@@ -95,8 +95,8 @@
 ### 4.2 驗證規則
 
 1. 日照：出發時間 + 整趟 P90 ≤ min（民用暮光終, 騎士設定的回程時間）
-2. 續航：相鄰補給點距離 ≤ 續航 ×（1 − 安全餘裕），且抵達加油站的 P90 時間在營業時間內
-3. 天氣：抵達時落在大雨以上警特報範圍的路段標為高風險
+2. 續航：相鄰補給點距離 ≤ 續航 ×（1 − 安全餘裕），且抵達該加油站的 P90 時刻 ETA⁽⁰·⁹⁾ 在營業時間內
+3. 天氣：路段的抵達時段 [ETA⁽⁰·⁵⁾, ETA⁽⁰·⁹⁾] 與大雨以上警特報範圍重疊時標為高風險；高風險段不得位於日照限制最緊的最後一段
 4. 路況：路段有封閉或管制事件時計畫不可行
 5. 可追溯：回答中的數字都必須出現在工具輸出中
 
@@ -161,25 +161,34 @@
 ## 8. Algorithm
 
 ```text
-Algorithm 1: Plan with Verification
+Algorithm 1: Moto Touring Copilot — Plan with Verification
 Input : rider query Q, rider id u, trip store S_u, knowledge base KB
-Output: feasible trip plan with ranges and citations, or an infeasibility report
+Output: feasible trip plan P with ranges and citations, or an infeasibility report
 
-01: ctx ← UNDERSTAND(Q, MEMORY(u))
-02: if MISSING(ctx) then return ASK_RIDER()
-03: route ← BUILD_ROUTE(ctx); X ← SEGMENT_FEATURES(route)
-04: repeat
-05:   for each departure d in CANDIDATES(ctx) do
-06:     (t50, ETA) ← PACE_AGENT(X, d, u)
-07:     T90 ← Σ t50 + BREAKS + CONFORMAL_Q90(u)
-08:     W ← WEATHER_AGENT(route, ETA)
-09:     F ← SUPPLY_AGENT(route, ETA, VEHICLE(u))
-10:     plan ← COMPOSE(d, t50, T90, W, F, SEARCH(KB))
-11:     if VERIFY(plan) and SLACK(plan) > SLACK(best) then best ← plan
-12:   if best = ∅ then ctx ← REPLAN(ctx, violations)
-13: until best ≠ ∅ or attempts ≥ MAX
-14: return best ≠ ∅ ? RENDER(best) : INFEASIBILITY_REPORT()
+01: ctx ← UNDERSTAND(Q, MEMORY(u))                 ▷ origin, route, date, T_user, max hours
+02: if MISSING(ctx) ≠ ∅ then return ASK_RIDER(MISSING(ctx))
+03: route ← BUILD_ROUTE(ctx)                         ▷ waypoints → road segments s_1..s_n
+04: X ← SEGMENT_FEATURES(route)                      ▷ curvature, DTM grade, road class, flags
+05: D ← CANDIDATE_DEPARTURES(ctx)                    ▷ e.g. every 30 min
+06: attempts ← 0 ; best ← ∅
+07: repeat
+08:     for each d in D do
+09:         (t50, t90, ETA50, ETA90) ← PACE_AGENT(X, d, u)   ▷ segment times, ETAs (4.6)
+10:         T90 ← ETA90[n] − d                        ▷ = Σ t50 + BREAKS + c_0.9
+11:         W ← WEATHER_AGENT(route, ETA50, ETA90)    ▷ forecast, warnings, T_dusk
+12:         F ← SUPPLY_AGENT(route, ETA90, VEHICLE(u)) ▷ stations (ETA90), range, events
+13:         plan ← ORCHESTRATOR_COMPOSE(d, t50, t90, T90, W, F, SEARCH(KB, W, F))
+14:         (ok, violations) ← VERIFY(plan)            ▷ rules 1–5, numbers traceable
+15:         if ok and SLACK(plan) > SLACK(best) then best ← plan
+16:     if best = ∅ then
+17:         ctx ← REPLAN(ctx, violations) ; attempts ← attempts + 1
+18: until best ≠ ∅ or attempts ≥ MAX_ATTEMPTS
+19: if best = ∅ then return INFEASIBILITY_REPORT(violations, ALTERNATIVES(ctx))
+20: SAVE_MEMORY(u, ctx, best)
+21: return RENDER(best)                              ▷ chat + Google Maps dashboard + plan file
 ```
+
+與 Proposal §4.8 Algorithm 1 相同（行號一致）；P50／P90 抵達時刻 ETA 的定義見 Proposal §4.6。
 
 配速模型更新（Algorithm 2）見 Proposal §4.8。
 
@@ -230,4 +239,5 @@ Output: feasible trip plan with ranges and citations, or an infeasibility report
 
 | 日期 | 內容 |
 | --- | --- |
-| 2026-11 | 建立 repo 與本文件（Proposal 階段）：需求、架構、資料、方法、演算法、規劃中的程式結構 |
+| 2026-10-31 | 建立 repo 與本文件（Proposal 階段）：需求、架構、資料、方法、演算法、規劃中的程式結構 |
+| 2026-10-31 | 依獨立審查同步 Proposal：配速模型改預測移動時間（對數）、P50／P90 抵達時刻、E2 改以獨立 oracle 評分（§4.1、§6）；驗證規則 2、3 與 Algorithm 1 改為 Proposal 的版本（§4.2、§8） |
