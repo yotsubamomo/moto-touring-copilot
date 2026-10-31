@@ -11,7 +11,7 @@
 | [DESIGN.md](DESIGN.md) | 系統設計：需求、架構、元件、資料、方法、演算法、規劃中的程式結構 |
 | [Proposal（PDF）](docs/proposal/proposal.pdf) | 完整提案：Abstract、Introduction、Related Work、Deep Research、Proposed Scheme |
 | [Proposal 簡報（PPTX）](docs/proposal/proposal-slides.pptx) | 16 頁，逐字稿在備忘稿 |
-| Proposal 簡報影片 | YouTube（上傳後補上連結） |
+| [Proposal 簡報影片（YouTube）](https://youtu.be/8XWvbD2qnNo) | 9 分 58 秒，AI 語音旁白，字幕內嵌 |
 
 ## 系統概要
 
