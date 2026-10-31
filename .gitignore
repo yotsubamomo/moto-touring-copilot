@@ -1,0 +1,26 @@
+# Personal ride data (contains home/work locations) — never commit
+*.gpx
+*.fit
+data/raw/
+data/private/
+
+# Secrets
+.env
+*.key
+
+# Media too large for git (published on YouTube)
+*.mp4
+*.mp3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
