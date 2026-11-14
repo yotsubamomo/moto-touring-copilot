@@ -1,0 +1,67 @@
+{
+  "mode": "local-scripted",
+  "api_calls": 0,
+  "spent_usd": 0.0,
+  "good_model": {
+    "smoke": {
+      "L2": "3/3",
+      "L3": "2/2",
+      "L4": "3/3",
+      "L5": "1/1",
+      "L6": "2/2"
+    },
+    "dev": {
+      "P1": "3/3",
+      "P2": "3/3",
+      "P3": "1/1",
+      "P4": "3/3"
+    },
+    "all_pass": true
+  },
+  "bad_model_detection": {
+    "wrong_tool@C1": {
+      "criterion": "L2",
+      "detected": true
+    },
+    "bad_args@C1": {
+      "criterion": "L2",
+      "detected": true
+    },
+    "skip_chain@C2": {
+      "criterion": "L3",
+      "detected": true
+    },
+    "bad_json@C2": {
+      "criterion": "L4",
+      "detected": true
+    },
+    "fabricate@C3": {
+      "criterion": "L5",
+      "detected": true
+    },
+    "pick_first@D1": {
+      "criterion": "P1",
+      "detected": true
+    },
+    "fabricate@D2": {
+      "criterion": "P3",
+      "detected": true
+    },
+    "wrong_status@D3": {
+      "criterion": "P4",
+      "detected": true
+    }
+  },
+  "budget_guard": {
+    "stopped_before_cap": true,
+    "spend_matches_tokens": true,
+    "per_call_log_complete": true,
+    "cases_completed_before_stop": 6,
+    "calls_logged": 19,
+    "fake_spend_usd": 0.0822,
+    "fake_cap_usd": 0.1,
+    "note": "fake prices and scripted token counts; not a real cost"
+  },
+  "passed": true,
+  "run_at": "2026-11-14T21:10:13+08:00"
+}

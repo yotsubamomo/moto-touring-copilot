@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moto Touring Copilot｜UI Prototype（模擬資料）</title>
+<style>
+  :root {
+    --color-primary: #1E40AF;
+    --color-on-primary: #FFFFFF;
+    --color-heading: #1E3A8A;
+    --color-text: #0F172A;
+    --color-muted-text: #475569;
+    --color-background: #F8FAFC;
+    --color-card: #FFFFFF;
+    --color-muted: #E9EEF6;
+    --color-border: #CBD5E1;
+    --color-ring: #1E40AF;
+    /* status tokens: background / text pairs, all at least 4.5:1 */
+    --ok-bg: #DCFCE7;      --ok-fg: #166534;
+    --cond-bg: #FEF3C7;    --cond-fg: #92400E;
+    --bad-bg: #FEE2E2;     --bad-fg: #991B1B;
+    --unk-bg: #E2E8F0;     --unk-fg: #334155;
+    --info-bg: #DBEAFE;    --info-fg: #1E40AF;
+    --sim-bg: #EDE9FE;     --sim-fg: #5B21B6;
+    --stale-bg: #FFEDD5;   --stale-fg: #9A3412;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+    --radius: 8px;
+    --font: "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    --font-num: "Cascadia Mono", Consolas, "SF Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--color-background); color: var(--color-text); font-family: var(--font);
+         font-size: 16px; line-height: 1.6; }
+  .page { max-width: 1120px; margin: 0 auto; padding: var(--space-4); }
+  h1 { font-size: 24px; margin: 0; color: var(--color-heading); }
+  h2 { font-size: 20px; margin: 0 0 var(--space-3); color: var(--color-heading); }
+  h3 { font-size: 16px; margin: var(--space-6) 0 var(--space-2); color: var(--color-heading); }
+  p { margin: 0 0 var(--space-2); }
+  /* keep running text to a readable measure on wide screens */
+  p, li, .hint { max-width: 46em; }
+  .muted { color: var(--color-muted-text); }
+  .small { font-size: 14px; }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .card { background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius);
+          padding: var(--space-4); margin-bottom: var(--space-4); }
+  .topbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin: var(--space-2) 0 var(--space-4); }
+  .proto { border: 2px dashed #64748B; background: #F1F5F9; }
+  .proto h2 { font-size: 16px; color: var(--color-text); }
+
+  /* badges: colour plus icon plus full text */
+  .badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px 10px; border-radius: 999px;
+           font-size: 14px; font-weight: 600; max-width: 100%; white-space: nowrap; }
+  /* a status label stays on one line; only the sentence-length labels in the top bar may wrap */
+  .topbar .badge { white-space: normal; }
+  .badge.big, .topbar .badge { border-radius: 14px; }
+  .badge svg { width: 16px; height: 16px; flex: none; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
+  .badge.cond { background: var(--cond-bg); color: var(--cond-fg); }
+  .badge.bad { background: var(--bad-bg); color: var(--bad-fg); }
+  .badge.unk { background: var(--unk-bg); color: var(--unk-fg); }
+  .badge.info { background: var(--info-bg); color: var(--info-fg); }
+  .badge.sim { background: var(--sim-bg); color: var(--sim-fg); }
+  .badge.stale { background: var(--stale-bg); color: var(--stale-fg); }
+  .badge.big { font-size: 18px; padding: 6px 16px; }
+  .badge.big svg { width: 20px; height: 20px; }
+
+  /* form */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-4); }
+  label, .label { display: block; font-weight: 600; margin-bottom: var(--space-1); }
+  .req { color: var(--bad-fg); }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  input, select, textarea { width: 100%; min-height: 44px; padding: var(--space-2) var(--space-3);
+        border: 1px solid #64748B; border-radius: 6px; background: #fff; }
+  textarea { min-height: 76px; resize: vertical; }
+  input[type=checkbox], input[type=radio] { width: 24px; height: 24px; min-height: 0; padding: 0; vertical-align: middle; }
+  .hint { font-size: 14px; color: var(--color-muted-text); margin-top: var(--space-1); }
+  .field-error { font-size: 14px; color: var(--bad-fg); margin-top: var(--space-1); font-weight: 600; }
+  .invalid { border-color: var(--bad-fg); border-width: 2px; }
+  :focus-visible { outline: 3px solid var(--color-ring); outline-offset: 2px; }
+  button { min-height: 44px; padding: var(--space-2) var(--space-4); border-radius: 6px; border: 1px solid var(--color-primary);
+           background: #fff; color: var(--color-primary); font-weight: 600; cursor: pointer; transition: background-color 120ms; }
+  button:hover { background: var(--info-bg); }
+  button.primary { background: var(--color-primary); color: var(--color-on-primary); }
+  button.primary:hover { background: #1E3A8A; }
+  button[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+
+  /* messages */
+  .box { border-radius: var(--radius); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); border: 1px solid transparent; }
+  .box.error { background: var(--bad-bg); color: var(--bad-fg); border-color: #FCA5A5; }
+  .box.warn { background: var(--cond-bg); color: var(--cond-fg); border-color: #FCD34D; }
+  .box.info { background: var(--info-bg); color: var(--info-fg); border-color: #93C5FD; }
+  .box.stale { background: var(--stale-bg); color: var(--stale-fg); border-color: #FDBA74; }
+  .box.plain { background: var(--color-muted); color: var(--color-text); border-color: var(--color-border); }
+  .box svg { width: 18px; height: 18px; vertical-align: -3px; }
+  .box h3 { margin-top: 0; color: inherit; }
+  .box ul, .box ol { margin: var(--space-1) 0 0; padding-left: 22px; }
+  .box a { color: inherit; font-weight: 600; }
+
+  /* status steps (maps to st.status) */
+  .steps { list-style: none; padding: 0; margin: 0; }
+  .steps li { display: flex; gap: var(--space-2); align-items: center; padding: var(--space-1) 0; }
+  .steps svg { width: 18px; height: 18px; flex: none; }
+  .steps .pending { color: var(--color-muted-text); }
+  /* finished: one line, like a collapsed st.status */
+  .card.compact { padding: var(--space-2) var(--space-4); }
+  .card.compact h2 { display: none; }
+
+  /* chat message (maps to st.chat_message) */
+  .chat { display: flex; gap: var(--space-3); align-items: flex-start; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary); color: #fff; display: grid;
+            place-items: center; font-weight: 700; flex: none; }
+
+  /* tabs (maps to st.tabs) */
+  [role=tablist] { display: flex; flex-wrap: wrap; gap: var(--space-1); border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-4); }
+  [role=tab] { border: none; border-bottom: 3px solid transparent; border-radius: 0; background: none; color: var(--color-muted-text);
+               padding: var(--space-2) var(--space-4); margin-bottom: -2px; }
+  [role=tab][aria-selected=true] { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+  [role=tab]:hover { background: var(--color-muted); }
+
+  /* metrics (maps to st.metric) */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+  .metric { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3); background: #fff; }
+  .metric .k { font-size: 14px; color: var(--color-muted-text); }
+  .metric .v { font-size: 26px; font-weight: 700; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .metric .s { font-size: 13px; color: var(--color-muted-text); }
+
+  /* tables (maps to st.dataframe / st.table) */
+  .table-wrap { overflow-x: auto; container-type: inline-size; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  /* the caption keeps the width of the visible area, so it stays readable when the table scrolls sideways */
+  caption { text-align: left; font-size: 14px; color: var(--color-muted-text); padding-bottom: var(--space-1); width: 100cqw; }
+  th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  th { background: var(--color-muted); font-weight: 600; white-space: nowrap; }
+  tr.selected td { background: #EFF6FF; }
+  tr.recommended td:first-child { box-shadow: inset 4px 0 0 var(--color-primary); }
+
+  /* expander (maps to st.expander) */
+  details { border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; margin-bottom: var(--space-3); }
+  summary { cursor: pointer; padding: var(--space-3) var(--space-4); font-weight: 600; min-height: 44px; }
+  details > .inner { padding: 0 var(--space-4) var(--space-4); }
+  .rule { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2); background: #fff; }
+  .rule .head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .rule dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-3); margin: var(--space-2) 0 0; font-size: 15px; }
+  .rule dt { color: var(--color-muted-text); }
+  .rule dd { margin: 0; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<!-- icons: one outline family, used inside badges and steps; always next to visible text -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5"/><path d="M12 17.2v.3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-q" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8"/><path d="M12 16.8v.3"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.5v.3"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></symbol>
+</svg>
+
+<div class="page">
+  <header>
+    <h1>Moto Touring Copilot 重機旅遊規劃顧問</h1>
+    <p class="muted">出發前的決策輔助：最晚幾點出發還來得及？</p>
+    <div class="topbar" id="topbar"></div>
+  </header>
+
+  <!-- ===== Prototype-only controls. Not part of the product screen. ===== -->
+  <section class="card proto" aria-labelledby="proto-title">
+    <h2 id="proto-title">Prototype 控制（不屬於產品畫面）</h2>
+    <p class="small">這個區塊只在原型中存在，用來切換模擬情境。本頁所有資料與判定都是模擬的，沒有連接任何 API 或語言模型。</p>
+    <div class="row">
+      <div style="flex:1; min-width:260px">
+        <label for="scenario">模擬情境</label>
+        <select id="scenario"></select>
+      </div>
+      <div style="align-self:flex-end"><button type="button" id="apply-scenario">套用情境並填入表單</button></div>
+    </div>
+    <p class="hint" id="scenario-note"></p>
+  </section>
+
+  <!-- ===== Trip Planner ===== -->
+  <section class="card" aria-labelledby="planner-title">
+    <h2 id="planner-title">Trip Planner</h2>
+    <div id="error-summary" class="box error" role="alert" tabindex="-1" hidden></div>
+    <p class="hint" style="margin: 0 0 var(--space-3)"><span class="req">*</span> 必填欄位</p>
+    <div class="grid">
+      <div>
+        <label for="route">示範路線 <span class="req">*</span></label>
+        <select id="route">
+          <option value="R01">示範路線 R01（單向，約 47 公里）</option>
+          <option value="R02">示範路線 R02（單向，約 46 公里）</option>
+        </select>
+        <div class="hint">一次規劃是一條路線從頭騎到尾。</div>
+      </div>
+      <div>
+        <label for="date">日期 <span class="req">*</span></label>
+        <input type="date" id="date">
+        <div class="hint">可以選超出預報期間的日期。</div>
+        <div class="field-error" id="err-date" hidden></div>
+      </div>
+      <div>
+        <label for="earliest">最早可出發時間 <span class="req">*</span></label>
+        <input type="time" id="earliest">
+        <div class="field-error" id="err-earliest" hidden></div>
+      </div>
+      <div>
+        <label for="deadline">最晚抵達終點時間 <span class="req">*</span></label>
+        <input type="time" id="deadline">
+        <div class="field-error" id="err-deadline" hidden></div>
+      </div>
+      <div>
+        <label for="fuel">出發油量（%） <span class="req">*</span></label>
+        <input type="number" id="fuel" min="0" max="100" step="1" inputmode="numeric">
+        <div class="hint">0–100。不會預設為滿油。</div>
+        <div class="field-error" id="err-fuel" hidden></div>
+      </div>
+    </div>
+    <div style="margin-top: var(--space-4)">
+      <label for="freetext">自然語言需求（選填）</label>
+      <textarea id="freetext" placeholder="例如：中途想休息 20 分鐘"></textarea>
+      <div class="hint">只用來補充休息與偏好。和上方欄位衝突時，以欄位為準。</div>
+    </div>
+    <div class="row" style="margin-top: var(--space-4)">
+      <label style="margin:0; font-weight:400"><input type="checkbox" id="snapshot"> Snapshot Mode（使用固定的資料快照）</label>
+    </div>
+    <div class="row" style="margin-top: var(--space-4)">
+      <button type="button" class="primary" id="plan-btn">規劃</button>
+      <span class="muted small">只有按下「規劃」才會計算。修改欄位不會自動重新規劃。</span>
+    </div>
+  </section>
+
+  <section id="status-card" class="card" aria-live="polite" hidden>
+    <h2>規劃進度</h2>
+    <ul class="steps" id="steps"></ul>
+  </section>
+
+  <section id="ask-card" class="card" hidden>
+    <h2>需要你補充</h2>
+    <div class="chat">
+      <div class="avatar" aria-hidden="true">P</div>
+      <div style="flex:1">
+        <p id="ask-text"></p>
+        <div class="row">
+          <div style="min-width:220px">
+            <label for="ask-answer">休息多久</label>
+            <select id="ask-answer">
+              <option value="10">10 分鐘</option>
+              <option value="20" selected>20 分鐘</option>
+              <option value="30">30 分鐘</option>
+            </select>
+          </div>
+          <div style="align-self:flex-end"><button type="button" class="primary" id="ask-submit">回覆並繼續規劃</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="stale" class="box stale" role="status" hidden>
+    <strong>結果已過期。</strong> 上次規劃後變更了：<span id="stale-fields"></span>。下方仍是上次規劃的結果，資料模式與來源也是當時的；請按「規劃」重新計算。
+  </div>
+
+  <section class="card" aria-label="規劃結果">
+    <div role="tablist" aria-label="結果分頁">
+      <button type="button" role="tab" id="tab-result" aria-controls="panel-result" aria-selected="true">Trip Result</button>
+      <button type="button" role="tab" id="tab-valid" aria-controls="panel-valid" aria-selected="false" tabindex="-1">Validation &amp; Replanning</button>
+    </div>
+    <div role="tabpanel" id="panel-result" aria-labelledby="tab-result" tabindex="0"></div>
+    <div role="tabpanel" id="panel-valid" aria-labelledby="tab-valid" tabindex="0" hidden></div>
+  </section>
+
+  <p class="muted small">UI Prototype，供 G3 審查。對應 Streamlit 1.67.0 的標準元件：欄位、按鈕、分頁、可展開區塊、唯讀表格、數值卡片、狀態標籤、對話訊息、步驟狀態。</p>
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   MOCK DATA AND MOCK LOGIC. Everything below imitates the product for review.
+   Numbers, times, sources and rule outcomes are invented. No API, no LLM.
+   ========================================================================== */
+const MOCK = {
+  routes: {
+    R01: { name: "示範路線 R01", km: 47.4, typMin: 50 },
+    R02: { name: "示範路線 R02", km: 46.0, typMin: 47 },
+  },
+  marginCoeff: 0.2,
+  tankL: 20, consumptionLPer100: 5.0, reservePct: 20,
+  dusk: "17:32",
+  forecastEnd: "2026-11-22",
+  station: { id: "CP02", name: "中途加油站", fraction: 0.4, open: "06:00", close: "22:00", stopMin: 10 },
+  stepMin: 15, batchSize: 40,
+};
+
+const SCENARIOS = [
+  { id: "feasible", label: "FEASIBLE：全部規則通過（含模擬的路況資料）",
+    note: "真實日期沒有路況來源，規則 4 會是 UNKNOWN。FEASIBLE 只會在有路況資料時出現，這裡用模擬的路況資料示意。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "simulated_clear" } },
+  { id: "conditional", label: "CONDITIONAL：沒有路況來源（規則 4 為 UNKNOWN）",
+    note: "真實日期最常見的結果：有條件可行，待確認事項置頂。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "none" } },
+  { id: "beyond", label: "CONDITIONAL：日期超出預報期間（規則 3、4 為 UNKNOWN）",
+    note: "照常規劃，天氣規則標成 UNKNOWN。",
+    form: { route: "R02", date: "2026-12-05", earliest: "09:00", deadline: "12:00", fuel: 70, text: "" },
+    env: { road: "none" } },
+  { id: "dusk", label: "傍晚出發：期限接近民用暮光終",
+    note: "期限晚於民用暮光終，規則 1 以暮光終為準。較晚的候選因為規則 1 不通過。",
+    form: { route: "R01", date: "2026-11-21", earliest: "15:30", deadline: "18:00", fuel: 80, text: "" },
+    env: { road: "simulated_clear" } },
+  { id: "rain", label: "高降雨機率提醒落在路線最後 20%",
+    note: "抵達最後 20% 路段的時段遇到高降雨機率，較晚的候選因為規則 3 不通過。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "simulated_clear", highPop: ["15:45", "18:00"] } },
+  { id: "rain-early", label: "高降雨機率提醒在前段與中段（規則 3 仍通過）",
+    note: "天氣表出現高降雨機率提醒的標籤，但它不在路線最後 20%，所以規則 3 通過。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "simulated_clear", highPop: ["15:30", "16:35"] } },
+  { id: "replan-ok", label: "重新規劃後可行：出發油量不足，新增一次加油",
+    note: "第 1 輪全部因為油量不通過；重新規劃新增加油後找到可用的候選。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 28, text: "" },
+    env: { road: "none" } },
+  { id: "infeasible", label: "INFEASIBLE：重試後仍然不可行（提前停止）",
+    note: "油量連中途加油站都到不了。重新規劃一次後沒有新的合法安排，提前停止。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 22, text: "" },
+    env: { road: "none" } },
+  { id: "infeasible-time", label: "INFEASIBLE：只違反時間限制（最接近時間限制的候選）",
+    note: "唯一的候選保守估計超過期限。代表候選稱為「最接近時間限制的候選」。",
+    form: { route: "R01", date: "2026-11-21", earliest: "16:05", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "simulated_clear" } },
+  { id: "incomplete", label: "搜尋未完成（INCOMPLETE）",
+    note: "只評估了一部分候選。不能宣稱推薦的是整個範圍內最晚的可行出發時間。",
+    form: { route: "R01", date: "2026-11-21", earliest: "09:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "none", incomplete: true } },
+  { id: "template", label: "說明文字改用固定模板",
+    note: "Planner 的說明兩次沒通過可追溯檢查，改用固定模板；計畫狀態不變。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "none", explanation: "template" } },
+  { id: "output-error", label: "輸出驗證錯誤（規則 5）",
+    note: "固定模板也沒通過。不顯示計畫狀態，也不重新搜尋。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "" },
+    env: { road: "none", explanation: "error" } },
+  { id: "ask", label: "追問：休息安排有歧義",
+    note: "自然語言提到休息但沒有說多久，Planner 追問後才規劃。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "中途想休息一下" },
+    env: { road: "none" } },
+  { id: "conflict", label: "自然語言與表單衝突",
+    note: "自然語言提到另一個出發時間。以表單為準，並在採用的條件中提示。",
+    form: { route: "R01", date: "2026-11-21", earliest: "13:00", deadline: "17:00", fuel: 80, text: "我想下午三點出發，中途休息 20 分鐘" },
+    env: { road: "none" } },
+];
+
+const RULE_NAME = { 1: "規則 1 日照與期限", 2: "規則 2 油量", 3: "規則 3 天氣", 4: "規則 4 路況", 5: "規則 5 可追溯" };
+const GUIDANCE = {
+  1: "查詢當日的民用暮光終時間，確認保守抵達時間在天黑之前。",
+  2: "出發前確認這個加油站當天的營業時間，或先在起點加滿。",
+  3: "出發前查看氣象署的最新預報，確認抵達時段的降雨機率。",
+  4: "出發前到公路主管機關的路況資訊，確認沿線有沒有封閉或管制。",
+};
+const REASON_CLASS = { NO_SOURCE: "沒有資料來源", OUT_OF_COVERAGE: "超出涵蓋期間", SOURCE_ERROR: "外部服務失敗",
+                       MISSING_INPUT: "缺少必要輸入", UPSTREAM_UNKNOWN: "上游結果為 UNKNOWN" };
+
+const $ = (id) => document.getElementById(id);
+const toMin = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+const fmt = (min) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(Math.round(min) % 60).padStart(2, "0")}`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const icon = (name) => `<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const badge = (cls, ic, text, big) => `<span class="badge ${cls}${big ? " big" : ""}">${icon(ic)}${esc(text)}</span>`;
+const PLAN_BADGE = { FEASIBLE: ["ok", "check", "FEASIBLE 可行"], CONDITIONAL: ["cond", "warn", "CONDITIONAL 有條件可行"],
+                     INFEASIBLE: ["bad", "x", "INFEASIBLE 不可行"] };
+const RULE_BADGE = { PASS: ["ok", "check", "PASS 通過"], FAIL: ["bad", "x", "FAIL 未通過"], UNKNOWN: ["unk", "q", "UNKNOWN 無法判定"] };
+const planBadge = (s, big) => badge(...PLAN_BADGE[s], big);
+const ruleBadge = (r) => badge(...RULE_BADGE[r]);
+
+let env = { road: "none" };
+let state = { result: null, inputsAtPlan: null, selected: null, planning: false };
+
+/* ---------- form ---------- */
+function readForm() {
+  return { route: $("route").value, date: $("date").value, earliest: $("earliest").value, deadline: $("deadline").value,
+           fuel: $("fuel").value, text: $("freetext").value.trim(), snapshot: $("snapshot").checked };
+}
+function validateForm(f) {
+  const errors = [];
+  if (!f.date) errors.push(["date", "請選擇日期。"]);
+  if (!f.earliest) errors.push(["earliest", "請填最早可出發時間。"]);
+  if (!f.deadline) errors.push(["deadline", "請填最晚抵達終點時間。"]);
+  if (f.earliest && f.deadline && toMin(f.earliest) >= toMin(f.deadline))
+    errors.push(["deadline", "最晚抵達終點時間必須晚於最早可出發時間。"]);
+  if (f.fuel === "") errors.push(["fuel", "請填出發油量。這一欄必填，不會以滿油代替。"]);
+  else if (!(Number(f.fuel) >= 0 && Number(f.fuel) <= 100)) errors.push(["fuel", "出發油量要在 0 到 100 之間。"]);
+  return errors;
+}
+function showErrors(errors) {
+  for (const id of ["date", "earliest", "deadline", "fuel"]) {
+    $(id).classList.remove("invalid"); $(id).removeAttribute("aria-describedby"); $(id).removeAttribute("aria-invalid");
+    $("err-" + id).hidden = true;
+  }
+  const box = $("error-summary");
+  if (!errors.length) { box.hidden = true; return; }
+  for (const [id, msg] of errors) {
+    $(id).classList.add("invalid"); $(id).setAttribute("aria-describedby", "err-" + id); $(id).setAttribute("aria-invalid", "true");
+    $("err-" + id).textContent = msg; $("err-" + id).hidden = false;
+  }
+  box.innerHTML = `<h3>有 ${errors.length} 個欄位需要修正</h3><ul>` +
+    errors.map(([id, msg]) => `<li><a href="#${id}">${esc(msg)}</a></li>`).join("") + "</ul>";
+  box.hidden = false; box.focus();
+}
+/* mock stand-in for the Planner turning free text into structured data */
+function parseFreeText(text) {
+  const out = { breakMin: 0, ambiguous: false, conflict: null };
+  const m = text.match(/休息\s*(\d+)\s*分/);
+  if (m) out.breakMin = Number(m[1]);
+  else if (/休息/.test(text)) out.ambiguous = true;
+  if (/(點|時)出發/.test(text)) out.conflict = "自然語言提到了出發時間。出發時間的範圍以表單的「最早可出發時間」為準。";
+  return out;
+}
+
+/* ---------- mock tools and mock validator ---------- */
+function evaluate(ctx, arrangement, limitCount) {
+  const route = MOCK.routes[ctx.route], T = route.typMin;
+  const stops = arrangement.breakMin + (arrangement.refuel ? MOCK.station.stopMin : 0);
+  const margin = Math.round(MOCK.marginCoeff * T);
+  const deadline = toMin(ctx.deadline), dusk = env.dusk === "unknown" ? null : toMin(MOCK.dusk);
+  const usedPct = route.km * MOCK.consumptionLPer100 / 100 / MOCK.tankL * 100;
+  const forecastKnown = ctx.date <= MOCK.forecastEnd;
+  const all = [];
+  for (let d = toMin(ctx.earliest); d + T + stops <= deadline; d += MOCK.stepMin) all.push(d);
+  const evaluated = limitCount ? all.slice(0, limitCount) : all;
+
+  const candidates = evaluated.map((d, i) => {
+    const etaTyp = d + T + stops, etaSafe = etaTyp + margin;
+    const stationTyp = d + MOCK.station.fraction * T, stationSafe = d + MOCK.station.fraction * T * (1 + MOCK.marginCoeff);
+    const last20 = [d + 0.8 * T + stops, etaSafe];
+    const rules = {};
+    // rule 1
+    if (etaSafe > deadline) rules[1] = { r: "FAIL", detail: `保守抵達時間 ${fmt(etaSafe)} 晚於最晚抵達終點時間 ${fmt(deadline)}，超過 ${Math.round(etaSafe - deadline)} 分鐘。`, ev: ["EV-ETA"], over: etaSafe - deadline };
+    else if (dusk === null) rules[1] = { r: "UNKNOWN", cls: "SOURCE_ERROR", detail: "取不到當日的民用暮光終。保守抵達時間沒有超過你的最晚抵達終點時間。", ev: ["EV-DUSK"] };
+    else if (etaSafe > dusk) rules[1] = { r: "FAIL", detail: `保守抵達時間 ${fmt(etaSafe)} 晚於民用暮光終 ${fmt(dusk)}，超過 ${Math.round(etaSafe - dusk)} 分鐘。`, ev: ["EV-ETA", "EV-DUSK"], over: etaSafe - dusk };
+    else rules[1] = { r: "PASS", detail: `保守抵達時間 ${fmt(etaSafe)} 不晚於期限 ${fmt(Math.min(dusk, deadline))}。`, ev: ["EV-ETA", "EV-DUSK"] };
+    // rule 2
+    const fuel = { start: ctx.fuel, refuel: arrangement.refuel, atStation: ctx.fuel - MOCK.station.fraction * usedPct,
+                   end: arrangement.refuel ? 100 - (1 - MOCK.station.fraction) * usedPct : ctx.fuel - usedPct,
+                   stationTyp, stationSafe, stationOpen: "不適用" };
+    if (!arrangement.refuel) {
+      rules[2] = fuel.end >= MOCK.reservePct
+        ? { r: "PASS", detail: `抵達終點時剩餘 ${fuel.end.toFixed(0)}%，不低於安全保留油量 ${MOCK.reservePct}%。`, ev: ["EV-PROFILE", "EV-ETA"] }
+        : { r: "FAIL", detail: `抵達終點時剩餘 ${fuel.end.toFixed(0)}%，低於安全保留油量 ${MOCK.reservePct}%。`, ev: ["EV-PROFILE", "EV-ETA"] };
+    } else if (fuel.atStation < MOCK.reservePct) {
+      fuel.stationOpen = "營業中";
+      rules[2] = { r: "FAIL", detail: `抵達${MOCK.station.name}前剩餘 ${fuel.atStation.toFixed(0)}%，低於安全保留油量 ${MOCK.reservePct}%。`, ev: ["EV-PROFILE", "EV-STATION"] };
+    } else if (env.stationHours === "unknown") {
+      fuel.stationOpen = "UNKNOWN";
+      rules[2] = { r: "UNKNOWN", cls: "NO_SOURCE", detail: `${MOCK.station.name}沒有營業時間資料。`, ev: ["EV-STATION"] };
+    } else {
+      fuel.stationOpen = "營業中";
+      rules[2] = { r: "PASS", detail: `抵達${MOCK.station.name}前剩餘 ${fuel.atStation.toFixed(0)}%；加滿後抵達終點剩餘 ${fuel.end.toFixed(0)}%。抵達時段在營業時間內。`, ev: ["EV-PROFILE", "EV-STATION"] };
+    }
+    // rule 3
+    const hp = env.highPop ? env.highPop.map(toMin) : null;
+    if (!forecastKnown) rules[3] = { r: "UNKNOWN", cls: "OUT_OF_COVERAGE", detail: `規劃日期 ${ctx.date} 超出預報涵蓋到 ${MOCK.forecastEnd} 的期間。`, ev: ["EV-FORECAST"] };
+    else if (hp && last20[0] < hp[1] && last20[1] > hp[0]) rules[3] = { r: "FAIL", detail: `抵達路線最後 20% 的時段 ${fmt(last20[0])}–${fmt(last20[1])} 有高降雨機率提醒（降雨機率 80%）。`, ev: ["EV-FORECAST", "EV-ETA"] };
+    else rules[3] = { r: "PASS", detail: "路線最後 20% 的抵達時段沒有高降雨機率提醒。", ev: ["EV-FORECAST", "EV-ETA"] };
+    // rule 4
+    if (env.road === "none") rules[4] = { r: "UNKNOWN", cls: "NO_SOURCE", detail: "沒有可用的路況事件來源。", ev: [] };
+    else if (env.road === "simulated_closure") rules[4] = { r: "FAIL", detail: "路線上有封閉事件（模擬）。", ev: ["EV-ROAD"] };
+    else rules[4] = { r: "PASS", detail: "路況來源中沒有這條路線的封閉或管制事件（模擬）。", ev: ["EV-ROAD"] };
+
+    const values = Object.values(rules).map((x) => x.r);
+    const status = values.includes("FAIL") ? "INFEASIBLE" : values.includes("UNKNOWN") ? "CONDITIONAL" : "FEASIBLE";
+    return { planId: `P-${ctx.route}-${fmt(d).replace(":", "")}`, d, etaTyp, etaSafe, last20, rules, status, fuel,
+             margin: Math.min(deadline, dusk === null ? deadline : dusk) - etaSafe };
+  });
+  return { candidates, total: all.length };
+}
+const rank = (c) => (c.status === "FEASIBLE" ? 2 : 1) * 100000 + c.d;
+function pickBest(cands) {
+  let best = null;
+  for (const c of cands) if (c.status !== "INFEASIBLE" && (!best || rank(c) > rank(best))) best = c;
+  return best;
+}
+/* representative failing candidate (G1 Q27) */
+function pickRepresentative(cands) {
+  if (!cands.length) return null;
+  const fails = (c) => Object.values(c.rules).filter((x) => x.r === "FAIL").length;
+  const fewest = Math.min(...cands.map(fails));
+  const pool = cands.filter((c) => fails(c) === fewest);
+  const onlyRule1 = (c) => c.rules[1].r === "FAIL" && fails(c) === 1;
+  if (pool.every(onlyRule1)) {
+    const c = pool.reduce((a, b) => (b.rules[1].over < a.rules[1].over ? b : a));
+    // The name "closest to the time limit" is only true when no candidate breaks any other rule.
+    if (cands.every(onlyRule1))
+      return { c, label: "最接近時間限制的候選", basis: "全部候選都只違反規則 1；取超過期限最少的一個。" };
+    return { c, label: "代表性失敗候選", basis: "取 FAIL 規則數最少的候選；它們都只違反規則 1，取其中超過期限最少的一個。其他候選還違反別的規則。" };
+  }
+  const c = pool.reduce((a, b) => (b.d > a.d ? b : a));
+  return { c, label: "代表性失敗候選", basis: "取 FAIL 規則數最少的候選；無法再比較時取出發時間最晚的一個。" };
+}
+function plan(ctx) {
+  const parsed = ctx.parsed;
+  let arrangement = { refuel: false, breakMin: parsed.breakMin };
+  const rounds = [];
+  let best = null, last = null;
+  for (let r = 0; r <= 2; r++) {
+    const limit = env.incomplete ? 8 : 0;
+    last = evaluate(ctx, arrangement, limit);
+    best = pickBest(last.candidates);
+    rounds.push({ round: r, evaluated: last.candidates.length, total: last.total,
+                  best: best ? best.status : (last.candidates.length ? "INFEASIBLE" : "沒有候選"), arrangement: { ...arrangement } });
+    if (best || r === 2) break;
+    // mock Planner replanning: only breaks and refuelling may change
+    let next = null;
+    const fuelFails = last.candidates.length && last.candidates.every((c) => c.rules[2].r === "FAIL");
+    if (fuelFails && !arrangement.refuel) next = { ...arrangement, refuel: true };
+    else if (arrangement.breakMin >= 10) next = { ...arrangement, breakMin: Math.floor(arrangement.breakMin / 2) };
+    if (!next) { rounds.stopEarly = "沒有新的合法安排可以嘗試，提前停止。"; break; }
+    arrangement = next;
+  }
+  const search = env.incomplete
+    ? { status: "INCOMPLETE", reason: "模擬：第 2 批候選的資料工具逾時，只評估了一部分。", evaluated: last.candidates.length, total: last.total }
+    : { status: "COMPLETE", reason: "", evaluated: last.candidates.length, total: last.total };
+  const result = { ctx, arrangement, rounds, candidates: last.candidates, best, search, parsed,
+                   representative: best ? null : pickRepresentative(last.candidates),
+                   explanation: env.explanation || "planner" };
+  result.outputError = !!best && result.explanation === "error";
+  return result;
+}
+/* fix the change text of each replanning round (kept simple for the mock) */
+function describeRounds(rounds) {
+  const out = [];
+  let prev = null;
+  for (const r of rounds) {
+    let change = "初次評估";
+    if (prev) {
+      const parts = [];
+      if (r.arrangement.refuel && !prev.arrangement.refuel) parts.push(`新增加油：${MOCK.station.name}（模擬檢查點），停留 ${MOCK.station.stopMin} 分鐘`);
+      if (r.arrangement.breakMin !== prev.arrangement.breakMin) parts.push(`縮短休息：${prev.arrangement.breakMin} 分鐘改為 ${r.arrangement.breakMin} 分鐘`);
+      change = parts.join("；");
+    }
+    out.push({ ...r, change }); prev = r;
+  }
+  return out;
+}
+
+/* ---------- rendering ---------- */
+function sources(res) {
+  /* Every row in this prototype is mock data. The third item is the source type the product is
+     expected to show for that source; null means G1 did not settle it (left to the Spec). */
+  const snap = res.ctx.snapshot;
+  const api = snap ? "資料快照" : "真實 API";
+  const time = snap ? "快照時間 2026-11-14 20:00" : "取得時間 2026-11-15 08:00";
+  const rows = [
+    ["EV-ETA", "個人配速表與路線目錄", null, "建表時間 2026-11-14 20:00", `${MOCK.routes[res.ctx.route].name}全程`],
+    ["EV-PROFILE", "Rider Profile（油箱、油耗、安全保留油量）", null, "設定檔，沒有取得時間", "車輛設定"],
+    ["EV-DUSK", "中央氣象署日出日沒", api, time, res.ctx.date],
+    ["EV-FORECAST", "中央氣象署預報", api, time, `涵蓋到 ${MOCK.forecastEnd}`],
+    ["EV-STATION", "加油站資料", "資料快照", "快照時間 2026-11-14 20:00", `${MOCK.station.name}（模擬檢查點）`],
+  ];
+  if (env.road !== "none") rows.push(["EV-ROAD", "路況事件情境檔", "模擬", "人工編寫，沒有取得時間", `${MOCK.routes[res.ctx.route].name}全程`]);
+  return rows;
+}
+function conditionsTable(res) {
+  const f = res.ctx, a = res.arrangement;
+  const rows = [
+    ["路線", `${MOCK.routes[f.route].name}（單向，${MOCK.routes[f.route].km} 公里）`],
+    ["日期", f.date], ["最早可出發時間", f.earliest], ["最晚抵達終點時間", f.deadline],
+    ["出發油量", `${f.fuel}%（約 ${(f.fuel / 100 * MOCK.tankL).toFixed(1)} 公升）`],
+    ["休息安排", a.breakMin ? `在${MOCK.station.name}（模擬檢查點）休息 ${a.breakMin} 分鐘，來自自然語言需求` : "沒有休息"],
+    ["補給安排", a.refuel ? `在${MOCK.station.name}（模擬檢查點）加滿，停留 ${MOCK.station.stopMin} 分鐘；由重新規劃加入` : "不加油"],
+    ["資料模式", f.snapshot ? "Snapshot Mode（固定的資料快照）" : "一般模式"],
+  ];
+  let html = `<div class="table-wrap"><table><caption>採用的條件</caption><tbody>` +
+    rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("") + "</tbody></table></div>";
+  if (res.parsed.conflict) html = `<div class="box info">${icon("info")} <strong>自然語言與表單不一致。</strong> ${esc(res.parsed.conflict)}</div>` + html;
+  return html;
+}
+function sourcesTable(res) {
+  return `<div class="table-wrap"><table><caption>來源證據。本原型的每一列都是模擬資料；「正式產品」是這個來源在正式產品中預計標示的類型。</caption>
+    <thead><tr><th scope="col">代號</th><th scope="col">資料來源</th><th scope="col">來源類型</th><th scope="col">時間</th><th scope="col">涵蓋範圍</th></tr></thead><tbody>` +
+    sources(res).map(([id, name, prod, t, cov]) => `<tr><td class="num">${id}</td><td>${esc(name)}</td>
+      <td style="white-space:nowrap">${badge("sim", "info", "模擬")} <span class="small muted">正式產品：${prod ? esc(prod) : "待 Spec 定義"}</span></td><td style="white-space:nowrap">${esc(t)}</td><td>${esc(cov)}</td></tr>`).join("") +
+    `</tbody></table></div>`;
+}
+function popClass(p) { return p >= 70 ? badge("cond", "warn", "高降雨機率提醒") : p >= 40 ? badge("unk", "dot", "中降雨機率") : badge("unk", "dot", "低降雨機率"); }
+function weatherTable(res, c) {
+  const f = res.ctx;
+  if (f.date > MOCK.forecastEnd) return `<div class="box plain">${ruleBadge("UNKNOWN")} 規劃日期超出預報涵蓋期間，沒有天氣資料。</div>`;
+  const T = MOCK.routes[f.route].typMin, stops = c.etaTyp - c.d - T;
+  const hp = env.highPop ? env.highPop.map(toMin) : null;
+  const pop = (a, b) => (hp && a < hp[1] && b > hp[0]) ? 80 : (b > toMin("14:00") ? 50 : 20);
+  const parts = [["前段（0–40%）", c.d, c.d + 0.4 * T * 1.2], ["中段（40–80%）", c.d + 0.4 * T, c.d + 0.8 * T * 1.2 + stops], ["最後 20%", c.last20[0], c.last20[1]]];
+  return `<div class="table-wrap"><table><caption>各區段抵達時段的降雨機率。分類是本專題自訂的，不是氣象署的警特報，也不代表降雨強度。</caption>
+    <thead><tr><th scope="col">區段</th><th scope="col">抵達時段</th><th scope="col">降雨機率</th><th scope="col">自訂分類</th></tr></thead><tbody>` +
+    parts.map(([n, a, b]) => { const p = pop(a, b); return `<tr><td>${n}</td><td class="num">${fmt(a)}–${fmt(b)}</td><td class="num">${p}%</td><td>${popClass(p)}</td></tr>`; }).join("") +
+    "</tbody></table></div>";
+}
+function fuelTable(c) {
+  const f = c.fuel, L = (p) => (p / 100 * MOCK.tankL).toFixed(1);
+  const rows = [["起點", "—", `${Number(f.start).toFixed(0)}%（${L(f.start)} 公升）`, "—", "—"]];
+  rows.push([`${MOCK.station.name}（模擬檢查點）`, `${fmt(f.stationTyp)}–${fmt(f.stationSafe)}`, `${f.atStation.toFixed(0)}%（${L(f.atStation)} 公升）`, f.refuel ? "加滿" : "不加油", f.refuel ? f.stationOpen : "不適用"]);
+  rows.push(["終點", `${fmt(c.etaTyp)}–${fmt(c.etaSafe)}`, `${f.end.toFixed(0)}%（${L(f.end)} 公升）`, "—", "—"]);
+  return `<div class="table-wrap"><table><caption>加油安排。安全保留油量 ${MOCK.reservePct}%，來自 Rider Profile。</caption>
+    <thead><tr><th scope="col">檢查點</th><th scope="col">抵達時段</th><th scope="col">抵達時剩餘油量</th><th scope="col">補油安排</th><th scope="col">站點營業狀態</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr>${r.map((x, i) => `<td${i === 1 || i === 2 ? ' class="num"' : ""}>${esc(x)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+}
+function explanationBlock(res, c) {
+  const text = `建議 ${fmt(c.d)} 出發。典型估計 ${fmt(c.etaTyp)} 抵達終點，保守估計 ${fmt(c.etaSafe)}，距離期限還有 ${Math.round(c.margin)} 分鐘。` +
+    (c.fuel.refuel ? `途中在${MOCK.station.name}加滿。` : "出發油量足夠，不需要加油。");
+  if (res.explanation === "template")
+    return `<div class="box info"><strong>說明文字已改用固定模板。</strong> Planner 產生的說明兩次沒有通過可追溯檢查，沒有顯示。計畫狀態不受影響。</div>
+      <p>${esc(text)}</p><p class="hint">來源：固定模板（由結構化欄位組成）。規則 5：${ruleBadge("PASS")}</p>`;
+  return `<p>${esc(text)}</p><p class="hint">來源：Planner 產生（原型中為模擬文字）。規則 5：${ruleBadge("PASS")}</p>`;
+}
+function searchBadge(s) {
+  return s.status === "COMPLETE" ? badge("ok", "check", "搜尋完成 COMPLETE") : badge("stale", "warn", "搜尋未完成 INCOMPLETE");
+}
+
+function renderResult() {
+  const el = $("panel-result"), res = state.result;
+  if (!res) { el.innerHTML = `<div class="box plain">尚未規劃。填好上方的條件後按「規劃」。</div>`; return; }
+  let h = "";
+  if (res.outputError) {
+    h += `<div class="box error" role="alert"><h3>輸出驗證錯誤</h3>
+      <p>說明文字與固定模板都沒有通過規則 5（可追溯檢查）。這次不顯示計畫狀態，也沒有重新搜尋候選。</p>
+      <p>內部紀錄保留了 3 次檢查的結果。請回報這個問題；你可以再按一次「規劃」。</p></div>`;
+    h += `<h3>採用的條件</h3>${conditionsTable(res)}<h3>來源證據</h3>${sourcesTable(res)}`;
+    el.innerHTML = h; return;
+  }
+  const c = res.best;
+  if (!c) {
+    h += `<div class="row" style="margin-bottom:var(--space-3)">${planBadge("INFEASIBLE", true)} ${searchBadge(res.search)}</div>`;
+    h += `<div class="box error"><h3>沒有可用的計畫</h3><p>${esc(infeasibleSummary(res))}</p>
+      <p>原因、代表候選與替代方案在「Validation &amp; Replanning」分頁。</p></div>`;
+    h += `<h3>採用的條件</h3>${conditionsTable(res)}<h3>來源證據</h3>${sourcesTable(res)}`;
+    el.innerHTML = h; return;
+  }
+  h += `<div class="row" style="margin-bottom:var(--space-3)">${planBadge(c.status, true)} ${searchBadge(res.search)}</div>`;
+  if (c.status === "CONDITIONAL") {
+    const unknown = Object.entries(c.rules).filter(([, x]) => x.r === "UNKNOWN");
+    h += `<div class="box warn"><h3>出發前要確認的事項（${unknown.length} 項）</h3><ol>` +
+      unknown.map(([n, x]) => `<li><strong>${RULE_NAME[n]}：</strong>${esc(GUIDANCE[n])}</li>`).join("") +
+      `</ol><p class="small" style="margin-top:var(--space-2)">自行確認之後，計畫的狀態仍然是「有條件可行」；系統只依資料判定。</p></div>`;
+  }
+  if (res.search.status === "INCOMPLETE")
+    h += `<div class="box stale"><strong>搜尋未完成。</strong> 只評估了 ${res.search.evaluated} / ${res.search.total} 個候選。下方的建議不一定是最晚的可行出發時間。</div>`;
+  const depLabel = res.search.status === "COMPLETE" ? "最晚的可行出發時間" : "建議的出發時間（搜尋未完成）";
+  h += `<div class="metrics">
+    <div class="metric"><div class="k">${depLabel}</div><div class="v">${fmt(c.d)}</div><div class="s">候選每 15 分鐘一個</div></div>
+    <div class="metric"><div class="k">典型估計抵達終點</div><div class="v">${fmt(c.etaTyp)}</div><div class="s">依個人配速表</div></div>
+    <div class="metric"><div class="k">保守估計抵達終點</div><div class="v">${fmt(c.etaSafe)}</div><div class="s">典型估計加上安全餘裕</div></div>
+    <div class="metric"><div class="k">時間餘裕</div><div class="v">${Math.round(c.margin)} 分</div><div class="s">期限減去保守估計</div></div></div>`;
+  h += `<h3>說明</h3>${explanationBlock(res, c)}`;
+  h += `<h3>採用的條件</h3>${conditionsTable(res)}`;
+  h += `<h3>加油安排</h3>${fuelTable(c)}`;
+  h += `<h3>天氣</h3>${weatherTable(res, c)}`;
+  h += `<h3>來源證據</h3>${sourcesTable(res)}`;
+  el.innerHTML = h;
+}
+function infeasibleSummary(res) {
+  if (!res.candidates.length) return "在你填的時間範圍內，沒有任何出發時間能以典型估計在期限前抵達。";
+  const counts = failCounts(res.candidates);
+  const worst = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return `評估的 ${res.candidates.length} 個候選全部不可行。最多候選違反的是${RULE_NAME[worst[0]]}（${worst[1]} 個）。`;
+}
+function failCounts(cands) {
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (const c of cands) for (const n of [1, 2, 3, 4]) if (c.rules[n].r === "FAIL") counts[n]++;
+  return counts;
+}
+function ruleRows(res, c) {
+  let h = "";
+  for (const n of [1, 2, 3, 4]) {
+    const x = c.rules[n];
+    h += `<div class="rule"><div class="head"><strong>${RULE_NAME[n]}</strong>${ruleBadge(x.r)}</div>`;
+    if (x.r === "UNKNOWN") {
+      h += `<dl><dt>缺失的項目</dt><dd>${esc(x.detail)}</dd>
+        <dt>原因</dt><dd>${esc(REASON_CLASS[x.cls])}（${x.cls}）</dd>
+        <dt>來源與時間</dt><dd>${x.ev.length ? x.ev.map((e) => `<span class="num">${e}</span>`).join("、") + "，見來源證據" : "沒有可用的來源"}</dd>
+        <dt>人工確認指引</dt><dd>${esc(GUIDANCE[n])}</dd></dl>
+        <p class="hint">自行確認不會把這條規則改為 PASS。</p>`;
+    } else {
+      h += `<dl><dt>原因</dt><dd>${esc(x.detail)}</dd><dt>證據</dt><dd>${x.ev.map((e) => `<span class="num">${e}</span>`).join("、")}</dd></dl>`;
+    }
+    h += "</div>";
+  }
+  return h;
+}
+/* rule 5 guards the final output, so it is shown once, not per candidate */
+function rule5Block(res) {
+  if (!res.best) return `<div class="box plain">沒有可用的計畫，所以沒有產生說明文字。規則 5 不適用。</div>`;
+  const r5 = res.outputError ? "FAIL" : "PASS";
+  const d5 = res.outputError ? "說明文字與固定模板都沒有通過。共檢查 3 次，內部保留紀錄。計畫狀態不顯示。"
+    : res.explanation === "template" ? "Planner 的說明 2 次沒通過；固定模板通過。未通過的文字沒有顯示。"
+    : "Planner 的說明第 1 次就通過。";
+  return `<div class="rule"><div class="head"><strong>${RULE_NAME[5]}</strong>${ruleBadge(r5)}</div>
+    <dl><dt>檢查對象</dt><dd>最終輸出的說明文字。計畫的數值由主程式從工具輸出填入。</dd><dt>結果</dt><dd>${esc(d5)}</dd></dl></div>`;
+}
+function candidateTable(res) {
+  if (!res.candidates.length) return `<div class="box plain">沒有候選。</div>`;
+  const rows = res.candidates.map((c) => {
+    const issues = Object.entries(c.rules).filter(([, x]) => x.r !== "PASS").map(([n, x]) => `${n}（${x.r}）`).join("、") || "—";
+    const rec = res.best && c.planId === res.best.planId;
+    const rep = res.representative && c.planId === res.representative.c.planId;
+    const sel = state.selected === c.planId;
+    return `<tr class="${sel ? "selected" : ""} ${rec ? "recommended" : ""}">
+      <td><label style="font-weight:400;margin:0;white-space:nowrap"><input type="radio" name="cand" value="${c.planId}" ${sel ? "checked" : ""}> <span class="num">${fmt(c.d)}</span></label>${rec ? " " + badge("info", "check", "推薦") : ""}${rep ? " " + badge("unk", "dot", "代表候選") : ""}</td>
+      <td class="num">${fmt(c.etaTyp)}</td><td class="num">${fmt(c.etaSafe)}</td><td class="num">${Math.round(c.margin)} 分</td>
+      <td>${planBadge(c.status)}</td><td class="num">${issues}</td></tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table><caption>全部評估過的候選（唯讀），依出發時間排列。選取一列，表格下方顯示那個候選的逐條規則結果。</caption>
+    <thead><tr><th scope="col">出發時間</th><th scope="col">典型抵達</th><th scope="col">保守抵達</th><th scope="col">時間餘裕</th><th scope="col">計畫狀態</th><th scope="col">FAIL 或 UNKNOWN 的規則</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+function renderValidation() {
+  const el = $("panel-valid"), res = state.result;
+  if (!res) { el.innerHTML = `<div class="box plain">尚未規劃。</div>`; return; }
+  let h = `<h3 style="margin-top:0">候選搜尋</h3><div class="row">${searchBadge(res.search)}
+    <span>評估了 <span class="num">${res.search.evaluated}</span> / <span class="num">${res.search.total}</span> 個候選，每批最多 ${MOCK.batchSize} 個。</span></div>`;
+  if (res.search.status === "INCOMPLETE") h += `<p class="hint">${esc(res.search.reason)} 搜尋狀態和計畫狀態是分開的。</p>`;
+
+  if (!res.best) {
+    const rep = res.representative, counts = failCounts(res.candidates);
+    h += `<h3>無可行解</h3><div class="box error"><p><strong>原因摘要：</strong>${esc(infeasibleSummary(res))}</p></div>`;
+    if (res.candidates.length) {
+      h += `<div class="table-wrap"><table><caption>各規則的 FAIL 統計（共 ${res.candidates.length} 個候選）</caption><thead><tr><th scope="col">規則</th><th scope="col">FAIL 的候選數</th></tr></thead><tbody>` +
+        [1, 2, 3, 4].map((n) => `<tr><td>${RULE_NAME[n]}</td><td class="num">${counts[n]}</td></tr>`).join("") + "</tbody></table></div>";
+      h += `<div class="box plain"><h3>${esc(rep.label)}：${fmt(rep.c.d)} 出發</h3>
+        <p>${planBadge("INFEASIBLE")} <strong>這不是有效的建議。</strong></p><p class="small">選法：${esc(rep.basis)}</p></div>`;
+    }
+    h += `<div class="box info"><h3>替代方案（未經驗證，不會自動執行）</h3><ul>
+      <li>出發前先加油，提高出發油量後重新規劃。</li><li>把最早可出發時間提前，或放寬最晚抵達終點時間。</li>
+      <li>改選另一條示範路線，或改日期。</li></ul><p class="small">以上都需要你修改表單後再按「規劃」，系統沒有驗證它們是否可行。</p></div>`;
+  }
+
+  /* The block above the table always shows the recommended (or representative) candidate.
+     A row picked in the table shows its rule results below the table, inside the expander. */
+  const main = res.best || (res.representative && res.representative.c);
+  if (main) {
+    const which = res.best ? "推薦的候選" : res.representative.label;
+    h += `<h3>逐條規則結果：${which}（${fmt(main.d)} 出發）</h3>${ruleRows(res, main)}`;
+  }
+  h += `<h3>最終輸出的驗證</h3>${rule5Block(res)}`;
+  const picked = res.candidates.find((c) => c.planId === state.selected);
+  let pickedHtml = "";
+  if (res.candidates.length) {
+    if (!picked) pickedHtml = `<p class="hint">還沒有選取候選。</p>`;
+    else if (main && picked.planId === main.planId) pickedHtml = `<p class="hint">選取的是${res.best ? "推薦的候選" : esc(res.representative.label)}（${fmt(picked.d)} 出發）。它的逐條規則結果在上方。</p>`;
+    else pickedHtml = `<h3>選取的候選：${fmt(picked.d)} 出發 ${planBadge(picked.status)}</h3>` +
+      (picked.status === "INFEASIBLE" ? `<p><strong>這不是有效的建議。</strong></p>` : "") + ruleRows(res, picked);
+  }
+  h += `<details id="cand-details" ${state.candOpen ? "open" : ""}><summary>全部候選（共 ${res.candidates.length} 個，預設收合）</summary><div class="inner">${candidateTable(res)}<div id="picked">${pickedHtml}</div></div></details>`;
+
+  const rounds = describeRounds(res.rounds);
+  h += `<h3>重新規劃紀錄</h3><div class="table-wrap"><table><caption>初次評估加上最多 2 次重新規劃。只會調整休息與加油安排。</caption>
+    <thead><tr><th scope="col">輪次</th><th scope="col">結構化的變更</th><th scope="col">評估的候選數</th><th scope="col">最佳狀態</th></tr></thead><tbody>` +
+    rounds.map((r) => `<tr><td class="num">${r.round === 0 ? "初次" : "重新規劃 " + r.round}</td><td>${esc(r.change)}</td><td class="num">${r.evaluated}</td>
+      <td>${PLAN_BADGE[r.best] ? planBadge(r.best) : esc(r.best)}</td></tr>`).join("") + "</tbody></table></div>";
+  if (res.rounds.stopEarly) h += `<p class="hint">${esc(res.rounds.stopEarly)}</p>`;
+  el.innerHTML = h;
+  const det = $("cand-details");
+  if (det) det.addEventListener("toggle", () => { state.candOpen = det.open; });
+  el.querySelectorAll('input[name="cand"]').forEach((r) => r.addEventListener("change", () => {
+    state.selected = r.value; state.candOpen = true; renderValidation();
+    const again = $("panel-valid").querySelector('input[name="cand"]:checked');   // keep keyboard focus on the chosen row
+    if (again) again.focus();
+  }));
+}
+/* The data-mode label describes the result on screen, not the checkbox. Before the first
+   result there is nothing on screen, so it describes the next run. */
+function renderTopbar() {
+  let h = badge("sim", "info", "模擬資料：本頁不連接任何 API 或語言模型");
+  const res = state.result;
+  if (res) { if (res.ctx.snapshot) h += badge("info", "info", "Snapshot Mode：目前顯示的結果使用固定的資料快照"); }
+  else if ($("snapshot").checked) h += badge("info", "info", "Snapshot Mode：下次規劃會使用固定的資料快照");
+  $("topbar").innerHTML = h;
+}
+function renderAll() { renderTopbar(); renderResult(); renderValidation(); checkStale(); }
+
+/* ---------- interaction ---------- */
+const FIELD_LABEL = { route: "路線", date: "日期", earliest: "最早可出發時間", deadline: "最晚抵達終點時間",
+                      fuel: "出發油量", text: "自然語言需求", snapshot: "Snapshot Mode" };
+function checkStale() {
+  let changed = [];
+  if (state.inputsAtPlan && !state.planning) {
+    const before = JSON.parse(state.inputsAtPlan), now = readForm();
+    changed = Object.keys(FIELD_LABEL).filter((k) => before[k] !== now[k]);
+  }
+  $("stale-fields").textContent = changed.map((k) => FIELD_LABEL[k]).join("、");
+  $("stale").hidden = !changed.length;
+}
+const STEPS = ["理解需求並整理休息與補給安排", "取得預報、暮光終、加油站與路況資料", "逐一評估候選並判定規則", "驗證輸出的說明文字"];
+function runSteps(done) {
+  const card = $("status-card"), list = $("steps");
+  card.hidden = false; card.classList.remove("compact");
+  state.planning = true; $("plan-btn").disabled = true; $("plan-btn").textContent = "規劃中…";
+  let i = 0;
+  const draw = () => {
+    list.innerHTML = STEPS.map((s, k) => k < i ? `<li>${icon("check")}<span>${s}：完成</span></li>`
+      : k === i ? `<li>${icon("dot")}<strong>${s}：進行中</strong></li>` : `<li class="pending">${icon("dot")}<span>${s}</span></li>`).join("");
+  };
+  draw();
+  const tick = () => {
+    i++; draw();
+    if (i < STEPS.length) setTimeout(tick, 350);
+    else {
+      state.planning = false; $("plan-btn").disabled = false; $("plan-btn").textContent = "規劃";
+      card.classList.add("compact");
+      list.innerHTML = `<li>${icon("check")}<span>規劃完成：${STEPS.length} 個步驟都已完成</span></li>`;
+      done();
+    }
+  };
+  setTimeout(tick, 350);
+}
+function startPlanning(answerBreak) {
+  const f = readForm(), errors = validateForm(f);
+  showErrors(errors);
+  if (errors.length) return;
+  const parsed = parseFreeText(f.text);
+  if (parsed.ambiguous && answerBreak === undefined) {
+    $("ask-text").textContent = "你提到中途想休息，但沒有說要休息多久。我會把休息排在中途加油站（模擬檢查點）。請選擇休息的長度。";
+    $("ask-card").hidden = false; $("ask-answer").focus(); return;
+  }
+  if (answerBreak !== undefined) { parsed.breakMin = answerBreak; parsed.ambiguous = false; }
+  $("ask-card").hidden = true;
+  const ctx = { ...f, fuel: Number(f.fuel), parsed };
+  runSteps(() => {
+    state.result = plan(ctx);
+    state.inputsAtPlan = JSON.stringify(readForm());
+    state.selected = null; state.candOpen = false;
+    renderAll();
+    selectTab("tab-result"); $("panel-result").focus();
+  });
+}
+function selectTab(id) {
+  for (const t of document.querySelectorAll("[role=tab]")) {
+    const on = t.id === id;
+    t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
+    $(t.getAttribute("aria-controls")).hidden = !on;
+  }
+}
+function applyScenario(id) {
+  const s = SCENARIOS.find((x) => x.id === id);
+  env = { ...s.env };
+  $("route").value = s.form.route; $("date").value = s.form.date; $("earliest").value = s.form.earliest;
+  $("deadline").value = s.form.deadline; $("fuel").value = s.form.fuel; $("freetext").value = s.form.text;
+  $("scenario-note").textContent = s.note + " 已填入表單；按「規劃」查看結果。";
+  showErrors([]); $("ask-card").hidden = true; renderTopbar(); checkStale();
+}
+function init() {
+  $("scenario").innerHTML = SCENARIOS.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join("");
+  $("apply-scenario").addEventListener("click", () => applyScenario($("scenario").value));
+  $("plan-btn").addEventListener("click", () => startPlanning());
+  $("ask-submit").addEventListener("click", () => startPlanning(Number($("ask-answer").value)));
+  for (const id of ["route", "date", "earliest", "deadline", "fuel", "freetext", "snapshot"])
+    $(id).addEventListener("input", () => { renderTopbar(); checkStale(); });
+  const tabs = [...document.querySelectorAll("[role=tab]")];
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => selectTab(t.id));
+    t.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      selectTab(next.id); next.focus();
+    });
+  });
+  applyScenario(SCENARIOS[0].id);
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>

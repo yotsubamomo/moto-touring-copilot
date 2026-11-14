@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "mock": true,
+    "contract_version": "0.2",
+    "note": "MOCK FIXTURE. Every number, time and coordinate here is invented to exercise the contract validators. It is not ride data and must never be reported as an E1 or E2 result."
+  },
+  "derived_segments": [
+    {"trip_id": "T001", "seg_index": 0, "trip_role": "pace", "route_id": null, "length_m": 1000.0, "moving_time_s": 60.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 20.0, "seg_category": "C1", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T001", "seg_index": 1, "trip_role": "pace", "route_id": null, "length_m": 800.0, "moving_time_s": 64.0, "stopped_time_s": 12.0, "curvature_deg_per_km": 140.0, "seg_category": "C2", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T001", "seg_index": 2, "trip_role": "pace", "route_id": null, "length_m": 500.0, "moving_time_s": null, "stopped_time_s": 0.0, "curvature_deg_per_km": null, "seg_category": null, "quality": "invalid", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T002", "seg_index": 0, "trip_role": "pace", "route_id": "R01", "length_m": 1200.0, "moving_time_s": 96.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 150.0, "seg_category": "C2", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T002", "seg_index": 1, "trip_role": "pace", "route_id": "R01", "length_m": 900.0, "moving_time_s": 50.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 25.0, "seg_category": "C1", "quality": "suspect", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T002", "seg_index": 2, "trip_role": "pace", "route_id": "R01", "length_m": 700.0, "moving_time_s": 70.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 420.0, "seg_category": "C3", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T002", "seg_index": 3, "trip_role": "pace", "route_id": "R01", "length_m": 1500.0, "moving_time_s": 90.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 15.0, "seg_category": "C1", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T003", "seg_index": 0, "trip_role": "holdout", "route_id": "R01", "length_m": 1000.0, "moving_time_s": 55.0, "stopped_time_s": 0.0, "curvature_deg_per_km": 18.0, "seg_category": "C1", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"},
+    {"trip_id": "T003", "seg_index": 1, "trip_role": "holdout", "route_id": "R01", "length_m": 900.0, "moving_time_s": 70.0, "stopped_time_s": 30.0, "curvature_deg_per_km": 160.0, "seg_category": "C2", "quality": "ok", "category_scheme": "curv-mock", "ingest_version": "ingest-mock"}
+  ],
+  "private_start_times": {
+    "T001": ["2026-01-03T08:00:00+08:00", "2026-01-03T08:01:00+08:00", "2026-01-03T08:02:16+08:00"],
+    "T002": ["2026-01-10T07:30:00+08:00", "2026-01-10T07:31:36+08:00", "2026-01-10T07:32:26+08:00", "2026-01-10T07:33:36+08:00"],
+    "T003": ["2026-01-17T09:00:00+08:00", "2026-01-17T09:00:55+08:00"]
+  },
+  "routes": [
+    {"route_id": "R01", "name": "示範路線甲（模擬）", "n_segments": 4, "total_length_m": 13500.0, "source_trip_id": "T002", "category_scheme": "curv-mock", "catalog_version": "catalog-mock-1"},
+    {"route_id": "R02", "name": "示範路線乙（模擬）", "n_segments": 2, "total_length_m": 5000.0, "source_trip_id": "T002", "category_scheme": "curv-mock", "catalog_version": "catalog-mock-1"}
+  ],
+  "route_segments": [
+    {"route_id": "R01", "seg_index": 0, "length_m": 3000.0, "cum_length_m": 3000.0, "seg_category": "C1", "end_lat": 10.01, "end_lon": 20.01},
+    {"route_id": "R01", "seg_index": 1, "length_m": 1500.0, "cum_length_m": 4500.0, "seg_category": "C2", "end_lat": 10.02, "end_lon": 20.02},
+    {"route_id": "R01", "seg_index": 2, "length_m": 3000.0, "cum_length_m": 7500.0, "seg_category": "C2", "end_lat": 10.03, "end_lon": 20.03},
+    {"route_id": "R01", "seg_index": 3, "length_m": 6000.0, "cum_length_m": 13500.0, "seg_category": "C1", "end_lat": 10.04, "end_lon": 20.04},
+    {"route_id": "R02", "seg_index": 0, "length_m": 2000.0, "cum_length_m": 2000.0, "seg_category": "C2", "end_lat": 10.11, "end_lon": 20.11},
+    {"route_id": "R02", "seg_index": 1, "length_m": 3000.0, "cum_length_m": 5000.0, "seg_category": "C3", "end_lat": 10.12, "end_lon": 20.12}
+  ],
+  "checkpoints": [
+    {"checkpoint_id": "R01-CP01", "route_id": "R01", "kind": "start", "after_seg_count": 0, "name": "起點（模擬）", "station_ref": null},
+    {"checkpoint_id": "R01-CP02", "route_id": "R01", "kind": "fuel_station", "after_seg_count": 0, "name": "起點旁加油站（模擬）", "station_ref": "MOCK-ST-01"},
+    {"checkpoint_id": "R01-CP03", "route_id": "R01", "kind": "fuel_station", "after_seg_count": 2, "name": "中途加油站（模擬）", "station_ref": "MOCK-ST-02"},
+    {"checkpoint_id": "R01-CP04", "route_id": "R01", "kind": "waypoint", "after_seg_count": 3, "name": null, "station_ref": null},
+    {"checkpoint_id": "R01-CP05", "route_id": "R01", "kind": "end", "after_seg_count": 4, "name": "終點（模擬）", "station_ref": null},
+    {"checkpoint_id": "R02-CP01", "route_id": "R02", "kind": "start", "after_seg_count": 0, "name": null, "station_ref": null},
+    {"checkpoint_id": "R02-CP02", "route_id": "R02", "kind": "end", "after_seg_count": 2, "name": null, "station_ref": null}
+  ],
+  "pace_header": {
+    "pace_version": "pace-mock-1", "method": "median_unweighted", "category_scheme": "curv-mock", "ingest_version": "ingest-mock",
+    "min_segments": 2, "n_trips": 2, "trip_ids": ["T001", "T002"], "built_at": "2026-11-14T20:00:00+08:00"
+  },
+  "pace_categories": [
+    {"pace_version": "pace-mock-1", "seg_category": "C1", "speed_kmh": 60.0, "n_segments": 2},
+    {"pace_version": "pace-mock-1", "seg_category": "C2", "speed_kmh": 45.0, "n_segments": 2},
+    {"pace_version": "pace-mock-1", "seg_category": "C3", "speed_kmh": null, "n_segments": 1}
+  ],
+  "eta_headers": [
+    {"plan_id": "P-MOCK-1", "route_id": "R01", "departure_time": "2026-11-21T07:00:00+08:00", "status": "ok", "unknown_reason": null,
+     "margin_coeff": 0.2, "breaks": [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}],
+     "pace_version": "pace-mock-1", "catalog_version": "catalog-mock-1", "computed_at": "2026-11-14T20:05:00+08:00"},
+    {"plan_id": "P-MOCK-2", "route_id": "R02", "departure_time": "2026-11-21T07:00:00+08:00", "status": "unknown", "unknown_reason": "C3 沒有配速",
+     "margin_coeff": 0.2, "breaks": [],
+     "pace_version": "pace-mock-1", "catalog_version": "catalog-mock-1", "computed_at": "2026-11-14T20:05:00+08:00"}
+  ],
+  "eta_segments": [
+    {"plan_id": "P-MOCK-1", "seg_index": 0, "typ_seg_time_s": 180.0, "break_time_s": 0.0, "eta_typ": "2026-11-21T07:03:00+08:00", "eta_safe": "2026-11-21T07:03:36+08:00"},
+    {"plan_id": "P-MOCK-1", "seg_index": 1, "typ_seg_time_s": 120.0, "break_time_s": 0.0, "eta_typ": "2026-11-21T07:05:00+08:00", "eta_safe": "2026-11-21T07:06:00+08:00"},
+    {"plan_id": "P-MOCK-1", "seg_index": 2, "typ_seg_time_s": 240.0, "break_time_s": 600.0, "eta_typ": "2026-11-21T07:19:00+08:00", "eta_safe": "2026-11-21T07:20:48+08:00"},
+    {"plan_id": "P-MOCK-1", "seg_index": 3, "typ_seg_time_s": 360.0, "break_time_s": 600.0, "eta_typ": "2026-11-21T07:25:00+08:00", "eta_safe": "2026-11-21T07:28:00+08:00"},
+    {"plan_id": "P-MOCK-2", "seg_index": 0, "typ_seg_time_s": null, "break_time_s": 0.0, "eta_typ": null, "eta_safe": null},
+    {"plan_id": "P-MOCK-2", "seg_index": 1, "typ_seg_time_s": null, "break_time_s": 0.0, "eta_typ": null, "eta_safe": null}
+  ]
+}

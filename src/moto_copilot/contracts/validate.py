@@ -1,0 +1,332 @@
+"""Validation of the minimal data contracts v0.2 (DESIGN.md §5).
+
+Every validate_* function returns a list of violation messages; an empty list means the data
+conforms. Nothing here computes pace or ETA: it only checks data that some producer wrote.
+"""
+from __future__ import annotations
+
+import datetime as dt
+from collections import defaultdict
+from typing import Any, Iterable
+
+import jsonschema
+
+from . import schemas as S
+
+# ETA timestamps are ISO strings, so recomputed times are compared with a tolerance.
+# The contract does not fix a rounding rule; one second is assumed here.
+ETA_TOLERANCE_S = 1.0
+# cum_length_m is a running sum of length_m written by the same producer.
+LENGTH_TOLERANCE_M = 1e-6
+
+Rows = list[dict[str, Any]]
+
+
+def _schema_errors(label: str, rows: Iterable[dict], schema: dict) -> list[str]:
+    validator = jsonschema.Draft202012Validator(schema)
+    out = []
+    for i, row in enumerate(rows):
+        for err in validator.iter_errors(row):
+            where = "/".join(str(p) for p in err.absolute_path) or "(record)"
+            out.append(f"{label}[{i}] schema: {where}: {err.message}")
+    return out
+
+
+def _duplicates(keys: Iterable[Any]) -> list[Any]:
+    seen, dup = set(), []
+    for key in keys:
+        if key in seen and key not in dup:
+            dup.append(key)
+        seen.add(key)
+    return dup
+
+
+def _contiguous(indices: list[int]) -> bool:
+    return sorted(indices) == list(range(len(indices)))
+
+
+def _time(value: Any) -> dt.datetime | None:
+    try:
+        return dt.datetime.fromisoformat(value) if isinstance(value, str) else None
+    except ValueError:
+        return None
+
+
+# --- Contract 1: Derived Segment Table -------------------------------------
+def pace_eligible(row: dict) -> bool:
+    """Invariant 4: only these rows may enter the Pace Table."""
+    return (row.get("quality") == "ok" and row.get("seg_category") is not None
+            and row.get("trip_role") == "pace" and row.get("moving_time_s") is not None)
+
+
+def validate_derived_segments(rows: Rows, visibility: str = "public") -> list[str]:
+    if visibility not in ("public", "private"):
+        raise ValueError("visibility must be 'public' or 'private'")
+    schema = S.DERIVED_SEGMENT_PUBLIC if visibility == "public" else S.DERIVED_SEGMENT_PRIVATE
+    out = _schema_errors(f"derived_segments({visibility})", rows, schema)
+
+    for key in _duplicates((r.get("trip_id"), r.get("seg_index")) for r in rows):
+        out.append(f"derived_segments: duplicate primary key {key}")
+
+    by_trip: dict[Any, Rows] = defaultdict(list)
+    for r in rows:
+        by_trip[r.get("trip_id")].append(r)
+    for trip_id, trip_rows in by_trip.items():
+        indices = [r.get("seg_index") for r in trip_rows]
+        if all(isinstance(i, int) for i in indices) and not _contiguous(indices):
+            out.append(f"derived_segments: trip {trip_id} seg_index is not 0..n-1 without gaps")
+        if len({r.get("trip_role") for r in trip_rows}) > 1:
+            out.append(f"derived_segments: trip {trip_id} has more than one trip_role (invariant 1)")
+        if len({r.get("route_id") for r in trip_rows}) > 1:
+            out.append(f"derived_segments: trip {trip_id} has more than one route_id (invariant 1)")
+
+    for column in ("ingest_version", "category_scheme"):
+        if len({r.get(column) for r in rows}) > 1:
+            out.append(f"derived_segments: more than one {column} in one table (invariant 2)")
+
+    for i, r in enumerate(rows):
+        invalid, has_time = r.get("quality") == "invalid", r.get("moving_time_s") is not None
+        if invalid and has_time:
+            out.append(f"derived_segments[{i}]: quality is invalid but moving_time_s has a value (invariant 3)")
+        if not invalid and not has_time:
+            out.append(f"derived_segments[{i}]: moving_time_s is null but quality is not invalid (invariant 3)")
+    return out
+
+
+def validate_public_private_pair(public: Rows, private: Rows) -> list[str]:
+    """Invariant 5: same rows, same values, the private version only adds start_time."""
+    out = []
+    key = lambda r: (r.get("trip_id"), r.get("seg_index"))
+    pub, prv = {key(r): r for r in public}, {key(r): r for r in private}
+    if set(pub) != set(prv):
+        out.append("derived_segments: public and private versions do not have the same rows (invariant 5)")
+    for k in set(pub) & set(prv):
+        for column, value in pub[k].items():
+            if prv[k].get(column) != value:
+                out.append(f"derived_segments: {k} differs between public and private in {column} (invariant 5)")
+    return out
+
+
+# --- Contract 2: Route Catalog ---------------------------------------------
+def validate_route_catalog(routes: Rows, segments: Rows, checkpoints: Rows) -> list[str]:
+    out = (_schema_errors("routes", routes, S.ROUTE) + _schema_errors("route_segments", segments, S.ROUTE_SEGMENT)
+           + _schema_errors("checkpoints", checkpoints, S.CHECKPOINT))
+    for name, keys in (("routes", [r.get("route_id") for r in routes]),
+                       ("route_segments", [(s.get("route_id"), s.get("seg_index")) for s in segments]),
+                       ("checkpoints", [c.get("checkpoint_id") for c in checkpoints])):
+        for key in _duplicates(keys):
+            out.append(f"{name}: duplicate primary key {key}")
+
+    route_ids = {r.get("route_id") for r in routes}
+    for label, records in (("route_segments", segments), ("checkpoints", checkpoints)):
+        for rec in records:
+            if rec.get("route_id") not in route_ids:
+                out.append(f"{label}: route_id {rec.get('route_id')} is not in routes")
+
+    for route in routes:
+        rid, n = route.get("route_id"), route.get("n_segments")
+        segs = sorted((s for s in segments if s.get("route_id") == rid), key=lambda s: s.get("seg_index", -1))
+        if len(segs) != n or not _contiguous([s.get("seg_index") for s in segs]):
+            out.append(f"routes: {rid} needs seg_index 0..{n}-1 exactly once, found {len(segs)} segments")
+        else:
+            running = 0.0
+            for s in segs:
+                running += s["length_m"]
+                if abs(s["cum_length_m"] - running) > LENGTH_TOLERANCE_M * max(1.0, running):
+                    out.append(f"route_segments: {rid} seg {s['seg_index']} cum_length_m is not the running sum of length_m")
+            if segs and segs[-1]["cum_length_m"] != route.get("total_length_m"):
+                out.append(f"routes: {rid} total_length_m differs from the last cum_length_m")
+
+        cps = [c for c in checkpoints if c.get("route_id") == rid]
+        for kind, position in (("start", 0), ("end", n)):
+            of_kind = [c for c in cps if c.get("kind") == kind]
+            if len(of_kind) != 1:
+                out.append(f"checkpoints: {rid} must have exactly one {kind}, found {len(of_kind)} (invariant 1)")
+            for c in of_kind:
+                if c.get("after_seg_count") != position:
+                    out.append(f"checkpoints: {c.get('checkpoint_id')} is {kind} but after_seg_count is not {position} (invariant 1)")
+        for c in cps:
+            count = c.get("after_seg_count")
+            if isinstance(count, int) and isinstance(n, int) and not 0 <= count <= n:
+                out.append(f"checkpoints: {c.get('checkpoint_id')} after_seg_count {count} is outside 0..{n} (invariant 2)")
+
+    for c in checkpoints:
+        is_station, has_ref = c.get("kind") == "fuel_station", c.get("station_ref") is not None
+        if is_station and not has_ref:
+            out.append(f"checkpoints: {c.get('checkpoint_id')} is a fuel_station without station_ref")
+        if not is_station and has_ref:
+            out.append(f"checkpoints: {c.get('checkpoint_id')} is not a fuel_station but has station_ref")
+    return out
+
+
+# --- Contract 3: Pace Table -------------------------------------------------
+def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | None = None) -> list[str]:
+    out = _schema_errors("pace_header", [header], S.PACE_HEADER) + _schema_errors("pace_categories", categories, S.PACE_CATEGORY)
+    version = header.get("pace_version")
+    for rec in categories:
+        if rec.get("pace_version") != version:
+            out.append(f"pace_categories: {rec.get('seg_category')} belongs to another pace_version")
+
+    present = [rec.get("seg_category") for rec in categories]
+    for category in S.CATEGORIES:
+        if present.count(category) != 1:
+            out.append(f"pace_categories: need exactly one record for {category}, found {present.count(category)} (invariant 1)")
+
+    trip_ids = header.get("trip_ids") or []
+    if header.get("n_trips") != len(trip_ids):
+        out.append("pace_header: n_trips does not equal the number of trip_ids (invariant 2)")
+
+    minimum = header.get("min_segments")
+    for rec in categories:
+        n, speed = rec.get("n_segments"), rec.get("speed_kmh")
+        if isinstance(n, int) and isinstance(minimum, int):
+            if n < minimum and speed is not None:
+                out.append(f"pace_categories: {rec.get('seg_category')} has speed_kmh with fewer than min_segments segments")
+            if n >= minimum and speed is None:
+                out.append(f"pace_categories: {rec.get('seg_category')} has enough segments but speed_kmh is null")
+
+    if derived_rows is not None:
+        roles = {r.get("trip_id"): r.get("trip_role") for r in derived_rows}
+        for trip_id in trip_ids:
+            if roles.get(trip_id) != "pace":
+                out.append(f"pace_header: trip {trip_id} is not a pace trip (holdout or unknown) (invariant 2)")
+        if {r.get("ingest_version") for r in derived_rows} - {header.get("ingest_version")}:
+            out.append("pace_header: ingest_version differs from the derived segment table")
+        for rec in categories:
+            eligible = sum(1 for r in derived_rows if pace_eligible(r) and r.get("trip_id") in trip_ids
+                           and r.get("seg_category") == rec.get("seg_category"))
+            if rec.get("n_segments") != eligible:
+                out.append(f"pace_categories: {rec.get('seg_category')} n_segments is {rec.get('n_segments')}, "
+                           f"but {eligible} rows are eligible (invariant 3)")
+    return out
+
+
+# --- Contract 4: ETA Output -------------------------------------------------
+def expected_break_times(n_segments: int, breaks: Rows, checkpoints: Rows) -> list[float]:
+    """break_time_s for seg_index 0..n-1 (invariant 3).
+
+    A break happens after arriving at its checkpoint. A checkpoint with after_seg_count c sits at
+    the end of segment c-1, so the break delays segments c, c+1, ... and not segment c-1.
+    """
+    position = {c["checkpoint_id"]: c["after_seg_count"] for c in checkpoints}
+    times = [0.0] * n_segments
+    for b in breaks:
+        c = position[b["after_checkpoint_id"]]
+        for k in range(c, n_segments):
+            times[k] += b["duration_s"]
+    return times
+
+
+def checkpoint_arrival(header: dict, eta_rows: Rows, checkpoint: dict) -> tuple[str | None, str | None]:
+    """(eta_typ, eta_safe) on arrival at a checkpoint, before any break taken there (invariant 4)."""
+    c = checkpoint["after_seg_count"]
+    if c == 0:
+        return header["departure_time"], header["departure_time"]
+    row = next(r for r in eta_rows if r["plan_id"] == header["plan_id"] and r["seg_index"] == c - 1)
+    return row["eta_typ"], row["eta_safe"]
+
+
+def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_segments: Rows, checkpoints: Rows,
+                        pace_header: dict | None = None, pace_categories: Rows | None = None) -> list[str]:
+    out = _schema_errors("eta_headers", headers, S.ETA_HEADER) + _schema_errors("eta_segments", eta_segments, S.ETA_SEGMENT)
+    for key in _duplicates(h.get("plan_id") for h in headers):
+        out.append(f"eta_headers: duplicate plan_id {key}")
+    for key in _duplicates((s.get("plan_id"), s.get("seg_index")) for s in eta_segments):
+        out.append(f"eta_segments: duplicate primary key {key}")
+    plan_ids = {h.get("plan_id") for h in headers}
+    for s in eta_segments:
+        if s.get("plan_id") not in plan_ids:
+            out.append(f"eta_segments: plan_id {s.get('plan_id')} has no header")
+
+    route_by_id = {r.get("route_id"): r for r in routes}
+    null_speed = {c.get("seg_category") for c in (pace_categories or []) if c.get("speed_kmh") is None}
+
+    for h in headers:
+        pid, rid = h.get("plan_id"), h.get("route_id")
+        status, reason = h.get("status"), h.get("unknown_reason")
+        if (status == "unknown") != (reason is not None):
+            out.append(f"eta_headers: {pid} unknown_reason must be set exactly when status is unknown")
+        route = route_by_id.get(rid)
+        if route is None:
+            out.append(f"eta_headers: {pid} route_id {rid} is not in the route catalog")
+            continue
+        if h.get("catalog_version") != route.get("catalog_version"):
+            out.append(f"eta_headers: {pid} catalog_version differs from the route catalog")
+        if pace_header is not None and h.get("pace_version") != pace_header.get("pace_version"):
+            out.append(f"eta_headers: {pid} pace_version differs from the pace table")
+
+        n = route["n_segments"]
+        rows = sorted((s for s in eta_segments if s.get("plan_id") == pid), key=lambda s: s.get("seg_index", -1))
+        if len(rows) != n or not _contiguous([s.get("seg_index") for s in rows]):
+            out.append(f"eta_segments: {pid} needs seg_index 0..{n}-1 exactly once, found {len(rows)} rows (invariant 1)")
+            continue
+
+        cps = {c["checkpoint_id"]: c for c in checkpoints if c.get("route_id") == rid}
+        breaks, breaks_ok = h.get("breaks") or [], True
+        for key in _duplicates(b.get("after_checkpoint_id") for b in breaks):
+            out.append(f"eta_headers: {pid} has more than one break at {key} (invariant 2)")
+            breaks_ok = False
+        for b in breaks:
+            cp = cps.get(b.get("after_checkpoint_id"))
+            if cp is None:
+                out.append(f"eta_headers: {pid} break at {b.get('after_checkpoint_id')}, which is not a checkpoint of {rid} (invariant 2)")
+                breaks_ok = False
+            elif not 0 < cp["after_seg_count"] < n:
+                out.append(f"eta_headers: {pid} break at {cp['checkpoint_id']} sits at the start or the end (invariant 2)")
+                breaks_ok = False
+        if breaks_ok:
+            for k, expected in enumerate(expected_break_times(n, breaks, list(cps.values()))):
+                if abs(rows[k].get("break_time_s", -1) - expected) > 1e-9:
+                    out.append(f"eta_segments: {pid} seg {k} break_time_s should be {expected} (invariant 3)")
+
+        if status == "unknown":
+            for s in rows:
+                if any(s.get(col) is not None for col in ("typ_seg_time_s", "eta_typ", "eta_safe")):
+                    out.append(f"eta_segments: {pid} seg {s['seg_index']} carries a time although status is unknown (invariant 6)")
+            continue
+
+        categories = {s.get("seg_category") for s in route_segments if s.get("route_id") == rid}
+        if categories & null_speed:
+            out.append(f"eta_headers: {pid} is ok but the route uses a category without pace: {sorted(categories & null_speed)} (invariant 7)")
+
+        departure, margin = _time(h.get("departure_time")), h.get("margin_coeff", 0)
+        cumulative, previous = 0.0, None
+        for s in rows:
+            k, typ, safe = s["seg_index"], _time(s.get("eta_typ")), _time(s.get("eta_safe"))
+            if s.get("typ_seg_time_s") is None or typ is None or safe is None:
+                out.append(f"eta_segments: {pid} seg {k} has a null time although status is ok")
+                break
+            cumulative += s["typ_seg_time_s"]
+            if departure is not None and breaks_ok:
+                expected = departure + dt.timedelta(seconds=cumulative + s["break_time_s"])
+                if abs((typ - expected).total_seconds()) > ETA_TOLERANCE_S:
+                    out.append(f"eta_segments: {pid} seg {k} eta_typ is not departure + cumulative time + break_time_s")
+                expected_safe = expected + dt.timedelta(seconds=margin * cumulative)
+                if abs((safe - expected_safe).total_seconds()) > ETA_TOLERANCE_S:
+                    out.append(f"eta_segments: {pid} seg {k} eta_safe is not eta_typ + margin_coeff x cumulative time")
+            if safe < typ:
+                out.append(f"eta_segments: {pid} seg {k} eta_safe is earlier than eta_typ (invariant 5)")
+            if previous is not None and typ < previous:
+                out.append(f"eta_segments: {pid} seg {k} eta_typ goes back in time (invariant 5)")
+            previous = typ
+    return out
+
+
+# --- Whole dataset ----------------------------------------------------------
+def validate_dataset(data: dict, visibility: str = "public") -> dict[str, list[str]]:
+    """Validate whichever contracts are present in `data`. Keys of the result are contract names."""
+    report: dict[str, list[str]] = {}
+    derived = data.get("derived_segments")
+    if derived is not None:
+        report["derived_segments"] = validate_derived_segments(derived, visibility)
+    if "routes" in data:
+        report["route_catalog"] = validate_route_catalog(data["routes"], data.get("route_segments", []),
+                                                         data.get("checkpoints", []))
+    if "pace_header" in data:
+        report["pace_table"] = validate_pace_table(data["pace_header"], data.get("pace_categories", []), derived)
+    if "eta_headers" in data:
+        report["eta_output"] = validate_eta_output(
+            data["eta_headers"], data.get("eta_segments", []), data.get("routes", []),
+            data.get("route_segments", []), data.get("checkpoints", []),
+            data.get("pace_header"), data.get("pace_categories"))
+    return report
