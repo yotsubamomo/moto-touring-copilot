@@ -1,5 +1,6 @@
 # G3 UI/UX Audit Report
 
+> **CR-01（2026-11-15）：** CR-01 重開了 Trip Planner 的輸入區與 [UI_CR01_DELTA.md](UI_CR01_DELTA.md) 列出的項目；其餘內容維持凍結。
 > 日期：2026-11-15。對象：[prototype/index.html](../../prototype/index.html)（G2 原型）。
 > 狀態：**G3 APPROVED / FROZEN（2026-11-15，專題負責人裁決）。** 裁決內容在第 7 節。原型與 UI 文件已凍結；之後的介面變更記入 DESIGN.md 的 Change Log。
 > 範圍：審查與必要修正，不是重新設計。G1 決議與 Must 範圍沒有變更；沒有新增功能；沒有 Streamlit 實作。

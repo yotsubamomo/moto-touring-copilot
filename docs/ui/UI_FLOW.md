@@ -1,5 +1,6 @@
 # UI_FLOW — 使用者操作與狀態轉換
 
+> **CR-01（2026-11-15）：** CR-01 重開了 Trip Planner 的輸入區與 [UI_CR01_DELTA.md](UI_CR01_DELTA.md) 列出的項目；其餘內容維持凍結。
 > 階段：G2 UI/UX Prototype（2026-11-15）。對應的原型是 [prototype/index.html](../../prototype/index.html)。
 > 依據：[G1 Grill 文件](../grill/g1-grill-input.md) 的決議 Q1–Q32。
 > 2026-11-15 依 [G3 Audit Report](G3_AUDIT_REPORT.md) 更新：第 1、2、3、4、6 節。

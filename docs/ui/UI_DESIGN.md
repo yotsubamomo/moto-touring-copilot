@@ -1,5 +1,6 @@
 # UI_DESIGN — Design System、版面與元件規範
 
+> **CR-01（2026-11-15）：** CR-01 重開了 Trip Planner 的輸入區與 [UI_CR01_DELTA.md](UI_CR01_DELTA.md) 列出的項目；其餘內容維持凍結。
 > 階段：G2 UI/UX Prototype（2026-11-15）。對應的原型是 [prototype/index.html](../../prototype/index.html)。
 > 權威輸入：[G1 Grill 文件](../grill/g1-grill-input.md) 第 8、9 節與 [DESIGN.md](../../DESIGN.md) §9.6。
 > 這份文件規範的是原型與之後的 Streamlit 介面要長什麼樣子。正式的 Streamlit 產品尚未實作。

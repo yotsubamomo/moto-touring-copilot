@@ -1,5 +1,6 @@
 # UI_ACCEPTANCE — UI 驗收條件與 G2 自我審查
 
+> **CR-01（2026-11-15）：** CR-01 重開了 Trip Planner 的輸入區與 [UI_CR01_DELTA.md](UI_CR01_DELTA.md) 列出的項目；其餘內容維持凍結。
 > 階段：G2 UI/UX Prototype（2026-11-15）。對應的原型是 [prototype/index.html](../../prototype/index.html)。
 > 依據：[G1 Grill 文件](../grill/g1-grill-input.md) 第 8、9 節與 [DESIGN.md](../../DESIGN.md) §9.6。
 > 狀態：**G3 APPROVED / FROZEN（2026-11-15，專題負責人裁決）。** 第 3 節的審查是製作者的自我審查，不是獨立審查；G3 的結論由專題負責人作出。
