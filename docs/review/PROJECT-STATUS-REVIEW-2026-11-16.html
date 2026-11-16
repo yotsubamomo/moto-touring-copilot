@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moto Touring Copilot — Project Status & Proposal Alignment Review（2026-11-16）</title>
+<style>
+:root{
+  --ink:#1b2430; --ink2:#46515f; --ink3:#6b7684; --line:#d5dbe3; --line2:#e8ecf1;
+  --bg:#f5f6f8; --card:#ffffff; --accent:#1f4e79; --accent2:#2f6da8;
+  --pass:#1a7f4b; --pass-bg:#e3f4ea; --partial:#9a6200; --partial-bg:#fdf1d8;
+  --fail:#b3261e; --fail-bg:#fbe5e3; --blocked:#5b3aa0; --blocked-bg:#ece6f8;
+  --nv:#55606e; --nv-bg:#e9ecf0; --must:#1f4e79; --should:#7a5b00; --wont:#7a2f2f;
+  --llm:#b25a00; --det:#1f4e79; --ext:#55606e;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Noto Sans TC","Microsoft JhengHei","PingFang TC","Segoe UI",system-ui,sans-serif}
+a{color:var(--accent2)}
+code,.mono{font-family:"Cascadia Mono","Consolas","SFMono-Regular",monospace;font-size:.92em}
+code{background:#eef1f5;padding:.05em .35em;border-radius:3px}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1500px;margin:0 auto}
+nav.toc{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:22px 16px 30px;border-right:1px solid var(--line);background:#fff}
+nav.toc h2{font-size:13px;letter-spacing:.06em;color:var(--ink3);margin:0 0 10px;font-weight:600}
+nav.toc ol{margin:0;padding-left:20px;font-size:14px}
+nav.toc li{margin:5px 0}
+nav.toc a{text-decoration:none;color:var(--ink2)}
+nav.toc a:hover{color:var(--accent2);text-decoration:underline}
+nav.toc .meta{margin-top:18px;font-size:12.5px;color:var(--ink3);border-top:1px solid var(--line2);padding-top:12px}
+main{padding:26px 34px 60px;min-width:0}
+header.top{border-bottom:3px solid var(--accent);padding-bottom:14px;margin-bottom:22px}
+header.top h1{font-size:25px;margin:0 0 4px;line-height:1.3}
+header.top .sub{color:var(--ink2);font-size:14.5px}
+h2{font-size:21px;margin:42px 0 12px;padding-top:8px;border-top:1px solid var(--line)}
+h2 .num{color:var(--accent2);margin-right:.4em}
+h3{font-size:16.5px;margin:24px 0 8px}
+h4{font-size:14.5px;margin:16px 0 6px;color:var(--ink2)}
+p{margin:8px 0}
+.lead{font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:12px 0}
+.note{border-left:4px solid var(--accent2);background:#eef4fa;padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0}
+.warn{border-left:4px solid var(--partial);background:var(--partial-bg);padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0}
+.crit{border-left:4px solid var(--fail);background:var(--fail-bg);padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0}
+table{border-collapse:collapse;width:100%;margin:10px 0 16px;background:#fff;font-size:13.8px}
+th,td{border:1px solid var(--line);padding:6px 9px;vertical-align:top;text-align:left}
+th{background:#eef1f5;font-weight:600;white-space:nowrap}
+td.c,th.c{text-align:center}
+tbody tr:nth-child(even) td{background:#fafbfc}
+.tbl-wrap{overflow-x:auto}
+.b{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.02em;white-space:nowrap;border:1px solid transparent}
+.b.pass{color:var(--pass);background:var(--pass-bg);border-color:#b7dfc8}
+.b.partial{color:var(--partial);background:var(--partial-bg);border-color:#efd59a}
+.b.fail{color:var(--fail);background:var(--fail-bg);border-color:#f0bdb9}
+.b.blocked{color:var(--blocked);background:var(--blocked-bg);border-color:#cfc2ee}
+.b.nv{color:var(--nv);background:var(--nv-bg);border-color:#cdd3da}
+.b.sr{color:#0b5d6b;background:#e2f1f4;border-color:#a9d3da}
+table.cmp{font-size:13px}
+table.cmp td,table.cmp th{padding:5px 7px}
+table.cmp td.st{min-width:150px}
+.t{display:inline-block;padding:0 7px;border-radius:3px;font-size:12px;font-weight:700;border:1px solid}
+.t.must{color:var(--must);border-color:#9db8d4;background:#eaf1f8}
+.t.should{color:var(--should);border-color:#dcc98a;background:#fbf6e3}
+.t.wont{color:var(--wont);border-color:#dfb3b3;background:#fbeeee}
+.src{color:var(--ink3);font-size:12.5px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}
+.tile{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.tile .k{font-size:12.5px;color:var(--ink3)}
+.tile .v{font-size:24px;font-weight:700;line-height:1.25}
+.tile .d{font-size:12.5px;color:var(--ink2)}
+.bar{height:10px;background:#e4e8ee;border-radius:5px;overflow:hidden;display:flex;margin:4px 0}
+.bar span{display:block;height:100%}
+.bar .s1{background:var(--pass)} .bar .s2{background:#e0a100} .bar .s3{background:#b9c1cb}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink2);margin:6px 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+figure{margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:12.8px;color:var(--ink2);margin-top:6px}
+ul,ol{margin:6px 0;padding-left:22px}
+li{margin:3px 0}
+.steps{counter-reset:s;list-style:none;padding-left:0}
+.steps li{counter-increment:s;position:relative;padding:8px 12px 8px 44px;border:1px solid var(--line);border-radius:6px;margin:6px 0;background:#fff}
+.steps li::before{content:counter(s);position:absolute;left:10px;top:8px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;text-align:center;line-height:24px}
+.who{font-size:12px;font-weight:700;padding:0 6px;border-radius:3px;margin-right:4px}
+.who.u{background:#e6eef7;color:#1f4e79}.who.l{background:#fdebd3;color:#8a4600}.who.d{background:#e3f1ea;color:#16663c}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:12px;color:var(--ink3);font-size:12.8px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.two{grid-template-columns:1fr}main{padding:18px}}
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .layout{display:block}
+  nav.toc{display:none}
+  main{padding:0}
+  h2{break-after:avoid;margin-top:26px}
+  h3,h4{break-after:avoid}
+  table,figure,.card,.steps li{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+  .tbl-wrap{overflow:visible}
+  th{background:#eee !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .b,.t,.bar span,.tile,.note,.warn,.crit{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="目錄">
+  <h2>目錄</h2>
+  <ol>
+    <li><a href="#s1">Executive Summary</a></li>
+    <li><a href="#s2">Original Proposal</a></li>
+    <li><a href="#s3">Proposal Alignment Matrix</a></li>
+    <li value="3" style="list-style-type:none"><a href="#s3a">3A　Course ①–⑧ Alignment</a></li>
+    <li><a href="#s4">System Architecture</a></li>
+    <li><a href="#s5">Final Product Capabilities</a></li>
+    <li><a href="#s6">Implementation Status</a></li>
+    <li><a href="#s7">End-to-End Workflow</a></li>
+    <li><a href="#s8">Research &amp; Evaluation</a></li>
+    <li><a href="#s9">Roadmap</a></li>
+    <li><a href="#s10">Overall Assessment</a></li>
+    <li><a href="#s11">附錄：審查紀錄</a></li>
+  </ol>
+  <div class="meta">
+    審查日期：2026-11-16<br>
+    基準：本機分支 <code>docs-scope-reduction-mvp</code>，HEAD <code>df7c8f1</code>，另有未提交的文件修改<br>
+    狀態標記：
+    <div style="margin-top:6px;line-height:2">
+      <span class="b pass">PASS</span> <span class="b partial">PARTIAL</span> <span class="b fail">FAIL</span><br>
+      <span class="b blocked">BLOCKED</span> <span class="b nv">NOT VERIFIED</span><br>
+      <span class="b sr">已接受的 Scope Reduction</span>
+    </div>
+  </div>
+</nav>
+
+<main>
+<header class="top">
+  <h1>Moto Touring Copilot 重機旅遊規劃顧問<br>Project Status &amp; Proposal Alignment Review</h1>
+  <div class="sub">NCHU 物聯網應用與資料分析（AIoT-DA）2026 期末專題 · 第 12 組 · 審查日期 2026-11-16</div>
+</header>
+
+<div class="note">
+  <strong>這份報告怎麼讀。</strong> 它回答六個問題：原始 Proposal 承諾了什麼；CR-01 之後的 MVP 還符不符合；現在實際做出了什麼；全部做完後使用者能做什麼；還剩哪些工作；最後的整體判斷。
+  「已實作」只指程式存在而且有測試；設計文件寫定、GitHub Issue 已建立都<strong>不算</strong>已完成。
+  第 5 節描述的是預期功能，不是現況。所有實驗（E1、E2）都還沒有執行，報告中沒有任何實驗結果。
+</div>
+
+<div class="note" style="border-left-color:#0b5d6b;background:#e2f1f4">
+  <strong>最終判準（專題負責人 2026-11-16 的指示）。</strong> 這次 Review 的最終判準是老師在 <code>requirements_proposal.txt</code> 定義的 ①–⑧ Domain AI Agent 架構，以及課程的基本要求；結果在<a href="#s3a">第 3A 節</a>與第 10 節。
+  原始 Proposal 中的多 Agent、LightGBM、P90、Google Maps、279 趟資料與部分實驗，因期末的時間限制做了 Scope Reduction，這是<strong>已知且接受的決策</strong>。第 3 節保留它的紀錄；已批准的功能裁減<strong>不等同於</strong>不符合老師的八階段架構。
+</div>
+
+<!-- ============================================================ 1 -->
+<h2 id="s1"><span class="num">1</span>Executive Summary</h2>
+
+<p class="lead"><strong>結論：以課程的 ①–⑧ 架構為判準，設計上八個階段都有對應；現況只有 ④ 資料取得與 ⑤ Analytics 有部分 Spike 程式，②③⑥⑦⑧ 沒有產品程式，端到端的流程沒有執行過，真實 API 驗證與兩個實驗也還沒有結果。</strong>
+差距來自尚未實作，不是來自 Scope Reduction。Proposal 中已接受的縮減在第 3 節逐項記錄。</p>
+
+<div class="tiles">
+  <div class="tile"><div class="k">Must 模組（DESIGN §9.1，11 個）</div><div class="v">0 完成</div><div class="d">9 個產品模組加 E1 Lite、E2：3 個有 Spike 版程式，8 個尚未建立</div></div>
+  <div class="tile"><div class="k">自動測試</div><div class="v">100 通過</div><div class="d">驗證契約 v0.2 與 Spike；新規格的測試 0 項實作</div></div>
+  <div class="tile"><div class="k">GitHub Issues #7–#12</div><div class="v">6 OPEN</div><div class="d">0 開始、0 個 PR</div></div>
+  <div class="tile"><div class="k">Spec Blockers</div><div class="v">5 / 10 關閉</div><div class="d">SPEC-001 尚未凍結</div></div>
+  <div class="tile"><div class="k">真實 API 驗證（C3）</div><div class="v"><span class="b blocked">BLOCKED</span></div><div class="d">沒有 Anthropic 憑證；氣象署授權碼尚未申請</div></div>
+  <div class="tile"><div class="k">實驗 E1 Lite／E2</div><div class="v"><span class="b nv">NOT RUN</span></div><div class="d">沒有任何結果</div></div>
+  <div class="tile"><div class="k">距功能凍結（12/5）</div><div class="v">19 天</div><div class="d">距預定的期末交付（12/20）34 天</div></div>
+</div>
+
+<div class="two">
+  <div class="card">
+    <h3 style="margin-top:0">專案目標</h3>
+    <p>個人化的<strong>出發前決策輔助</strong>：依騎士自己的歷史 GPX 建立配速，回答「照我的騎法，這趟山路幾點出發才能在天黑前回家、哪裡加油、哪一段有風險」。不做事故預測，也不宣稱降低事故率。<span class="src">（Proposal p.4–7；DESIGN §1）</span></p>
+    <h3>關鍵成果（已有證據）</h3>
+    <ul>
+      <li>CR-01 在<strong>設計上</strong>把 MVP 從兩條固定單向路線，恢復為 Proposal 的核心情境：實際道路路線、當天來回、自然語言描述、介面上傳 GPX（尚未實作）。<span class="src">（CR-01 §11–12）</span></li>
+      <li>資料契約 v0.2 的驗證程式，以及 <code>ingest</code>、<code>routes</code>、<code>pace</code> 的 Spike 版，100 個測試通過。</li>
+      <li>UI 原型（HTML）在 G3 凍結；CR-01 的介面差異已寫成規格，UI-0 的畫面文字已確認。</li>
+      <li>技術檢查 C1、C2、C4 與備案 C4b 有結論：C1 PASS、C2 FAIL、C4 FAIL、C4b PASS；C3 沒有結論（這些都不是 E1／E2 的結果）。</li>
+      <li>五個 Spec Blocker 關閉；第一批後端 Tickets（#7–#11）與 UI-0（#12）已建立。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">主要差距</h3>
+    <ul>
+      <li><strong>沒有可以操作的產品。</strong> 路線、資料工具、Planner、Validator、知識庫、Streamlit 介面都還沒有程式。</li>
+      <li><strong>C3 卡住。</strong> 沒有憑證就無法選定 LLM、無法取得氣象署資料；Planner、天氣規則與 E2 都依賴它。氣象署授權碼尚未申請，而申請原本排在 M0（11/14–11/16）。</li>
+      <li><strong>路線鏈還沒有 Ticket。</strong> <code>routing</code> 與 <code>routes</code> 在關鍵路徑上，12/5 要凍結的 E2 路線快照靠它們。</li>
+      <li><strong>研究主張縮小。</strong> Proposal 的 E1 要回答「比一般導航準嗎」；現行設計明確不回答這一題。</li>
+      <li><strong>實驗沒有結果。</strong> E1 Lite、E2 都未執行；研究問題目前沒有任何證據。</li>
+      <li><strong>文件與 repo 不同步。</strong> 規格分支沒有 push；GitHub 上的 <code>main</code> 與 README 還停在「Proposal 階段，尚未實作」；README（本機分支也一樣）仍描述 P50／P90 與和 Google Maps 的比較。</li>
+    </ul>
+    <h3>主要風險</h3>
+    <ul>
+      <li>時程：DESIGN §9.4 估計 23–32.5 人日當量（停等寬放另加約 1），依 DESIGN §9.4（2026-11-15 的估計），到 12/20 除了最後兩天，沒有緩衝。</li>
+      <li>期末發表與繳交的正式日期，課程文件沒有載明。<span class="b nv">NOT VERIFIED</span></li>
+      <li>公開路線伺服器只能低頻使用，正式條款頁沒有讀到原文。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ 2 -->
+<h2 id="s2"><span class="num">2</span>Original Proposal</h2>
+<p>頁碼是 <code>docs/proposal/proposal.pdf</code> 的實體頁碼（共 43 頁，頁面上沒有印頁碼；目錄所列和實體頁碼一致）。課程要求引用 <code>requirements_proposal.txt</code>（以行號 L 表示）與 <code>Part_3._課程專題說明.pdf</code>（P3，8 頁）。Proposal 本身沒有 FR／NFR 編號、沒有 RQ／H 編號，也沒有時程與期末交付清單；下表依原文的章節與用語整理。</p>
+
+<h3>2.1 問題、定位與要回答的問題</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>項目</th><th>原始 Proposal 的內容</th><th>頁碼</th></tr></thead>
+<tbody>
+<tr><td>題目</td><td>重機旅遊規劃顧問（Moto Touring Copilot）；副題「結合個人配速模型與外部驗證的多 Agent 重機旅遊規劃系統」</td><td>p.1</td></tr>
+<tr><td>問題定義</td><td>給定起訖點、途經路線、日期與騎士的歷史 GPX，產生可驗證的行程計畫：建議出發時間（附範圍）、加油點、各路段的風險說明，並附每個數字的資料出處</td><td>p.6</td></tr>
+<tr><td>定位</td><td>個人化的出發前決策輔助；不做事故預測，不宣稱降低事故率</td><td>p.5、p.7</td></tr>
+<tr><td>三項核心能力</td><td>(1) 個人化的時間預測，「給出範圍，而不是單一數字」；(2) 依「預計抵達該路段的時間」對齊的風險查詢；(3) 跨條件的一致性檢查</td><td>p.6</td></tr>
+<tr><td>要回答的三個問題</td><td>(1)「這趟路以我自己的騎法要騎多久？最晚幾點會回到家？」(2)「依各路段的預計抵達時間，天氣、日照和路況是否允許？」(3)「依續航和加油站營業時間，哪裡加油才不會沒油？」</td><td>p.24</td></tr>
+<tr><td>範例旅程</td><td>新竹出發走南橫當天來回、晚上七點前回家（數值為示意）</td><td>p.32–33</td></tr>
+</tbody></table></div>
+
+<h3>2.2 功能與架構承諾</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>項目</th><th>原始 Proposal 的承諾</th><th>頁碼</th></tr></thead>
+<tbody>
+<tr><td>輸入</td><td>起點、路線或途經點、出發日期、騎士限制（最晚回程時間、最長騎乘時數）、歷史行程；Web 對話介面，用地名描述或在地圖上選點；匯入 GPX 建立與更新個人配速</td><td>p.24、p.26</td></tr>
+<tr><td>輸出</td><td>建議出發時間、各段預計抵達時間範圍（P50／P90）、加油點、風險說明；無可行計畫時說明原因與替代方案；對話回答、Google Maps 行程儀表板、可下載的行程計畫</td><td>p.24、p.26</td></tr>
+<tr><td>Agent 架構</td><td>五個 Agent：規劃（Orchestrator）、配速分析、天氣、路況與補給、驗證；另有騎士記憶。LLM 只負責理解、分派與解釋，「數字一律來自工具計算」</td><td>p.7、p.25–27</td></tr>
+<tr><td>驗證規則</td><td>規則 1 日照（整趟 P90 回程不晚於民用暮光終或騎士設定的時間）；規則 2 續航與加油站營業時間；規則 3 天氣（抵達時段與大雨以上警特報重疊）；規則 4 路況（TDX 封閉或管制）；規則 5 可追溯</td><td>p.29–30</td></tr>
+<tr><td>決策</td><td>候選出發時間（例如每 30 分鐘）中，選回程餘裕最大且高風險路段最少者；驗證不通過就重新規劃，有次數上限</td><td>p.30、p.32</td></tr>
+<tr><td>配速模型</td><td>Baseline：平均速度、速限換算、Google Maps 兩輪車預估時間；模型一多元迴歸；模型二 LightGBM 分位數（q=0.5、0.9）；整趟 P90 以 conformal 校正</td><td>p.28–29</td></tr>
+<tr><td>特徵</td><td>曲率、坡度（DTM）、道路等級、公路局急彎與陡坡標記、時段、天氣、已騎里程</td><td>p.28</td></tr>
+<tr><td>資料</td><td>BMW Motorrad Connected 匯出的 GPX 279 趟，單一騎士（n=1）；當時只「已檢查一趟」</td><td>p.33、p.35</td></tr>
+<tr><td>外部資料</td><td>氣象署預報、警特報、民用暮光終；TDX 即時路況；中油加油站；內政部 DTM；OpenStreetMap；Google Maps Routes API</td><td>p.26、p.33</td></tr>
+<tr><td>知識庫</td><td>RAG 檢索（警特報說明、公路局行車資訊、騎乘安全資料、車系規格、相關研究）；當時狀態「待蒐集」</td><td>p.26、p.33</td></tr>
+<tr><td>例外處理</td><td>外部 API 失敗時回報「資料不可用」，相關規則視為未通過，「不以猜測補值」</td><td>p.31</td></tr>
+<tr><td>隱私</td><td>原始檔不進 repo；裁掉頭尾；只公開衍生資料</td><td>p.32、p.35–36</td></tr>
+<tr><td>範圍</td><td>L2 Knowledge Agent「承諾完成」（L1 包含在內）；L3（手機定位 → MQTT → 語音提醒）是「延伸，期末視進度」，不在承諾範圍內</td><td>p.8、p.28、p.35</td></tr>
+</tbody></table></div>
+
+<h3>2.3 研究假設與實驗設計</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>實驗</th><th>問題</th><th>方法與對照</th><th>指標</th><th>頁碼</th></tr></thead>
+<tbody>
+<tr><td>E1 配速模型</td><td>「個人配速模型比一般導航的時間估計準嗎？」</td><td>平均速度、速限換算、Google 兩輪車預估時間，對多元迴歸，對 LightGBM；依行程分組的交叉驗證加最新行程的時間外推</td><td>路段與整趟的 MAE、MAPE；整趟 P90 覆蓋率</td><td>p.34</td></tr>
+<tr><td>E2 驗證與消融</td><td>「外部驗證能不能提高計畫的可行率？」</td><td>三組：只用 LLM／LLM＋知識庫／完整 Agent；另逐一拿掉個人配速、天氣、路況；約 20–30 題；獨立 Oracle，不以規則 1–5 自評</td><td>Oracle 違規率、回程時間誤差、數字一致率、拒答率</td><td>p.8、p.34</td></tr>
+<tr><td>E3 風險規則</td><td>「風險規則是否抓得到歷史封路日？」</td><td>以歷史封路紀錄回測</td><td>命中率、誤報率</td><td>p.34</td></tr>
+<tr><td>E4 案例研究</td><td>「對騎士有沒有實際價值？」</td><td>2–3 個完整情境，以過去的實際行程回測</td><td>質性說明與回測誤差</td><td>p.34</td></tr>
+</tbody></table></div>
+<p><strong>預期成果（Proposal 自己標為「待驗證的假設」，p.34–35）：</strong>(a) 個人配速模型在彎道多的山區路段，整趟時間誤差低於一般導航；(b) 完整 Agent 對獨立 Oracle 的違規率低於只用 LLM；(c) 拿掉個人配速或天氣、路況資料後，違規率或時間誤差上升。Proposal 沒有給任何數值門檻。</p>
+
+<h3>2.4 課程要求</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>項目</th><th>要求</th><th>來源</th></tr></thead>
+<tbody>
+<tr><td>核心要求</td><td>「AI Agent + Domain Knowledge + Data Analytics + Real-World Application」；不是只訓練一個模型或做單純的 Chatbot，而是 Domain AI Agent</td><td>requirements L21–25、L202–203</td></tr>
+<tr><td>基本架構</td><td>①–⑧：User Scenario → Input → Planner &amp; Reasoning → Data Acquisition → Analytics Engine → Domain Knowledge → Decision → Output &amp; Interaction；並以架構圖、流程圖、具行號的虛擬碼三種方式表示</td><td>requirements L115–151</td></tr>
+<tr><td>Workflow 與六大能力</td><td>Understand → Plan → Acquire → Analyze → Generate → Interact；TALK × KNOW × SENSE × ANALYZE × THINK × SHOW</td><td>P3 p.4–5</td></tr>
+<tr><td>分析原則</td><td>「LLM 負責理解、推理與解釋；Analytics Engine 負責計算、驗證與提供證據」</td><td>P3 p.6</td></tr>
+<tr><td>Level</td><td>Level 1（LLM + Data）是「基礎完成線」；Level 2 Knowledge Agent；Level 3 IoT Autonomous Agent。不要求一開始就做 Level 3</td><td>P3 p.7</td></tr>
+<tr><td>IoT</td><td>資料來源「可以包含」IoT Sensor；同一份文件也寫「很多實際的 AI 應用不需要感測器」。實體感測器是否必備沒有載明</td><td>requirements L124；P3 p.5</td></tr>
+<tr><td>Final Handover</td><td>GitHub（完整原始碼、資料來源、執行與測試方式）；README.md；DESIGN.md（含 Implementation Mapping、Results、Limitations）；Final PPT 超過 20 頁；YouTube 影片超過 10 分鐘；Experiments；Conclusion。標準是下一位開發者能靠 repo 理解、執行、驗證並繼續開發</td><td>requirements L173–190</td></tr>
+<tr><td>結果真實性</td><td>未完成的實驗寫 Expected Findings，「不得虛構實驗結果」</td><td>requirements L51</td></tr>
+<tr><td>日期</td><td>Proposal 期限 2026-11-11。<strong>期末發表與最終繳交日沒有載明</strong>；期末的評分權重也沒有載明</td><td>requirements L5–12</td></tr>
+</tbody></table></div>
+
+<!-- ============================================================ 3 -->
+<h2 id="s3"><span class="num">3</span>Proposal Alignment Matrix</h2>
+<p><strong>這一節是 Scope Reduction 的紀錄，不是符合與否的判定。</strong> 表中的縮減與放棄是已知且接受的決策；是否符合課程要求，以第 3A 節的 ①–⑧ 矩陣為準。</p>
+<p>逐項比較原始 Proposal 與現行 MVP（CR-01 與後續裁決之後）。「預期完成程度」是<strong>規劃</strong>，不是現況；現況見第 6 節。分類：<span class="t must">Must</span> MVP 承諾完成；<span class="t should">Should</span> 進度允許才做；<span class="t wont">Won't</span> 本學期確定不做。來源：DESIGN §2.3 Scope Matrix、§13.5；CR-01 §11–12。</p>
+
+<div class="legend">
+  <span><i style="background:#e3f4ea;border:1px solid #b7dfc8"></i>保留：和 Proposal 一致</span>
+  <span><i style="background:#fdf1d8;border:1px solid #efd59a"></i>縮小或改寫</span>
+  <span><i style="background:#fbe5e3;border:1px solid #f0bdb9"></i>放棄：Proposal 有、MVP 不做</span>
+</div>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Proposal 的承諾（頁碼）</th><th>現行 MVP</th><th>分類</th><th>改變的原因</th><th>現況</th><th>對齊</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>核心情境：當天來回、天黑前回到家（p.6、p.24、p.32–33）</td><td>來回行程，期限是回到出發點；去程與回程各自向路線引擎取得。出發點是公開的出發錨點，不是住家（DESIGN §4.2）</td><td><span class="t must">Must</span></td><td>CR-01 D1 恢復（先前曾縮成固定的單向路段）</td><td>規格已定；尚未實作</td><td><span class="b pass" title="設計層面">保留</span></td></tr>
+<tr><td>2</td><td>用地名描述行程，或在地圖上選點（p.26）</td><td>一個自然語言描述欄加表單；地點限於公路與地標詞彙表（先 5–8 條）；缺條件時追問一輪</td><td><span class="t must">Must</span>；地圖選點、任意地名 <span class="t wont">Won't</span></td><td>任意地名解析的範圍太大；CR-01 §12</td><td>規格已定；尚未實作</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>3</td><td>Web 對話介面（p.26）；TALK 的多輪對話（p.27）</td><td>一個描述欄加一輪追問，不做多輪聊天</td><td>多輪聊天 <span class="t wont">Won't</span></td><td>時程；CR-01 §12</td><td>—</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>4</td><td>匯入 GPX 建立與更新個人配速（p.26、p.32）</td><td>介面多檔上傳、合併去重複、更新 Profile、涵蓋度摘要，不設最少檔數</td><td><span class="t must">Must</span></td><td>CR-01 D1：不能只做指令匯入</td><td>匯入的 Spike 已有；多檔合併與介面尚未實作</td><td><span class="b pass">保留</span></td></tr>
+<tr><td>5</td><td>配速模型：多元迴歸、LightGBM 分位數、整趟 P90 以 conformal 校正（p.28–29）</td><td>依曲率類別的配速表（各類別速度的中位數）、停等寬放、安全餘裕。保守估計<strong>不是</strong> P90</td><td>配速表 <span class="t must">Must</span>；MLR、LightGBM <span class="t should">Should</span>；P50／P90 與 conformal <span class="t wont">Won't</span></td><td>Scope Reduction（DESIGN §13.1）：時程與資料量</td><td>配速表與 ETA 有 Spike；停等寬放是 #9–#11</td><td><span class="b fail">放棄分位數模型</span></td></tr>
+<tr><td>6</td><td>特徵：曲率、坡度、道路等級、急彎陡坡標記、時段、天氣（p.28）</td><td>只用由軌跡算出的曲率，分三類</td><td>其餘特徵 <span class="t wont">Won't</span></td><td>不做完整的地形與路網特徵工程</td><td>Spike 已有</td><td><span class="b fail">縮減</span></td></tr>
+<tr><td>7</td><td>279 趟 GPX（p.33）</td><td>21 趟：16 趟配速、4 趟保留、1 趟排除</td><td>279 趟全量 <span class="t wont">Won't</span></td><td>逐趟匯出的成本；DESIGN §2.3</td><td>21 趟已取得</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>8</td><td>五個 Agent 分工（p.25–27）；副題、貢獻與主要創新都以多 Agent 為內容（p.1、p.7、p.35）</td><td>單一 Planner LLM、確定性的 Python 工具、獨立的 Validator</td><td>五個獨立 Agent <span class="t wont">Won't</span></td><td>Scope Reduction：五個 Agent 不是研究問題所在。DESIGN §13.1 寫明 Proposal 主要創新中的多 Agent 架構「不再成立」</td><td>Planner、Validator 尚未建立</td><td><span class="b fail">放棄多 Agent</span></td></tr>
+<tr><td>9</td><td>LLM 不算數字，數字來自工具；驗證以程式規則進行（p.7、p.27）</td><td>相同；另加規則 5 的最終檢查與來源證據</td><td><span class="t must">Must</span></td><td>—</td><td>尚未實作</td><td><span class="b pass">保留</span></td></tr>
+<tr><td>10</td><td>驗證規則 1–5（p.29–30）</td><td>五條都保留；結果改為三值 PASS／FAIL／UNKNOWN</td><td><span class="t must">Must</span></td><td>缺資料時標示 UNKNOWN。這和 Proposal p.31 的「視為未通過」不同，見 #26</td><td>只有規則 3 的範圍判定開了 Ticket（#8）</td><td><span class="b pass">保留</span></td></tr>
+<tr><td>11</td><td>規則 3：抵達時段與「大雨以上警特報」重疊（p.29）</td><td>降雨機率 ≥ 70%（專題自訂門檻，不是官方標準）；單向檢查最後 20%，來回檢查整段回程</td><td><span class="t must">Must</span>；警特報 <span class="t should">Should</span></td><td>警特報不在 Must；來回的範圍由 SB-9 裁決（方案 A）</td><td>#8 OPEN</td><td><span class="b partial">改寫</span></td></tr>
+<tr><td>12</td><td>規則 4：TDX 封閉或管制事件（p.29、p.33）</td><td>封路只以標示來源的模擬情境提供；真實日期的規則 4 是 UNKNOWN，計畫最多是 CONDITIONAL</td><td>模擬情境 <span class="t must">Must</span>；TDX <span class="t should">Should</span></td><td>沒有機器可讀的即時來源納入 Must</td><td>尚未實作</td><td><span class="b fail">縮減</span></td></tr>
+<tr><td>13</td><td>決策：回程餘裕最大（p.30）</td><td>最晚的可行出發時間；時間餘裕只用來顯示。Proposal 選餘裕最大，MVP 選最晚的可行時間，兩者的方向相反</td><td><span class="t must">Must</span></td><td>G1 Grill 的決議</td><td>尚未實作</td><td><span class="b partial">改寫：目標相反</span></td></tr>
+<tr><td>14</td><td>路線與地圖：Google Maps Routes API、OpenStreetMap（p.26、p.33）</td><td>公開的 Valhalla 伺服器（OpenStreetMap 圖資）、不可變的路線快照、國道檢查；也可以用只讀幾何的目標 GPX</td><td><span class="t must">Must</span>；Google Routes <span class="t wont">Won't</span></td><td>CR-01 D2；檢查 C4b 通過</td><td>規格已定；尚未實作</td><td><span class="b partial">替換</span></td></tr>
+<tr><td>15</td><td>氣象署預報與民用暮光終（p.26、p.33）</td><td>相同；鄉鎮界線在本機對應</td><td><span class="t must">Must</span></td><td>—</td><td><span class="b blocked">BLOCKED</span>（C3）</td><td><span class="b pass">保留</span></td></tr>
+<tr><td>16</td><td>加油站與續航檢查（p.29、p.33）</td><td>靜態的加油站快照、依出發油量的逐段油量檢查</td><td><span class="t must">Must</span></td><td>—</td><td>尚未實作</td><td><span class="b pass">保留</span></td></tr>
+<tr><td>17</td><td>知識庫 RAG 檢索，回答附出處（p.26、p.33）</td><td>最小的領域知識庫（關鍵字檢索、附出處）加公路與地標詞彙表</td><td><span class="t must">Must</span>；進階檢索 <span class="t should">Should</span></td><td>Scope Reduction</td><td>尚未實作</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>18</td><td>騎士記憶：偏好與過去計畫，自動插入休息（p.19、p.26、p.32）</td><td>靜態的 Rider Profile；依設定排入預設休息；騎士指定的休息不可被重新規劃移除</td><td>Profile <span class="t must">Must</span>；跨 Session Memory <span class="t wont">Won't</span></td><td>Scope Reduction</td><td>尚未實作</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>19</td><td>騎士限制含「最長騎乘時數」（p.24）</td><td>沒有對應的欄位；時間限制由期限與民用暮光終表達</td><td>—</td><td>不在 CR-01 §12 的 Must 內</td><td>—</td><td><span class="b fail">沒有對應</span></td></tr>
+<tr><td>20</td><td>Streamlit 加 Google Maps 儀表板，路段依時間與風險上色；可下載的計畫（p.26、p.33）</td><td>Streamlit 的 Profile 區與三個畫面，Snapshot Mode，來源證據；沒有地圖</td><td>三個畫面 <span class="t must">Must</span>；地圖、下載 <span class="t should">Should</span>；Google Maps <span class="t wont">Won't</span></td><td>不依賴 Google Maps</td><td>HTML 原型（G3）；UI-0 是 #12</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>21</td><td>折返點與替代路線（p.20）</td><td>無可行解時說明原因與替代方案；可驗證的提早折返點是 Should；重新規劃不自動改路線</td><td><span class="t should">Should</span>／<span class="t wont">Won't</span></td><td>CR-01 §12</td><td>—</td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>22</td><td>E1：和一般導航（Google）比較；MLR、LightGBM；P90 覆蓋率（p.34）</td><td>E1 Lite：單一速度、個人配速表、路線引擎的時間分開報告；路線引擎只在公開地標之間的路段比較。<strong>不宣稱比 Google Maps 或一般導航準</strong></td><td><span class="t must">Must</span>；「宣稱比 Google 準」<span class="t wont">Won't</span></td><td>CR-01 D4；私有軌跡不能送給第三方</td><td><span class="b nv">NOT RUN</span></td><td><span class="b fail">研究問題改寫</span></td></tr>
+<tr><td>23</td><td>E2：三組（LLM／LLM＋知識庫／完整）、20–30 題、三項消融（p.34）</td><td>三組 A1 LLM Only、A2 LLM＋Tools、A3 加 Validator（第二組由「LLM＋知識庫」改為「LLM＋Tools」）；12–15 題；獨立 Oracle；配速消融是 Should，天氣與路況消融不做</td><td><span class="t must">Must</span>；天氣路況消融 <span class="t wont">Won't</span></td><td>時程；三組直接對應研究問題 2</td><td><span class="b nv">NOT RUN</span></td><td><span class="b partial">縮小</span></td></tr>
+<tr><td>24</td><td>E3 歷史封路回測（p.34）</td><td>不做</td><td><span class="t wont">Won't</span></td><td>沒有機器可讀的歷史封路紀錄（Proposal p.35 把阻斷資料的取得列為延伸；E3 本身在 p.34 仍是預計的實驗）</td><td>—</td><td><span class="b fail">放棄</span></td></tr>
+<tr><td>25</td><td>E4 案例研究 2–3 個（p.34）</td><td>併入 Demo，不作為獨立實驗</td><td><span class="t wont">Won't</span>（獨立實驗）</td><td>時程</td><td>—</td><td><span class="b fail">放棄</span></td></tr>
+<tr><td>26</td><td>例外處理：API 失敗時回報不可用，不猜測補值（p.31）</td><td>API 失敗或缺資料時標示 UNKNOWN，計畫狀態是 CONDITIONAL，附四項固定內容與人工確認指引；路線失敗時不由 LLM 產生路線。「不猜測補值」保留；「視為未通過」放寬成 UNKNOWN</td><td><span class="t must">Must</span></td><td>沒有即時路況來源時，「視為未通過」會讓所有計畫都不可行（DESIGN §13.1）</td><td>尚未實作</td><td><span class="b partial">改寫（放寬）</span></td></tr>
+<tr><td>27</td><td>隱私：原始檔不進 repo、裁掉頭尾（p.35–36）</td><td>相同；另加：私有 GPX 與住家位置不送第三方、行程描述的本機輸入保護、保留行程的隔離</td><td><span class="t must">Must</span></td><td>—</td><td>裁切與公開版衍生表已在 Spike</td><td><span class="b pass">保留並加強</span></td></tr>
+<tr><td>28</td><td>L3：手機定位、MQTT、語音提醒（p.28，延伸）</td><td>不做</td><td><span class="t wont">Won't</span></td><td>Proposal 本來就不承諾</td><td>—</td><td><span class="b nv">不在承諾內</span></td></tr>
+</tbody></table></div>
+
+<div class="warn"><strong>不該被掩蓋的縮減。</strong> 相對於原始 Proposal，下列項目在現行 MVP 中<strong>不會出現，或語意已經改變</strong>：分位數模型與有覆蓋率保證的 P90（#5）；曲率以外的特徵（#6）；279 趟的資料規模，現在是 21 趟（#7）；多 Agent 架構（#8）；真實的路況來源（#12）；跨對話的記憶（#18）；最長騎乘時數的限制（#19）；多輪對話與地圖選點（#2、#3）；地圖（#20）；和一般導航的準確度比較（#22）；天氣與路況的消融，以及「LLM＋知識庫」的對照組（#23）；E3、E4（#24、#25）。另有兩處是方向改變而不只是縮小：決策目標由「餘裕最大」改為「最晚的可行出發時間」（#13）；API 失敗由「視為未通過」放寬成 UNKNOWN（#26）。這些都記錄在 DESIGN §13.1 與 §13.5 的差異表中，期末報告必須明寫。</div>
+
+<!-- ============================================================ 3A -->
+<h2 id="s3a"><span class="num">3A</span>Course Requirements ①～⑧ Alignment</h2>
+<p>判準是課程定義的基本架構（<code>requirements_proposal.txt</code> L115–122）：① User/Application Scenario → ② Query/Input → ③ Planner &amp; Reasoning Agent → ④ Data Acquisition/Retrieval → ⑤ Analytics Engine → ⑥ Domain Knowledge Integration → ⑦ Decision/Recommendation → ⑧ Output &amp; Interaction。MVP 的對應取自 DESIGN §3 的架構圖與 ①–⑧ 對照表。</p>
+<p>「設計」欄只表示設計文件涵蓋這個階段，不表示規格已經凍結，更不表示已經完成。「實作」「測試」「Demo 證據」三欄是 <strong>2026-11-16 的現況</strong>；最右欄是<strong>全部完成之後的預期</strong>，兩者分開。</p>
+
+<div class="tbl-wrap"><table class="cmp">
+<thead><tr><th>階段</th><th>MVP 的對應</th><th>設計（文件）</th><th>實作（現況）</th><th>測試（現況）</th><th>Demo 證據（現況）</th><th>尚缺工作</th><th>完成後的預期（規劃）</th></tr></thead>
+<tbody>
+<tr><td><strong>①</strong> User / Application Scenario</td>
+  <td>在台灣騎重機旅遊的騎士；出發前規劃一趟當天來回，要在期限與天黑前回到出發點</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §1、§3</td>
+  <td class="st">不適用（情境的定義）</td>
+  <td class="st">不適用</td>
+  <td class="st"><span class="b nv">沒有</span><br>還沒有以這個情境跑過的 Demo</td>
+  <td>Demo 的劇本（一條來回行程）；課程圖 ①–⑩ 與 ①–⑧ 的對照（DESIGN §3 註明尚未完成）</td>
+  <td>以一條真實道路上的來回行程展示整個情境</td></tr>
+<tr><td><strong>②</strong> Query / Input</td>
+  <td>Trip Planner：一個行程描述欄，加日期、最早出發、期限、出發油量；歷史 GPX 在 Profile 區上傳</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>UI-0 的畫面與固定文字已確認；輸入保護的確切規則（SB-6）未定案</td>
+  <td class="st"><span class="b fail">尚未開始</span><br><code>app/</code> 不存在。只有 G3 凍結的 HTML 原型（舊範圍、模擬資料）</td>
+  <td class="st"><span class="b nv">沒有</span><br>原型有回歸檢查腳本，不是產品測試</td>
+  <td class="st"><span class="b nv">沒有</span><br>HTML 原型可以操作，但不是 Streamlit，也不接後端</td>
+  <td>UI-0（#12）→ UI Delta Review → 正式介面；輸入保護；GPX 多檔上傳與合併</td>
+  <td>騎士在 Streamlit 輸入一段描述與表單、上傳 GPX</td></tr>
+<tr><td><strong>③</strong> Planner &amp; Reasoning Agent</td>
+  <td>單一 Planner LLM（理解、追問、工具呼叫、重新規劃的提案、說明）加上獨立的 Validator（規則 1–5、三值、計畫狀態）</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §3、§4.2、§8。未定案：LLM 模型（C3）；Plan Schema 在未凍結的 SPEC-001</td>
+  <td class="st"><span class="b blocked">BLOCKED</span>／<span class="b fail">尚未開始</span><br><code>planner</code> 等 C3；<code>validator</code> 與主程式沒有程式</td>
+  <td class="st"><span class="b nv">沒有</span><br>Smoke Test 只有本機的 Mock 驗證；真實 API 是 NOT RUN</td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td>Anthropic 憑證 → Smoke Test 與選型 → Planner；Validator 規則 1–5（目前只有 #8 的規則 3 範圍判定）；主程式的候選評估與重新規劃</td>
+  <td>Planner 把描述轉成結構化請求並呼叫工具；Validator 獨立判定，不可行時重新規劃（最多 2 次）</td></tr>
+<tr><td><strong>④</strong> Data Acquisition / Retrieval</td>
+  <td>自己的歷史 GPX；路線引擎的路線快照或目標 GPX；氣象署預報與日出日沒；靜態加油站；路況情境檔</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §5。未定案：預報欄位與鄉鎮對應（SB-3、SB-4）</td>
+  <td class="st"><span class="b partial">PARTIAL</span><br>只有 GPX 讀檔的 Spike（<code>ingest</code>）。<code>routing</code>、<code>sources</code> 沒有程式</td>
+  <td class="st"><span class="b partial">PARTIAL</span><br><code>ingest</code> 14 個測試（契約 v0.2、合成資料）；外部資料 0</td>
+  <td class="st"><span class="b nv">沒有</span><br>路線引擎只在技術檢查 C4、C4b 的腳本中呼叫過，不是產品功能；氣象署沒有呼叫過</td>
+  <td><code>routing</code>、<code>sources</code>（都沒有 Ticket）；申請氣象署授權碼；加油站快照；GPX 多檔合併（#9 之外）</td>
+  <td>系統自己取得實際道路路線、預報、暮光終與加油站資料，每筆帶來源證據</td></tr>
+<tr><td><strong>⑤</strong> Analytics Engine</td>
+  <td>確定性的 Python 工具：切段與曲率分類、配速表、ETA 與安全餘裕、續航、風險規則的計算</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §6.1；停等寬放已定案（SB-2）。契約 v0.3 是草案</td>
+  <td class="st"><span class="b partial">PARTIAL</span><br><code>ingest</code>、<code>routes</code>、<code>pace</code> 的 Spike（契約 v0.2）。停等寬放、續航、沿線檢查點未實作</td>
+  <td class="st"><span class="b partial">PARTIAL</span><br>100 passed，都針對契約 v0.2 與 Spike；新規格的驗收測試 0</td>
+  <td class="st"><span class="b nv">沒有</span><br>C1、C2 是技術檢查，不是 E1 的結果</td>
+  <td>#7、#9、#10、#11；續航計算；路線的切段與檢查點；E1 Lite</td>
+  <td>依個人配速算出每個候選的典型與保守抵達時間、各檢查點的油量</td></tr>
+<tr><td><strong>⑥</strong> Domain Knowledge Integration</td>
+  <td>最小知識庫（關鍵字檢索、回答附出處）；公路與地標詞彙表；五個思維模式落在規則 1–5 與配速設計</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §7。未定案：知識庫與詞彙表的內容沒有規格</td>
+  <td class="st"><span class="b fail">尚未開始</span><br><code>kb</code> 沒有程式，也沒有內容</td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td>詞彙表（先 5–8 條）；知識庫文件與檢索；沒有 Ticket</td>
+  <td>說明引用知識庫並附出處；公路名稱與地標由詞彙表對到錨點</td></tr>
+<tr><td><strong>⑦</strong> Decision / Recommendation</td>
+  <td>計畫狀態、最晚的可行出發時間、典型與保守抵達時間、加油安排、風險說明、UNKNOWN 項目；每個數值可追溯（規則 5）</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>DESIGN §4.2、§8。Plan Schema 在未凍結的 SPEC-001</td>
+  <td class="st"><span class="b fail">尚未開始</span></td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td>Validator、主程式的排序、Plan Schema 與規則 5 的檢查、來源證據</td>
+  <td>提出一個可追溯的建議，或說明為什麼不可行與有哪些替代方案</td></tr>
+<tr><td><strong>⑧</strong> Output &amp; Interaction</td>
+  <td>Streamlit：Profile 區、Trip Planner、Trip Result、Validation &amp; Replanning；一輪追問；規則狀態與來源證據獨立呈現</td>
+  <td class="st"><span class="b pass">已涵蓋</span><br>G3 凍結的 UI 文件加 CR-01 的差異說明。元件在 Streamlit 1.67.0 的可行性未驗證</td>
+  <td class="st"><span class="b fail">尚未開始</span><br><code>app/</code> 不存在；#12 OPEN</td>
+  <td class="st"><span class="b nv">沒有</span></td>
+  <td class="st"><span class="b nv">沒有</span><br>只有 HTML 原型，沒有端到端的互動</td>
+  <td>UI-0（#12）→ 11/28 UI Delta Review → 正式介面與後端整合（11/29–12/4）；端到端的 Demo</td>
+  <td>在 Streamlit 上從輸入到結果、驗證與重新規劃，完成一次端到端的互動</td></tr>
+</tbody></table></div>
+
+<div class="tiles">
+  <div class="tile"><div class="k">設計涵蓋</div><div class="v">8 / 8</div><div class="d">其中 ②③④⑤⑥⑦⑧ 各有未定案的細節</div></div>
+  <div class="tile"><div class="k">有產品程式（含 Spike）</div><div class="v">2 / 8</div><div class="d">④ 與 ⑤ 的一部分，契約 v0.2</div></div>
+  <div class="tile"><div class="k">新規格的驗收測試</div><div class="v">0</div><div class="d">現有 100 個測試都針對舊契約</div></div>
+  <div class="tile"><div class="k">有 Demo 證據的階段</div><div class="v">0 / 8</div><div class="d">端到端的流程沒有執行過</div></div>
+</div>
+
+<h3>3A.1 課程的基本要求</h3>
+<div class="tbl-wrap"><table class="cmp">
+<thead><tr><th>評估重點</th><th>設計</th><th>現況</th><th>現況的證據</th><th>尚缺工作</th></tr></thead>
+<tbody>
+<tr><td>具備完整的 Domain AI Agent 工作流程（看流程是否完整，不看 Agent 的數量）</td>
+  <td><span class="b pass">已涵蓋</span><br>單一 Planner、確定性工具、獨立 Validator、重新規劃；對應 Understand → Plan → Acquire → Analyze → Generate → Interact（DESIGN §3、§4.3、§8）</td>
+  <td><span class="b fail">尚未開始</span></td><td>端到端的流程從未執行；③⑥⑦⑧ 沒有程式</td><td>關鍵路徑上的全部模組（§9.3）</td></tr>
+<tr><td>真正取得資料</td>
+  <td><span class="b pass">已涵蓋</span></td><td><span class="b partial">PARTIAL</span></td>
+  <td>歷史 GPX 已由 Spike 讀取與處理。路線引擎只在技術檢查中呼叫過；氣象署與加油站的資料還沒有取得</td><td><code>routing</code>、<code>sources</code>；氣象署授權碼</td></tr>
+<tr><td>執行 Analytics</td>
+  <td><span class="b pass">已涵蓋</span></td><td><span class="b partial">PARTIAL</span></td>
+  <td>配速表與 ETA 的 Spike，有測試（契約 v0.2）。停等寬放與續航未實作</td><td>#7、#9、#10、#11；續航</td></tr>
+<tr><td>整合 Domain Knowledge</td>
+  <td><span class="b pass">已涵蓋</span></td><td><span class="b fail">尚未開始</span></td>
+  <td><code>kb</code> 沒有程式與內容；承載領域知識的規則 1–5 也還沒有實作</td><td>詞彙表、知識庫、Validator</td></tr>
+<tr><td>提出可追溯的建議</td>
+  <td><span class="b pass">已涵蓋</span></td><td><span class="b fail">尚未開始</span></td>
+  <td>規則 5 與來源證據只存在於規格</td><td>Validator、Plan Schema、來源證據</td></tr>
+<tr><td>透過 Streamlit 完成端到端互動</td>
+  <td><span class="b pass">已涵蓋</span></td><td><span class="b fail">尚未開始</span></td>
+  <td><code>app/</code> 不存在；現有的是 G3 的 HTML 原型（舊範圍、模擬資料）</td><td>#12 → UI Delta Review → 整合</td></tr>
+<tr><td>System Architecture（模組以 ①②③ 編號並逐一說明）</td>
+  <td colspan="2"><span class="b pass">PASS</span>（文件）</td>
+  <td>DESIGN §3 的架構圖以 ①–⑧ 編號，並有逐項的對照表</td><td>課程圖 ①–⑩ 與 ①–⑧ 的對照；期末依最後的實作更新</td></tr>
+<tr><td>Flowchart（含 Decision、Loop、Exception、Human Interaction）</td>
+  <td colspan="2"><span class="b partial">PARTIAL</span>（文件）</td>
+  <td><code>docs/figures/flowchart.png</code> 是縮減前的版本（DESIGN §8 自己註明）。MVP 的流程目前只表達在 DESIGN §3 的架構圖與 Algorithm 1</td><td>MVP 的流程圖</td></tr>
+<tr><td>具行號的 Pseudocode</td>
+  <td colspan="2"><span class="b pass">PASS</span>（文件）</td>
+  <td>DESIGN §8 的 Algorithm 1（MVP），行號 01–26，並標出哪幾行是 LLM、哪幾行是確定性程式</td><td>期末依最後的實作核對</td></tr>
+<tr><td>可重現的實驗證據（Dataset、Evaluation Metrics、Results、Comparison）</td>
+  <td><span class="b pass">已涵蓋</span><br>DESIGN §6.2、§6.3</td><td><span class="b nv">NOT VERIFIED</span></td>
+  <td>E1 Lite 與 E2 都沒有執行；腳本、題庫、Oracle 都還沒有建立。重現的機制（凍結清單、路線快照、SHA-256）只在設計中</td><td>E1 Lite 的分析計畫與腳本；E2 的題庫、Oracle、Runner；C3</td></tr>
+</tbody></table></div>
+
+<div class="card">
+<h3 style="margin-top:0">3A.2 以 ①–⑧ 為判準的結論</h3>
+<ul>
+  <li><strong>設計：符合。</strong> 八個階段在 DESIGN §3 都有對應的模組與說明。單一 Planner 加獨立 Validator 仍然是 ③；依曲率類別的配速表仍然是 ⑤；最小知識庫與詞彙表仍然是 ⑥。Scope Reduction 縮小了各階段的深度，沒有拿掉任何一個階段。</li>
+  <li><strong>現況：尚未符合。</strong> 只有 ④ 與 ⑤ 有部分 Spike 程式；②③⑥⑦⑧ 沒有產品程式；沒有任何階段有 Demo 證據；端到端的流程沒有執行過。原因是尚未實作，不是功能被裁減。</li>
+  <li><strong>技術表示：</strong>Architecture 與行號 Pseudocode 已經具備；Flowchart 還是縮減前的版本，要補 MVP 的版本。</li>
+  <li><strong>實驗證據：</strong>設計具備，結果是零。</li>
+  <li><strong>要由授課教師認定、這份報告無法判斷的兩點</strong> <span class="b nv">NOT VERIFIED</span>：⑥ 的最小知識庫（關鍵字檢索）深度是否足夠，課程文件沒有規定規模；資料來源是否必須包含 IoT 感測器（§10.4）。</li>
+</ul>
+</div>
+
+<!-- ============================================================ 4 -->
+<h2 id="s4"><span class="num">4</span>System Architecture</h2>
+<p>現行 MVP 的架構（DESIGN §3、§4.1）。顏色表示<strong>目前的實作狀態</strong>，不是設計上的重要性。</p>
+<figure>
+<svg viewBox="0 0 1120 600" role="img" aria-label="系統架構圖">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#46515f"/></marker>
+    <style>
+      .bx{stroke-width:1.5;rx:6}
+      .none{fill:#f1f3f6;stroke:#9aa5b1;stroke-dasharray:5 3}
+      .spike{fill:#fdf1d8;stroke:#c99700}
+      .blk{fill:#ece6f8;stroke:#5b3aa0;stroke-dasharray:5 3}
+      .ext{fill:#ffffff;stroke:#55606e}
+      .usr{fill:#e6eef7;stroke:#1f4e79}
+      .lb{font:600 14px "Microsoft JhengHei","Noto Sans TC",sans-serif;fill:#1b2430}
+      .sm{font:12px "Microsoft JhengHei","Noto Sans TC",sans-serif;fill:#46515f}
+      .tg{font:700 11px "Microsoft JhengHei",sans-serif}
+      .ln{stroke:#46515f;stroke-width:1.4;fill:none}
+      .grp{fill:none;stroke:#c3cad3;stroke-width:1}
+      .gl{font:600 12px "Microsoft JhengHei",sans-serif;fill:#6b7684}
+    </style>
+  </defs>
+  <!-- user -->
+  <rect class="bx usr" x="20" y="250" width="110" height="64"/><text class="lb" x="75" y="278" text-anchor="middle">騎士</text><text class="sm" x="75" y="297" text-anchor="middle">使用者</text>
+  <!-- UI -->
+  <rect class="bx none" x="170" y="150" width="190" height="270"/>
+  <text class="lb" x="265" y="176" text-anchor="middle">Streamlit 介面</text>
+  <text class="sm" x="265" y="198" text-anchor="middle">Profile 區（GPX 上傳）</text>
+  <text class="sm" x="265" y="218" text-anchor="middle">Trip Planner（描述、追問）</text>
+  <text class="sm" x="265" y="238" text-anchor="middle">Trip Result</text>
+  <text class="sm" x="265" y="258" text-anchor="middle">Validation &amp; Replanning</text>
+  <text class="sm" x="265" y="290" text-anchor="middle">本機輸入保護</text>
+  <text class="tg" x="265" y="330" text-anchor="middle" fill="#55606e">尚未建立</text>
+  <text class="sm" x="265" y="350" text-anchor="middle">HTML 原型在 G3 凍結</text>
+  <text class="sm" x="265" y="370" text-anchor="middle">UI-0 Skeleton：#12</text>
+  <line class="ln" x1="130" y1="282" x2="168" y2="282" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- orchestrator -->
+  <rect class="bx none" x="400" y="235" width="170" height="100"/>
+  <text class="lb" x="485" y="262" text-anchor="middle">主程式</text>
+  <text class="sm" x="485" y="282" text-anchor="middle">確定性的流程控制</text>
+  <text class="sm" x="485" y="300" text-anchor="middle">候選評估、排序、迴圈控制</text>
+  <text class="tg" x="485" y="322" text-anchor="middle" fill="#55606e">尚未建立</text>
+  <line class="ln" x1="360" y1="285" x2="398" y2="285" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- planner LLM -->
+  <rect class="bx blk" x="400" y="60" width="170" height="110"/>
+  <text class="lb" x="485" y="88" text-anchor="middle">Planner LLM</text>
+  <text class="sm" x="485" y="108" text-anchor="middle">解析行程描述、追問</text>
+  <text class="sm" x="485" y="126" text-anchor="middle">工具呼叫、重新規劃提案、說明</text>
+  <text class="tg" x="485" y="152" text-anchor="middle" fill="#5b3aa0">BLOCKED（C3）</text>
+  <line class="ln" x1="485" y1="170" x2="485" y2="233" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- validator -->
+  <rect class="bx none" x="400" y="400" width="170" height="130"/>
+  <text class="lb" x="485" y="428" text-anchor="middle">Validator</text>
+  <text class="sm" x="485" y="448" text-anchor="middle">規則 1 日照與期限</text>
+  <text class="sm" x="485" y="466" text-anchor="middle">規則 2 油量與加油站</text>
+  <text class="sm" x="485" y="484" text-anchor="middle">規則 3 天氣　規則 4 路況</text>
+  <text class="sm" x="485" y="502" text-anchor="middle">規則 5 數值可追溯</text>
+  <text class="tg" x="485" y="522" text-anchor="middle" fill="#55606e">尚未建立（規則 3 範圍：#8）</text>
+  <line class="ln" x1="485" y1="335" x2="485" y2="398" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- tools group -->
+  <rect class="grp" x="610" y="40" width="300" height="520" rx="8"/><text class="gl" x="622" y="58">確定性的 Python 工具</text>
+  <rect class="bx spike" x="626" y="70" width="268" height="62"/><text class="lb" x="760" y="94" text-anchor="middle">ingest ＋ Profile</text><text class="sm" x="760" y="114" text-anchor="middle">GPX 清理、切段、曲率分類　Spike；#9</text>
+  <rect class="bx spike" x="626" y="142" width="268" height="62"/><text class="lb" x="760" y="166" text-anchor="middle">pace</text><text class="sm" x="760" y="186" text-anchor="middle">配速表、ETA、安全餘裕　Spike；#10、#11</text>
+  <rect class="bx none" x="626" y="214" width="268" height="62"/><text class="lb" x="760" y="238" text-anchor="middle">routing</text><text class="sm" x="760" y="258" text-anchor="middle">路線請求、快照、國道檢查　尚未建立</text>
+  <rect class="bx spike" x="626" y="286" width="268" height="62"/><text class="lb" x="760" y="310" text-anchor="middle">routes</text><text class="sm" x="760" y="330" text-anchor="middle">路線目錄、檢查點　Spike（CR-01 部分未做）</text>
+  <rect class="bx blk" x="626" y="358" width="268" height="78"/><text class="lb" x="760" y="382" text-anchor="middle">sources</text><text class="sm" x="760" y="402" text-anchor="middle">預報、暮光終、加油站、封路情境</text><text class="tg" x="760" y="424" text-anchor="middle" fill="#5b3aa0">尚未建立；天氣與日照等 C3</text>
+  <rect class="bx none" x="626" y="446" width="268" height="52"/><text class="lb" x="760" y="468" text-anchor="middle">kb：知識庫與地標詞彙表</text><text class="sm" x="760" y="487" text-anchor="middle">尚未建立</text>
+  <rect class="bx spike" x="626" y="508" width="268" height="42"/><text class="lb" x="760" y="534" text-anchor="middle">contracts v0.2（已建立；v0.3：#7）</text>
+  <line class="ln" x1="570" y1="285" x2="608" y2="285" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <!-- external -->
+  <rect class="grp" x="940" y="40" width="165" height="330" rx="8"/><text class="gl" x="952" y="58">外部服務</text>
+  <rect class="bx ext" x="952" y="70" width="141" height="62"/><text class="lb" x="1022" y="94" text-anchor="middle">Anthropic API</text><text class="sm" x="1022" y="114" text-anchor="middle">只送文字與結構化條件</text>
+  <rect class="bx ext" x="952" y="214" width="141" height="62"/><text class="lb" x="1022" y="238" text-anchor="middle">Valhalla 公開伺服器</text><text class="sm" x="1022" y="258" text-anchor="middle">只送公開地標</text>
+  <rect class="bx ext" x="952" y="296" width="141" height="62"/><text class="lb" x="1022" y="320" text-anchor="middle">中央氣象署 API</text><text class="sm" x="1022" y="340" text-anchor="middle">預報、日出日沒</text>
+  <path class="ln" d="M485,60 L485,22 L1022,22 L1022,68" marker-end="url(#ar)" stroke-dasharray="4 3"/>
+  <line class="ln" x1="570" y1="140" x2="608" y2="140" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <line class="ln" x1="894" y1="245" x2="950" y2="245" marker-end="url(#ar)"/>
+  <path class="ln" d="M894,390 L922,390 L922,327 L950,327" marker-end="url(#ar)"/>
+  <!-- local data -->
+  <rect class="grp" x="940" y="390" width="165" height="170" rx="8"/><text class="gl" x="952" y="408">本機資料（不進版控）</text>
+  <text class="sm" x="952" y="432">歷史 GPX（私有）</text>
+  <text class="sm" x="952" y="452">配速表（研究用／使用者）</text>
+  <text class="sm" x="952" y="472">路線快照（不可變）</text>
+  <text class="sm" x="952" y="492">加油站快照</text>
+  <text class="sm" x="952" y="512">鄉鎮界線檔</text>
+  <text class="sm" x="952" y="532">Rider Profile 設定檔</text>
+  <line class="ln" x1="894" y1="470" x2="938" y2="470" marker-end="url(#ar)" marker-start="url(#ar)"/>
+</svg>
+<figcaption>
+  <span class="legend">
+    <span><i style="background:#fdf1d8;border:1px solid #c99700"></i>有 Spike 版程式（契約 v0.2）</span>
+    <span><i style="background:#f1f3f6;border:1px dashed #9aa5b1"></i>尚未建立</span>
+    <span><i style="background:#ece6f8;border:1px dashed #5b3aa0"></i>尚未建立，而且被 C3 卡住</span>
+    <span><i style="background:#fff;border:1px solid #55606e"></i>外部服務</span>
+  </span>
+  設計原則：Planner 是 Agent，負責理解需求、追問、規劃並執行工具呼叫（資料工具與知識庫，DESIGN §3）、提出重新規劃、解釋結果；路線、每個候選的時間與油量、規則判定與排序都由確定性的程式計算。私有 GPX 與住家位置不送給任何外部服務。
+</figcaption>
+</figure>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th>元件</th><th>職責</th><th>LLM 或確定性</th><th>對應 Proposal</th></tr></thead>
+<tbody>
+<tr><td>Planner LLM</td><td>把行程描述轉成結構化的路線請求、休息需求與休息策略；缺條件時追問；規劃並執行多步的工具呼叫（預報、暮光終、加油站、路況）；候選全部不可行時提出重新規劃；撰寫附出處的補充說明（DESIGN §8：Algorithm 1 第 01、02、08、18、23 行）</td><td>LLM（Claude，模型尚未選定）</td><td>規劃 Agent（p.26）</td></tr>
+<tr><td>主程式</td><td>取得路線、產生候選出發時間（每 15 分鐘）、以工具輸出填值、排序；重新規劃的迴圈控制與合法性檢查（最多 2 次）。候選迴圈（第 09–15 行）沒有 LLM</td><td>確定性</td><td>取代多 Agent 的迴圈（p.33）</td></tr>
+<tr><td>pace／routes／routing／sources</td><td>ETA、路線、檢查點、預報、暮光終、油量</td><td>確定性</td><td>配速、天氣、路況與補給三個 Agent 的工具（p.26–27）</td></tr>
+<tr><td>Validator</td><td>規則 1–4 的三值判定與計畫狀態；規則 5 檢查顯示文字中的每個數值都能追溯</td><td>確定性</td><td>驗證 Agent（p.27）</td></tr>
+</tbody></table></div>
+
+<!-- ============================================================ 5 -->
+<h2 id="s5"><span class="num">5</span>Final Product Capabilities <span class="b nv">預期功能，尚未完成</span></h2>
+<div class="crit"><strong>這一節描述的是 MVP 全部完成後的預期能力。</strong> 目前沒有任何一步可以實際操作；依據是 DESIGN、SPEC-001 與 UI_CR01_DELTA 的規格。範例中的數字都是示意，不是量測或實驗結果。</div>
+
+<div class="two">
+<div class="card">
+<h3 style="margin-top:0">使用者可以提供的輸入</h3>
+<ul>
+  <li>歷史 GPX：一次選多個檔案，之後可以再加；沒有最少檔數。</li>
+  <li>行程描述：一段自由文字（起點、目的地或公路、途經點、來回或單向、休息）。</li>
+  <li>表單：日期、最早可出發時間、期限、出發油量（必填）、行程型態（選填）。</li>
+  <li>選用：目標路線 GPX 的檔案路徑（只讀幾何）；Snapshot Mode。</li>
+  <li>Rider Profile 設定檔：車型、油箱容量、平均油耗、出發錨點、預設休息。</li>
+</ul>
+<h3>系統會給的輸出</h3>
+<ul>
+  <li>Profile 的涵蓋度摘要：可用的行程數、路段數、累計公里、各類別資料夠不夠。</li>
+  <li>採用的路線：行程型態、里程、主要道路名稱、來源、路權提醒。</li>
+  <li>最晚的可行出發時間；終點的典型抵達與保守抵達時間。</li>
+  <li>加油安排與各檢查點的剩餘油量；去程與回程的天氣；休息安排。</li>
+  <li>規則 1–5 的結果（PASS／FAIL／UNKNOWN）、計畫狀態（FEASIBLE／CONDITIONAL／INFEASIBLE）、每個數值的來源證據。</li>
+  <li>無可行解時：各規則的 FAIL 統計、一個代表性失敗候選、替代方案（不自動執行）。</li>
+</ul>
+</div>
+<div class="card">
+<h3 style="margin-top:0">做完之後仍然存在的限制</h3>
+<ul>
+  <li>只認得詞彙表中的 5–8 條公路與地標；其他地名會回覆不在支援範圍。</li>
+  <li>沒有即時路況來源：真實日期的規則 4 是 UNKNOWN，計畫<strong>最多是 CONDITIONAL</strong>，不會是 FEASIBLE（DESIGN §12）。</li>
+  <li>保守抵達時間是加了安全餘裕的估計，不是 P90，沒有覆蓋率的保證。</li>
+  <li>只檢查國道；個別快速公路與高架的禁行機車沒有查證。路線參數可能連快速公路也避開，平面轉場較慢。</li>
+  <li>降雨機率 ≥ 70% 是專題自訂的門檻，不是官方的警特報。</li>
+  <li>配速只來自一位騎士（n=1）的 16 趟行程；沒騎過的路估計較不可靠。</li>
+  <li>沒有地圖、沒有多輪對話、沒有騎乘中的即時提醒。</li>
+  <li>同一條路超過 30 天後，一般模式每次規劃都會重新向路線引擎查詢。</li>
+</ul>
+</div>
+</div>
+
+<h3>5.1 完整的使用範例（示意）</h3>
+<p>情境：騎士想從埔里走台 14 甲線到武嶺當天來回，傍晚前回到埔里。這條路是技術檢查 C4 用過的公開參考路線（去程與回程合計約 112 km）。</p>
+<ol class="steps">
+  <li><span class="who u">騎士</span>在 Profile 區選取 16 個歷史 GPX，按「更新 Profile」。<br><span class="who d">程式</span>清理、裁切、切段、分類，重建配速表，顯示涵蓋度摘要：三個類別的資料都足夠。</li>
+  <li><span class="who u">騎士</span>在 Trip Planner 輸入：「明天從埔里酒廠走台 14 甲到武嶺來回，回程在清境休息 20 分鐘」，設定最早 07:00 出發、最晚 17:30 回到出發點、出發油量 90%。<br><span class="who d">程式</span>先做本機的輸入保護檢查（沒有門牌或座標），才把文字交給 Planner。</li>
+  <li><span class="who l">Planner LLM</span>把描述轉成結構化的路線請求（起點、目的地、途經點、來回）與一筆休息需求（地點清境、20 分鐘、方向回程）。如果沒有寫方向，<span class="who d">程式</span>會在同一輪追問中問「去程或回程」。</li>
+  <li><span class="who d">程式</span>向路線引擎各取一次去程與回程，檢查沒有警告、國道檢查通過、起點終點與途經點的偏移在 200 m 內，存成不可變的路線快照。畫面顯示路線確認：來回、約 112 km、主要道路台 14 線與台 14 甲線。</li>
+  <li><span class="who d">程式</span>把路線切段並分類，建立檢查點（加油站、途經點、折返點），把清境的休息對到回程的檢查點。</li>
+  <li><span class="who l">Planner LLM</span>規劃並執行工具呼叫，取得預報、民用暮光終與加油站資料。<br><span class="who d">程式</span>從 07:00 起每 15 分鐘產生一個候選出發時間，逐一計算 ETA（典型與保守），由 Validator 判定規則 1–4。</li>
+  <li><span class="who d">程式</span>選出最晚的可行候選，例如 09:15 出發、保守抵達 16:50（示意）。規則 1、2、3 是 PASS；規則 4 因為沒有即時路況來源是 UNKNOWN，所以計畫狀態是 <strong>CONDITIONAL</strong>，並附固定的人工確認指引。</li>
+  <li><span class="who d">程式</span>以固定模板組成說明，經規則 5 檢查每個數值都能追溯；<span class="who l">Planner</span>的補充說明通過規則 5 才附加。畫面顯示來源證據、加油安排、去程與回程的天氣。</li>
+</ol>
+
+<!-- ============================================================ 6 -->
+<h2 id="s6"><span class="num">6</span>Implementation Status</h2>
+<p>依據：本機工作區的實際檔案、<code>pytest</code> 的執行結果（2026-11-16，100 passed）、GitHub Issues 的狀態。欄位「程式」只看 <code>src/</code> 之下是否有檔案；「新規格的驗證」指 CR-01 與後續裁決新增的驗收測試是否已實作。</p>
+
+<div class="card">
+<strong>DESIGN §9.1 的 11 個 Must 模組（9 個產品模組，加 E1 Lite 與 E2）的進度</strong>
+<div class="bar" aria-label="模組進度"><span class="s1" style="width:0%"></span><span class="s2" style="width:27.3%"></span><span class="s3" style="width:72.7%"></span></div>
+<div class="legend"><span><i style="background:var(--pass)"></i>完成並通過新規格的驗收：0</span><span><i style="background:#e0a100"></i>有 Spike 版：3（ingest、routes、pace）</span><span><i style="background:#b9c1cb"></i>尚未建立：8（routing、sources、planner、validator、kb、app、E1 Lite、E2）</span></div>
+<p class="src" style="margin-bottom:0">依 DESIGN §9.3，Spec 與 Tickets 之後的實作從 M2（11/21）才開始，G1 至 G3 已經提前完成；所以「0 完成」本身還不算落後於計畫。落後的是 C3 與氣象署授權碼的申請（§9.3）。</p>
+</div>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th>模組</th><th>程式</th><th>現有測試</th><th>新規格的驗證</th><th>規格</th><th>Ticket</th><th>狀態</th></tr></thead>
+<tbody>
+<tr><td><code>contracts</code>（支援模組）</td><td>已建立：契約 v0.2 的 Schema 與驗證</td><td>50 個測試函式</td><td>0（v0.3 的欄位未實作）</td><td>已定（SB-2 關閉）</td><td>#7 OPEN</td><td><span class="b partial">PARTIAL</span></td></tr>
+<tr><td><code>ingest</code></td><td>Spike：讀檔、清理、裁切、切段、曲率分類</td><td>14 個</td><td>0（停等三分類、假停留修正未實作）</td><td>已定</td><td>#9 OPEN；多檔合併與去重複<strong>沒有 Ticket</strong></td><td><span class="b partial">PARTIAL</span></td></tr>
+<tr><td><code>pace</code></td><td>Spike：配速表、ETA、暫定的餘裕係數</td><td rowspan="2">18 個（兩個模組共用）</td><td>0（停等比例、餘裕規則、版本未實作）</td><td>已定</td><td>#10、#11 OPEN</td><td><span class="b partial">PARTIAL</span></td></tr>
+<tr><td><code>routes</code></td><td>Spike：由軌跡建立路線目錄、軌跡比對</td><td>0（沿線檢查點、途經點檢查點、鄉鎮對應、路線接近比例未實作）</td><td>已定（SB-8 關閉）</td><td>沒有</td><td><span class="b partial">PARTIAL</span></td></tr>
+<tr><td><code>routing</code></td><td>沒有</td><td>—</td><td>0</td><td>已定（SB-1、SB-7、SB-8 關閉）</td><td>沒有</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td><code>sources</code>：加油站、封路情境</td><td>沒有</td><td>—</td><td>0</td><td>大致已定</td><td>沒有</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td><code>sources</code>：預報、民用暮光終</td><td>沒有</td><td>—</td><td>0</td><td>草案（SB-3、SB-4 未解決）</td><td>沒有</td><td><span class="b blocked">BLOCKED</span>（C3）</td></tr>
+<tr><td><code>validator</code></td><td>沒有</td><td>—</td><td>0</td><td>規則已定；RuleResult 在未凍結的 SPEC（SB-10）</td><td>#8 OPEN（只有規則 3 的範圍判定）</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td><code>planner</code>（LLM）</td><td>沒有</td><td>—</td><td>0</td><td>流程已定；模型未選定</td><td>沒有</td><td><span class="b blocked">BLOCKED</span>（C3）</td></tr>
+<tr><td><code>kb</code>：知識庫、公路與地標詞彙表</td><td>沒有</td><td>—</td><td>0</td><td>內容沒有規格</td><td>沒有</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td>主程式：候選評估、排序、重新規劃的控制（DESIGN §8；§9.1 沒有獨立的列）</td><td>沒有</td><td>—</td><td>0</td><td>演算法已定</td><td>沒有</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td>Streamlit 介面（<code>app/</code>）</td><td>沒有。只有 G3 凍結的 HTML 原型（舊範圍：兩條固定路線）</td><td>原型的回歸檢查腳本（不屬於 pytest）</td><td>0</td><td>UI-0 的畫面已確認；SB-6、SB-10 未關閉</td><td>#12 OPEN（Mock-data Skeleton）</td><td><span class="b fail">尚未開始</span></td></tr>
+<tr><td>E1 Lite（<code>experiments/e1_lite/</code>）</td><td>沒有</td><td>—</td><td>—</td><td>分析計畫尚未寫定</td><td>沒有</td><td><span class="b nv">NOT RUN</span></td></tr>
+<tr><td>E2：題庫、Oracle、Runner</td><td>沒有</td><td>—</td><td>—</td><td>規則已裁決；E2 規格尚未寫</td><td>沒有</td><td><span class="b nv">NOT RUN</span></td></tr>
+<tr><td>LLM Tool Calling Smoke Test</td><td>腳本已建立</td><td>只有本機的 Mock 驗證紀錄（2026-11-14）</td><td>真實 API：NOT RUN</td><td>—</td><td>—</td><td><span class="b blocked">BLOCKED</span>（C3）</td></tr>
+<tr><td>M1-B Spike 的執行腳本（<code>experiments/m1b_spike/</code>）</td><td>已建立（不是產品程式）</td><td>—</td><td>—</td><td>—</td><td>—</td><td>技術驗證用；不是 E1／E2</td></tr>
+<tr><td>CR-01 技術檢查腳本</td><td>已建立（不是產品程式）</td><td>—</td><td>C1 PASS、C2 FAIL、C4 FAIL、C4b PASS</td><td>—</td><td>—</td><td>已執行；不是 E1／E2</td></tr>
+</tbody></table></div>
+
+<h3>6.1 現有的 100 個測試驗證了什麼</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>測試檔</th><th>測試函式</th><th>驗證的內容</th><th>不能推論的事</th></tr></thead>
+<tbody>
+<tr><td><code>tests/test_contracts.py</code></td><td class="c">50</td><td>資料契約 v0.2 四份契約的 Schema 與不變條件</td><td rowspan="3">它們使用合成的 fixture，驗證的是 CR-01 之前的契約與 Spike 的行為。<strong>沒有任何一個測試驗證 CR-01 之後的新規格</strong>（停等寬放的 SB2-T1 至 T13、路線規則的 Q3-T1 至 T34、休息的 Q1-T1 至 T7、SPEC-001 第 9 節的 S 系列）。也沒有端到端測試。</td></tr>
+<tr><td><code>tests/test_ingest.py</code></td><td class="c">14</td><td>GPX 清理、裁切、切段與公開版輸出</td></tr>
+<tr><td><code>tests/test_routes_pace_eta.py</code></td><td class="c">18</td><td>由軌跡建立路線、配速表、ETA 的計算</td></tr>
+</tbody></table></div>
+<p class="src">pytest 收集到 100 個測試項目（含參數化的案例）；82 是測試函式的數目。</p>
+
+<h3>6.2 Git 與 GitHub 的狀態</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>項目</th><th>實際狀態</th><th>影響</th></tr></thead>
+<tbody>
+<tr><td>GitHub <code>main</code></td><td>停在 <code>e70d37d</code>（Proposal 的證據修訂）。README 寫「目前為 Proposal 階段，尚未實作」，並仍描述 P50／P90 與和 Google Maps 的比較；本機分支的 README 也相同</td><td>外部能看到的 repo 沒有任何程式與現行規格；只 push 不會讓 README 反映現況，還要改寫</td></tr>
+<tr><td>本機分支 <code>docs-scope-reduction-mvp</code></td><td>比 <code>main</code> 多 2 個 commit（<code>9b3af99</code>、<code>df7c8f1</code>），<strong>沒有 push</strong></td><td>程式、測試與 CR-01 的文件都只在本機</td></tr>
+<tr><td>未提交的修改</td><td>5 份文件有修改；另有 11 個未追蹤的項目（裁決紀錄、審查報告、Tickets 索引、試算腳本，以及這份報告的資料夾）</td><td>commit <code>df7c8f1</code> 之後的裁決與同步都還沒有進版控</td></tr>
+<tr><td>Issues #7–#12</td><td>6 張都是 OPEN，沒有指派、沒有留言、沒有對應的 PR</td><td>Issue 的內文是自足的，因為規格分支不在 GitHub 上</td></tr>
+<tr><td>Pull Requests</td><td>#1–#6 都是 Proposal 階段的文件，已合併</td><td>沒有實作的 PR</td></tr>
+</tbody></table></div>
+
+<h3>6.3 技術檢查與 Spec Blockers</h3>
+<div class="two">
+<div class="tbl-wrap"><table>
+<thead><tr><th>檢查</th><th>結果</th><th>意義</th></tr></thead>
+<tbody>
+<tr><td>C1 曲率一致性</td><td><span class="b pass">PASS</span></td><td>路線引擎的幾何和 GPS 幾何算出的典型時間相差 2.3% 以內（4 段山路）</td></tr>
+<tr><td>C2 整趟誤差</td><td><span class="b fail">FAIL</span></td><td>低曲率路段的誤差偏大；把短停留算進去後偏樂觀約兩成。促成停等寬放升為 Must</td></tr>
+<tr><td>C3 LLM 與氣象署</td><td><span class="b blocked">BLOCKED</span></td><td>沒有憑證，沒有發出任何呼叫，沒有以模擬結果代替</td></tr>
+<tr><td>C4 路線快照</td><td><span class="b fail">FAIL</span></td><td>公開伺服器忽略硬性排除</td></tr>
+<tr><td>C4b 軟性偏好</td><td><span class="b pass">PASS</span></td><td>5 條參考路線都不含國道；路線參數因此定案</td></tr>
+</tbody></table></div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Blocker</th><th>狀態</th></tr></thead>
+<tbody>
+<tr><td>SB-1 ID 格式；SB-2 停等寬放；SB-7 目標 GPX；SB-8 路線規則；SB-9 規則 3 的範圍</td><td><span class="b pass">CLOSED</span>（規格與測試條件寫定；程式未實作）</td></tr>
+<tr><td>SB-3 路段對應鄉鎮；SB-4 預報時段欄位</td><td><span class="b blocked">等 C3 與外部資料</span></td></tr>
+<tr><td>SB-5 C3 真實 API 驗證</td><td><span class="b blocked">BLOCKED／NOT RUN</span></td></tr>
+<tr><td>SB-6 輸入保護；SB-10 尚未逐項審查的內容</td><td><span class="b partial">UI-0 需要的部分已確認，其餘未關閉</span></td></tr>
+</tbody></table></div>
+</div>
+<p class="src">這些檢查都只用 16 趟配速行程與公開地標，不是 E1／E2 的結果；CLOSED 表示規格定案，不表示功能完成。來源：CR-01 §15、§24–25；<code>lead_dispositions_resolution.md</code> §9.11。</p>
+
+<!-- ============================================================ 7 -->
+<h2 id="s7"><span class="num">7</span>End-to-End Workflow</h2>
+<p>完整的資料流（DESIGN §5、§8；SPEC-001 §7）。這是規劃中的流程。目前有 Spike 版（契約 v0.2）的只有 A 欄的讀檔到配速表，以及 B 欄中「由軌跡建立路線目錄」與 ETA 計算的舊版；其餘都還沒有程式。</p>
+<figure>
+<svg viewBox="0 0 1120 1010" role="img" aria-label="端到端流程圖">
+  <defs>
+    <style>
+      .n{stroke-width:1.5;rx:6}
+      .nd{fill:#e9f1f8;stroke:#1f4e79}
+      .nl{fill:#fdebd3;stroke:#b25a00}
+      .ne{fill:#ffffff;stroke:#55606e}
+      .nf{fill:#fbe5e3;stroke:#b3261e}
+      .nk{fill:#ece6f8;stroke:#5b3aa0}
+      .nu{fill:#e3f1ea;stroke:#16663c}
+      .tx{font:600 13px "Microsoft JhengHei","Noto Sans TC",sans-serif;fill:#1b2430}
+      .ts{font:11.5px "Microsoft JhengHei","Noto Sans TC",sans-serif;fill:#46515f}
+      .fl{stroke:#46515f;stroke-width:1.4;fill:none}
+      .ff{stroke:#b3261e;stroke-width:1.3;fill:none;stroke-dasharray:5 3}
+      .fk{stroke:#5b3aa0;stroke-width:1.3;fill:none;stroke-dasharray:5 3}
+      .hd{font:700 14px "Microsoft JhengHei",sans-serif;fill:#1f4e79}
+      .lane{fill:#fafbfc;stroke:#d5dbe3}
+    </style>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#46515f"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+    <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5b3aa0"/></marker>
+  </defs>
+  <rect class="lane" x="10" y="10" width="300" height="990" rx="8"/>
+  <rect class="lane" x="320" y="10" width="480" height="990" rx="8"/>
+  <rect class="lane" x="810" y="10" width="300" height="990" rx="8"/>
+  <text class="hd" x="26" y="34">A. Profile：歷史 GPX → 配速表</text>
+  <text class="hd" x="336" y="34">B. 規劃：行程描述 → 計畫</text>
+  <text class="hd" x="826" y="34">失敗與 UNKNOWN 的出口</text>
+
+  <!-- lane A -->
+  <rect class="n nu" x="30" y="50" width="260" height="46"/><text class="tx" x="160" y="70" text-anchor="middle">騎士上傳歷史 GPX（多檔）</text><text class="ts" x="160" y="87" text-anchor="middle">只在本機；不送任何外部服務</text>
+  <rect class="n nd" x="30" y="120" width="260" height="46"/><text class="tx" x="160" y="140" text-anchor="middle">合併、以內容去重複</text><text class="ts" x="160" y="157" text-anchor="middle">保留行程與被排除的行程不處理</text>
+  <rect class="n nd" x="30" y="190" width="260" height="58"/><text class="tx" x="160" y="210" text-anchor="middle">清理、裁掉頭尾、切段</text><text class="ts" x="160" y="227" text-anchor="middle">停等分類：疑似假停留／短停留／長停留</text><text class="ts" x="160" y="241" text-anchor="middle">Spike 已有；停等分類是 #9</text>
+  <rect class="n nd" x="30" y="272" width="260" height="46"/><text class="tx" x="160" y="292" text-anchor="middle">曲率分類（三類，門檻每次重算）</text><text class="ts" x="160" y="309" text-anchor="middle">衍生路段表（契約 1）</text>
+  <rect class="n nd" x="30" y="342" width="260" height="58"/><text class="tx" x="160" y="362" text-anchor="middle">配速表（契約 3）</text><text class="ts" x="160" y="379" text-anchor="middle">各類別的速度、停等比例；餘裕係數</text><text class="ts" x="160" y="393" text-anchor="middle">新版本，不覆寫；#10</text>
+  <rect class="n nu" x="30" y="424" width="260" height="46"/><text class="tx" x="160" y="444" text-anchor="middle">涵蓋度摘要</text><text class="ts" x="160" y="461" text-anchor="middle">某類別不足 → 之後的 ETA 為 UNKNOWN</text>
+  <path class="fl" d="M160,96 L160,118" marker-end="url(#a2)"/><path class="fl" d="M160,166 L160,188" marker-end="url(#a2)"/><path class="fl" d="M160,248 L160,270" marker-end="url(#a2)"/><path class="fl" d="M160,318 L160,340" marker-end="url(#a2)"/><path class="fl" d="M160,400 L160,422" marker-end="url(#a2)"/>
+  <path class="fl" d="M290,371 L340,371 L340,560 L372,560" marker-end="url(#a2)"/>
+  <text class="ts" x="30" y="500">研究用的配速表（research-）凍結後獨立保存；</text>
+  <text class="ts" x="30" y="516">介面的更新只產生使用者的版本（user-）。</text>
+  <text class="ts" x="30" y="548">Profile 更新後，既有的路線要依新的門檻</text>
+  <text class="ts" x="30" y="564">重新分類；無法重建就不可使用。</text>
+
+  <!-- lane B -->
+  <rect class="n nu" x="374" y="50" width="370" height="46"/><text class="tx" x="559" y="70" text-anchor="middle">騎士輸入行程描述與表單</text><text class="ts" x="559" y="87" text-anchor="middle">日期、最早出發、期限、出發油量、行程型態</text>
+  <rect class="n nd" x="374" y="118" width="370" height="40"/><text class="tx" x="559" y="143" text-anchor="middle">本機輸入保護（門牌、座標）＋表單檢查</text>
+  <rect class="n nl" x="374" y="180" width="370" height="52"/><text class="tx" x="559" y="201" text-anchor="middle">Planner LLM：解析成路線請求、休息需求、休息策略</text><text class="ts" x="559" y="219" text-anchor="middle">只能引用詞彙表與 Profile 中的代號</text>
+  <rect class="n nl" x="374" y="254" width="370" height="40"/><text class="tx" x="559" y="279" text-anchor="middle">缺條件？→ 一輪追問（LLM；休息的兩題用固定模板）</text>
+  <rect class="n nd" x="374" y="316" width="370" height="58"/><text class="tx" x="559" y="337" text-anchor="middle">取得路線</text><text class="ts" x="559" y="354" text-anchor="middle">目標 GPX ／ Snapshot Mode 讀快照 ／ 呼叫路線引擎</text><text class="ts" x="559" y="368" text-anchor="middle">去程與回程各一次；30 天內重用既有快照</text>
+  <rect class="n nd" x="374" y="396" width="370" height="52"/><text class="tx" x="559" y="417" text-anchor="middle">採用條件：沒有警告、國道檢查通過、偏移 ≤ 200 m、順序正確</text><text class="ts" x="559" y="435" text-anchor="middle">通過才存成不可變的路線快照</text>
+  <rect class="n nd" x="374" y="470" width="370" height="46"/><text class="tx" x="559" y="490" text-anchor="middle">路線目錄：切段、曲率分類、檢查點</text><text class="ts" x="559" y="507" text-anchor="middle">加油站、途經點、折返點；休息對應到檢查點</text>
+  <rect class="n nd" x="374" y="540" width="370" height="46"/><text class="tx" x="559" y="560" text-anchor="middle">候選出發時間（每 15 分鐘）→ ETA</text><text class="ts" x="559" y="577" text-anchor="middle">典型＝移動＋停等寬放＋休息；保守＝典型＋餘裕</text>
+  <rect class="n nd" x="374" y="608" width="370" height="46"/><text class="tx" x="559" y="628" text-anchor="middle">資料工具：預報、民用暮光終、加油站、封路情境</text><text class="ts" x="559" y="645" text-anchor="middle"><tspan fill="#b25a00" font-weight="700">LLM</tspan> 規劃並執行工具呼叫；每筆資料帶來源證據</text>
+  <rect class="n nd" x="374" y="676" width="370" height="46"/><text class="tx" x="559" y="696" text-anchor="middle">Validator：規則 1–4 → PASS／FAIL／UNKNOWN</text><text class="ts" x="559" y="713" text-anchor="middle">每個候選都評估；計畫狀態 FEASIBLE／CONDITIONAL／INFEASIBLE</text>
+  <rect class="n nd" x="374" y="744" width="370" height="46"/><text class="tx" x="559" y="764" text-anchor="middle">選最晚的可行候選；沒有 → 重新規劃（最多 2 次）</text><text class="ts" x="559" y="781" text-anchor="middle"><tspan fill="#b25a00" font-weight="700">LLM</tspan> 提案、程式檢查；不得移除或縮短騎士指定的休息</text>
+  <rect class="n nd" x="374" y="812" width="370" height="46"/><text class="tx" x="559" y="832" text-anchor="middle">固定模板的說明 → 規則 5 檢查每個數值可追溯</text><text class="ts" x="559" y="849" text-anchor="middle"><tspan fill="#b25a00" font-weight="700">LLM</tspan> 的補充說明通過規則 5 才附加</text>
+  <rect class="n nu" x="374" y="880" width="370" height="52"/><text class="tx" x="559" y="901" text-anchor="middle">UI 輸出</text><text class="ts" x="559" y="919" text-anchor="middle">Trip Result、Validation &amp; Replanning、來源證據、路線確認</text>
+  <path class="fl" d="M559,96 L559,116" marker-end="url(#a2)"/><path class="fl" d="M559,158 L559,178" marker-end="url(#a2)"/><path class="fl" d="M559,232 L559,252" marker-end="url(#a2)"/><path class="fl" d="M559,294 L559,314" marker-end="url(#a2)"/><path class="fl" d="M559,374 L559,394" marker-end="url(#a2)"/><path class="fl" d="M559,448 L559,468" marker-end="url(#a2)"/><path class="fl" d="M559,516 L559,538" marker-end="url(#a2)"/><path class="fl" d="M559,586 L559,606" marker-end="url(#a2)"/><path class="fl" d="M559,654 L559,674" marker-end="url(#a2)"/><path class="fl" d="M559,722 L559,742" marker-end="url(#a2)"/><path class="fl" d="M559,790 L559,810" marker-end="url(#a2)"/><path class="fl" d="M559,858 L559,878" marker-end="url(#a2)"/>
+
+  <!-- failure lane -->
+  <rect class="n nf" x="830" y="112" width="262" height="52"/><text class="tx" x="961" y="133" text-anchor="middle">不送出，回到表單</text><text class="ts" x="961" y="151" text-anchor="middle">門牌或座標；缺出發油量；缺描述</text>
+  <path class="ff" d="M744,138 L828,138" marker-end="url(#a3)"/>
+  <rect class="n nf" x="830" y="248" width="262" height="52"/><text class="tx" x="961" y="269" text-anchor="middle">追問後仍對應不到 → 不產生計畫</text><text class="ts" x="961" y="287" text-anchor="middle">沒有第二輪追問</text>
+  <path class="ff" d="M744,274 L828,274" marker-end="url(#a3)"/>
+  <rect class="n nf" x="830" y="322" width="262" height="124"/><text class="tx" x="961" y="343" text-anchor="middle">路線錯誤（六個代碼）</text>
+  <text class="ts" x="961" y="362" text-anchor="middle">not_in_gazetteer · routing_unavailable</text>
+  <text class="ts" x="961" y="378" text-anchor="middle">highway_in_route · snapshot_missing</text>
+  <text class="ts" x="961" y="394" text-anchor="middle">target_gpx_invalid</text>
+  <text class="ts" x="961" y="410" text-anchor="middle">target_gpx_not_round_trip</text>
+  <text class="ts" x="961" y="432" text-anchor="middle">LLM 不得產生或補上路線</text>
+  <path class="ff" d="M744,345 L828,345" marker-end="url(#a3)"/><path class="ff" d="M744,422 L828,422" marker-end="url(#a3)"/>
+  <rect class="n nk" x="830" y="536" width="262" height="52"/><text class="tx" x="961" y="557" text-anchor="middle">ETA 無法估計 → UNKNOWN</text><text class="ts" x="961" y="575" text-anchor="middle">某類別沒有配速；不以其他類別代替</text>
+  <path class="fk" d="M744,563 L828,563" marker-end="url(#a4)"/>
+  <rect class="n nk" x="830" y="604" width="262" height="66"/><text class="tx" x="961" y="625" text-anchor="middle">資料缺漏 → UNKNOWN</text><text class="ts" x="961" y="643" text-anchor="middle">API 失敗、超出預報涵蓋、對不到鄉鎮、</text><text class="ts" x="961" y="659" text-anchor="middle">沒有路況來源；不猜測補值</text>
+  <path class="fk" d="M744,631 L828,631" marker-end="url(#a4)"/>
+  <rect class="n nf" x="830" y="686" width="262" height="46"/><text class="tx" x="961" y="706" text-anchor="middle">評估中途失敗 → evaluation_failed</text><text class="ts" x="961" y="723" text-anchor="middle">不宣稱最晚的可行出發時間</text>
+  <path class="ff" d="M744,704 L828,704" marker-end="url(#a3)"/>
+  <rect class="n nf" x="830" y="748" width="262" height="52"/><text class="tx" x="961" y="769" text-anchor="middle">無可行解 → INFEASIBLE 報告</text><text class="ts" x="961" y="787" text-anchor="middle">FAIL 統計、代表性失敗候選、替代方案</text>
+  <path class="ff" d="M744,772 L828,772" marker-end="url(#a3)"/>
+  <rect class="n nf" x="830" y="816" width="262" height="46"/><text class="tx" x="961" y="836" text-anchor="middle">模板沒通過規則 5 → 輸出驗證錯誤</text><text class="ts" x="961" y="853" text-anchor="middle">不顯示計畫狀態</text>
+  <path class="ff" d="M744,838 L828,838" marker-end="url(#a3)"/>
+  <!-- legend -->
+  <rect class="n nu" x="330" y="954" width="18" height="14"/><text class="ts" x="354" y="966">使用者／介面</text>
+  <rect class="n nl" x="450" y="954" width="18" height="14"/><text class="ts" x="474" y="966">LLM</text>
+  <rect class="n nd" x="520" y="954" width="18" height="14"/><text class="ts" x="544" y="966">確定性的程式</text>
+  <rect class="n nf" x="640" y="954" width="18" height="14"/><text class="ts" x="664" y="966">失敗：不產生計畫</text>
+  <rect class="n nk" x="790" y="954" width="18" height="14"/><text class="ts" x="814" y="966">UNKNOWN：計畫最多是 CONDITIONAL</text>
+</svg>
+<figcaption>LLM（Planner）出現在四處，另加一輪追問（DESIGN §8）：解析行程描述（Algorithm 1 第 01 行）、追問（第 02 行）、規劃並執行多步的工具呼叫（第 08 行）、重新規劃的提案（第 18 行）、撰寫補充說明（第 23 行）。路線解析（第 03–04 行）與候選迴圈（第 09–15 行）沒有 LLM：路線、每個候選的數值、規則判定、排序與顯示的固定文字都由確定性的程式產生。</figcaption>
+</figure>
+
+<!-- ============================================================ 8 -->
+<h2 id="s8"><span class="num">8</span>Research &amp; Evaluation <span class="b nv">兩個實驗都尚未執行</span></h2>
+<p>來源：DESIGN §6.2（E1 Lite）、§6.3（E2）；CR-01 §13；<code>lead_dispositions_resolution.md</code> §5、§6。下表描述的是<strong>設計</strong>。</p>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th>項目</th><th>E1 Lite：ETA 的誤差</th><th>E2：Agent 的可行性</th></tr></thead>
+<tbody>
+<tr><td>研究問題</td><td>依路段類別的個人配速表估計騎乘時間，誤差有多大？在山路段與沒騎過的路上，和單一速度、路線引擎的時間相比如何？</td><td>AI Agent 結合確定性的工具與獨立的驗證，能否提高重機行程規劃的可行性？</td></tr>
+<tr><td>方法</td><td>M1：依曲率類別的個人配速表。兩種比較：移動時間；記錄範圍內的騎乘時間（移動加短停留）</td><td>三組用同一個模型與同一份凍結資料：A1 只有 LLM；A2 LLM 加工具；A3 完整 MVP（工具加確定性的驗證與排序）</td></tr>
+<tr><td>基準</td><td>B0：全部路段速度的不加權中位數。B1：單一騎乘速度。路線引擎的時間只在公開地標之間、時間定義相容的路段另外列出</td><td>A1、A2 是對照；三組共用五條規則的自然語言定義</td></tr>
+<tr><td>題目／資料</td><td>16 趟配速行程（留一趟，開發數字）；4 趟保留行程（凍結後由隔離的腳本讀一次，只作描述）</td><td>12–15 題，都在凍結的路線快照上；最多 3 題用標示為模擬的預報；真實行程題最多 4 題</td></tr>
+<tr><td>標準答案</td><td>GPX 記錄的實際時間</td><td>獨立的 Oracle 腳本：不匯入 Planner、Validator 或任何工具的程式碼；不以 Validator 的規則評分</td></tr>
+<tr><td>指標</td><td>MAE、MAPE、平均帶符號誤差，依類別分層；實際時間落在保守估計內的趟數（只作描述）</td><td>Valid Plan Yield、不可行情境的正確拒答率、Over-refusal Rate、Oracle 違規率、UNKNOWN 處理正確率、數字一致率；另有規則 3 方案 A 對 B 的敏感度分析</td></tr>
+<tr><td>待驗證的假設</td><td>H1：在山路的代理路段（中、高曲率），個人配速表的移動時間 MAPE 低於 B0</td><td>H2：A3 的 Valid Plan Yield 高於 A2 與 A1，違規率較低，Over-refusal Rate 沒有明顯升高。只以預報沒有經過人工修改的題目（<code>N_weather_real</code>）判讀；任一指標的分母少於 5 題時，結論寫「證據有限，不下結論」</td></tr>
+<tr><td>現況</td><td><span class="b nv">NOT RUN</span>；分析計畫尚未寫定；腳本尚未建立</td><td><span class="b nv">NOT RUN</span>；題庫、Oracle、Runner 都尚未建立；<span class="b blocked">LLM 等 C3</span></td></tr>
+</tbody></table></div>
+
+<h3>8.1 訓練與保留資料的隔離</h3>
+<ul>
+  <li>保留行程依事前寫定的規則指定：可選的 20 趟中，依第一個軌跡點的時間取最新的 4 趟。選取只讀檔案的起始時間。清單的雜湊已記錄。<span class="src">（CR-01 §13）</span></li>
+  <li>配速表、分級門檻、停等比例與餘裕係數只由 16 趟配速行程決定，並在讀取保留行程之前凍結；研究用的配速表（<code>research-</code>）和介面更新的版本（<code>user-</code>）分開。</li>
+  <li>凍結之前，任何腳本都不得讀取保留行程的時間；<code>ingest</code> 的重建只處理配速行程。<code>pace</code> 建立配速表時已經會拒絕非配速行程（有測試 <code>test_holdout_trip_is_refused</code>）；<code>ingest</code> 這一層的防線要到 #9 才加上。</li>
+</ul>
+
+<h3>8.2 Proposal 的假設還能不能被回答</h3>
+<p class="src">這張表是 Scope Reduction 的紀錄：不再檢驗的假設是已接受的決策，期末不能提出對應的結論。它不是課程要求符合與否的判定。</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Proposal 的假設（p.34–35）</th><th>現行設計能回答嗎</th><th>判斷</th></tr></thead>
+<tbody>
+<tr><td>(a) 個人配速模型在山區路段的整趟誤差低於一般導航</td><td>不能。E1 Lite 的對照是單一速度，不是一般導航；路線引擎的時間只在少數公開地標之間的路段另列，不作整趟的比較；專題明確不宣稱比 Google Maps 準</td><td><span class="b sr">已接受的縮減：這個假設不再被檢驗</span></td></tr>
+<tr><td>(b) 完整 Agent 對獨立 Oracle 的違規率低於只用 LLM</td><td>可以，範圍較小：12–15 題、一組凍結的路線、單一騎士。對應 H2</td><td><span class="b partial">PARTIAL</span>：設計保留，尚未執行</td></tr>
+<tr><td>(c) 拿掉個人配速或天氣、路況資料後變差</td><td>配速消融是 Should；天氣與路況的消融不做</td><td><span class="b sr">已接受的縮減：大部分不再被檢驗</span></td></tr>
+<tr><td>E3 風險規則抓得到歷史封路日</td><td>不做</td><td><span class="b sr">已接受的縮減：放棄</span></td></tr>
+<tr><td>E4 對騎士有實際價值</td><td>併入 Demo，沒有獨立的評估</td><td><span class="b sr">已接受的縮減：沒有實驗證據</span></td></tr>
+</tbody></table></div>
+
+<h3>8.3 已知的效度限制</h3>
+<ul>
+  <li><strong>配速行程上的數字不是事前預測。</strong> 檢查 C2 與停等寬放的試算已經在同一批 16 趟行程上做過留一趟的比較；H1 的方向因此在 E1 Lite 執行之前就已經看過（DESIGN §6.2）。停等比例與餘裕係數也出自這 16 趟，依據薄弱。</li>
+  <li><strong>保留行程不是完全沒被看過。</strong> 4 趟保留行程在早期的 Spike 中都當過配速行程。</li>
+  <li><strong>樣本很小。</strong> 一位騎士、21 趟行程、12–15 題；結果只能描述，不能做統計推論。</li>
+  <li><strong>E2 只涵蓋凍結的路線。</strong> 自由文字轉路線的能力不在 E2 的結論內，另由 Demo 驗收。</li>
+  <li><strong>規則 3 的 Oracle 有時間相依的部分。</strong> 跨預報時段的題目要有獨立實作的 ETA 才計分；沒有實作就不宣稱已驗證跨時段的對齊。Oracle 和 production 共用凍結的輸入，獨立的只有程式碼。</li>
+  <li><strong>A2 與 A3 的流程差異不只是 Validator。</strong> A3 用固定模板與規則 5；報告必須列出這些差異。</li>
+  <li><strong>Over-refusal Rate 量不到方案 A 比「最後 20%」嚴格多少</strong>，所以另做敏感度分析，而且不稱為 Over-refusal Rate。</li>
+  <li><strong>核心情境可能沒有實測的佐證。</strong> 真實的來回行程很少（16 趟配速行程中不到 3 趟）；回到出發點的時間誤差只能在極少數樣本上報告，也可能完全沒有樣本。E1 Lite 的評估單位是一個裁切後的 GPX 檔，不驗證回到出發點的時間；它的「整趟」是記錄範圍內的騎乘時間，不是門到門（DESIGN §12）。</li>
+  <li><strong>H2 的判讀有事前的限制，但沒有數值門檻。</strong> 任一指標的分母少於 5 題時只能寫「證據有限，不下結論」；「沒有明顯升高」沒有事前定義的數值。</li>
+  <li><strong>E2 量的是有沒有遵守規則，不是規則對不對。</strong> Oracle 套用的是同一套專題自訂的規則定義（例如降雨機率 ≥ 70%、規則 3 的方案 A），三組也共用這五條定義。</li>
+  <li><strong>A1、A2 的計畫狀態由 LLM 自行宣告</strong>，因為它們沒有 Validator（DESIGN §6.3）。</li>
+</ul>
+
+<!-- ============================================================ 9 -->
+<h2 id="s9"><span class="num">9</span>Roadmap</h2>
+<p>日期取自 DESIGN §9.3。<strong>12/20 是專案自己訂的交付日；課程文件沒有載明期末發表與繳交的日期。</strong></p>
+
+<figure>
+<svg viewBox="0 0 1120 330" role="img" aria-label="里程碑時間軸">
+  <defs><style>
+    .ax{stroke:#9aa5b1;stroke-width:1}
+    .tk{font:11.5px "Microsoft JhengHei",sans-serif;fill:#6b7684}
+    .ph{rx:4;stroke-width:1}
+    .pl{font:600 12.5px "Microsoft JhengHei",sans-serif;fill:#1b2430}
+    .ps{font:11.5px "Microsoft JhengHei",sans-serif;fill:#46515f}
+    .ms{stroke:#b3261e;stroke-width:2}
+    .ml{font:700 12px "Microsoft JhengHei",sans-serif;fill:#b3261e}
+  </style></defs>
+  <!-- x: 11/16 at 150, each day 27.5 px; 12/20 at 150+34*27.5=1085 -->
+  <line class="ax" x1="150" y1="40" x2="1085" y2="40"/>
+  <g class="tk">
+    <text x="150" y="30" text-anchor="middle">11/16</text><line class="ax" x1="150" y1="36" x2="150" y2="300"/>
+    <text x="260" y="30" text-anchor="middle">11/20</text><line class="ax" x1="260" y1="36" x2="260" y2="300" stroke-dasharray="2 4"/>
+    <text x="287.5" y="30" text-anchor="middle"></text>
+    <text x="370" y="30" text-anchor="middle">11/24</text><line class="ax" x1="370" y1="36" x2="370" y2="300" stroke-dasharray="2 4"/>
+    <text x="480" y="30" text-anchor="middle">11/28</text><line class="ax" x1="480" y1="36" x2="480" y2="300" stroke-dasharray="2 4"/>
+    <text x="672.5" y="30" text-anchor="middle">12/5</text>
+    <text x="755" y="30" text-anchor="middle">12/8</text><line class="ax" x1="755" y1="36" x2="755" y2="300" stroke-dasharray="2 4"/>
+    <text x="892.5" y="30" text-anchor="middle">12/13</text><line class="ax" x1="892.5" y1="36" x2="892.5" y2="300" stroke-dasharray="2 4"/>
+    <text x="1085" y="30" text-anchor="middle">12/20</text>
+  </g>
+  <text class="tk" x="10" y="72">規格與 C3</text>
+  <rect class="ph" x="150" y="56" width="110" height="26" fill="#ece6f8" stroke="#5b3aa0"/><text class="pl" x="155" y="74">CR-01、C3 憑證</text>
+  <text class="tk" x="10" y="112">後端</text>
+  <rect class="ph" x="150" y="96" width="302.5" height="26" fill="#fdf1d8" stroke="#c99700"/><text class="pl" x="158" y="114">BATCH-1 #7–#11（未排定日期）</text>
+  <rect class="ph" x="287.5" y="130" width="165" height="26" fill="#f1f3f6" stroke="#9aa5b1" stroke-dasharray="4 3"/><text class="pl" x="294" y="148">M2：routing、sources 等</text>
+  <rect class="ph" x="480" y="130" width="165" height="26" fill="#f1f3f6" stroke="#9aa5b1" stroke-dasharray="4 3"/><text class="pl" x="487" y="148">M3：Validator、Planner</text>
+  <text class="tk" x="10" y="186">介面</text>
+  <rect class="ph" x="370" y="170" width="82.5" height="26" fill="#e6eef7" stroke="#1f4e79"/><text class="pl" x="376" y="188">UI-0 #12</text>
+  <rect class="ph" x="507.5" y="170" width="137.5" height="26" fill="#f1f3f6" stroke="#9aa5b1" stroke-dasharray="4 3"/><text class="pl" x="515" y="188">正式介面與整合</text>
+  <text class="tk" x="10" y="226">實驗</text>
+  <rect class="ph" x="287.5" y="210" width="357.5" height="26" fill="#f1f3f6" stroke="#9aa5b1" stroke-dasharray="4 3"/><text class="pl" x="295" y="228">E2 準備：Oracle 規格、題庫、Runner、Pilot</text>
+  <rect class="ph" x="672.5" y="210" width="192.5" height="26" fill="#e3f4ea" stroke="#1a7f4b"/><text class="pl" x="680" y="228">M4：正式 E2、E1 Lite</text>
+  <text class="tk" x="10" y="266">交付</text>
+  <rect class="ph" x="892.5" y="250" width="192.5" height="26" fill="#e3f4ea" stroke="#1a7f4b"/><text class="pl" x="900" y="268">M5：報告、簡報、影片</text>
+  <!-- milestones -->
+  <line class="ms" x1="480" y1="44" x2="480" y2="300"/><text class="ml" x="484" y="298">11/28 UI Delta Review</text>
+  <line class="ms" x1="672.5" y1="44" x2="672.5" y2="300"/><text class="ml" x="676.5" y="316">12/5 功能凍結；E2 題庫、快照、Oracle 凍結</text>
+  <line class="ms" x1="1085" y1="44" x2="1085" y2="300"/><text class="ml" x="1081" y="298" text-anchor="end">12/20 預定交付</text>
+  <text class="ps" x="759" y="298">12/8：正式 E2 最晚開始</text>
+</svg>
+<figcaption>橫條從開始日的刻度畫到結束日的刻度。黃色與藍色是已有 Ticket 的工作；灰色虛線是<strong>還沒有 Ticket</strong> 的工作；紫色是被憑證卡住的工作，綠色是實驗與交付階段（這兩種也都沒有 Ticket）。BATCH-1 的五張 Issue 沒有排定日期，圖上的位置只表示它們不必等 M2 就可以開始；M2 的完整內容見 DESIGN §9.3（routing、路線建立與檢查點、鄉鎮對應、Profile 匯入、資料工具、E2 Oracle 規格初版）。</figcaption>
+</figure>
+
+<h3>9.1 GitHub Issues 與依賴</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Issue</th><th>內容</th><th>依賴</th><th>狀態</th><th>驗收的重點</th></tr></thead>
+<tbody>
+<tr><td>#7 B1-1</td><td><code>contracts</code>：契約 1、3、4 的 v0.3 欄位與不變條件</td><td>無</td><td>OPEN</td><td>短停留不超過停留總和；餘裕欄位的取值；ETA 的算式</td></tr>
+<tr><td>#9 B1-2</td><td><code>ingest</code>：停等事件與三種分類</td><td>#7</td><td>OPEN</td><td>1 秒的重複位置不算停留；3／180 秒的邊界；拒絕保留行程</td></tr>
+<tr><td>#10 B1-3</td><td><code>pace</code>：停等比例、分級門檻、餘裕係數與版本</td><td>#7、#9</td><td>OPEN</td><td>餘裕規則；每次建立都是新版本，不覆寫</td></tr>
+<tr><td>#11 B1-4</td><td><code>pace</code>：ETA 的停等寬放與安全餘裕</td><td>#7、#10</td><td>OPEN</td><td>加入休息後寬放與餘裕的秒數不變</td></tr>
+<tr><td>#8 B1-5</td><td>規則 3 的範圍判定（純函式）</td><td>無</td><td>OPEN</td><td>來回只有去程有提醒時 PASS；範圍內有提醒時 FAIL</td></tr>
+<tr><td>#12 UI-0</td><td>Streamlit Mock-data Skeleton（CR-01 的 UI Delta Prototype）</td><td>無；不屬於 BATCH-1</td><td>OPEN</td><td>六個畫面區塊、十項驗收條件；通過 UI Delta Review 才進行正式整合</td></tr>
+</tbody></table></div>
+
+<h3>9.2 還沒有 Ticket 的工作</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>工作</th><th>規格的狀態</th><th>卡在哪裡</th></tr></thead>
+<tbody>
+<tr><td><code>routing</code>：路線請求、快照、國道檢查、目標 GPX</td><td>已定（SB-1、SB-7、SB-8 關閉）</td><td>可以開 Ticket；依賴公開伺服器持續可用</td></tr>
+<tr><td><code>routes</code>：檢查點、途經點、鄉鎮對應、路線接近比例、Profile 更新後重新分類</td><td>已定，鄉鎮對應是草案</td><td>鄉鎮對應等 SB-3</td></tr>
+<tr><td><code>ingest</code>：多檔合併、去重複、行程清單</td><td>已定</td><td>可以開 Ticket</td></tr>
+<tr><td><code>contracts</code>：契約 2、ID 格式、RouteSnapshot、Plan Schema 的 Schema 與驗證</td><td>契約 2 與 ID 格式已定；Plan Schema 在未凍結的 SPEC-001</td><td>#7 明文排除這些項目</td></tr>
+<tr><td>主程式：候選評估、排序、重新規劃的控制（DESIGN §8）</td><td>演算法已定</td><td>依賴 <code>pace</code>、<code>sources</code>、<code>validator</code>；SPEC-001 凍結</td></tr>
+<tr><td>以真實的配速行程重建配速表並做回歸檢查</td><td>BATCH-1 索引第 4 節</td><td>需要專題負責人另外同意</td></tr>
+<tr><td><code>sources</code>：加油站快照、封路情境、續航</td><td>大致已定</td><td>加油站快照的資料還沒有準備的紀錄 <span class="b nv">NOT VERIFIED</span></td></tr>
+<tr><td><code>sources</code>：預報、民用暮光終</td><td>草案</td><td><span class="b blocked">C3</span>：氣象署授權碼</td></tr>
+<tr><td><code>planner</code>、LLM 選型</td><td>流程已定</td><td><span class="b blocked">C3</span>：Anthropic 憑證與真實 API 測試</td></tr>
+<tr><td><code>validator</code> 規則 1、2、4、5 與整體結構</td><td>規則已定</td><td>SPEC-001 凍結（SB-10）</td></tr>
+<tr><td><code>kb</code>：知識庫內容、公路與地標詞彙表（5–8 條）</td><td>內容沒有規格</td><td>要先寫內容</td></tr>
+<tr><td>Streamlit 正式介面與後端整合</td><td>UI-0 之後</td><td>UI Delta Review 通過；SPEC-001 凍結</td></tr>
+<tr><td>E1 Lite：分析計畫、隔離的評估腳本</td><td>尚未寫定</td><td>分析計畫要在讀取保留行程之前寫定</td></tr>
+<tr><td>E2：規格、題庫、Oracle、Runner、Pilot</td><td>規則已裁決；E2 的規格未寫</td><td>路線快照；<span class="b blocked">C3</span></td></tr>
+<tr><td>Final Handover：README、DESIGN 的 Results、PPT 超過 20 頁、影片超過 10 分鐘</td><td>—</td><td>等實作與實驗結果</td></tr>
+</tbody></table></div>
+
+<h3>9.3 關鍵路徑與風險</h3>
+<div class="crit"><strong>關鍵路徑（DESIGN §9.2）：</strong><code>ingest</code> → <code>routing</code>（路線來源與快照）→ <code>routes</code>（路線建立與檢查點）→ <code>pace</code> → <code>sources</code> → <code>validator</code> → <code>planner</code> → <code>app</code> → E2 的凍結與執行。<code>kb</code> 可以平行；E1 Lite 在 <code>pace</code> 之後，可以平行。這條路徑上目前有兩條鏈同時卡住：
+<ol>
+<li><strong>路線鏈：</strong><code>routing</code> → <code>routes</code> → 路線快照。兩個模組都還沒有 Ticket，又依賴公開的路線伺服器；M2 的完成條件與 12/5 要凍結的 E2 路線快照都靠它們。BATCH-1（#7 → #9 → #10 → #11）在 <code>pace</code> 之前，也還沒有開始。</li>
+<li><strong>C3 鏈：</strong>Anthropic 憑證與氣象署授權碼 → 真實 API 的 Smoke Test 與模型選定 → Planner 與天氣、日照的資料工具 → 介面與後端整合 → 正式 E2（最晚 12/8 開始）。C3 沒有解決，Planner 無法實作、規則 1 與規則 3 只能是 UNKNOWN、E2 無法執行。</li>
+</ol></div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>風險</th><th>現況</th><th>對 12/5 與 12/20 的影響</th><th>來源</th></tr></thead>
+<tbody>
+<tr><td>C3 的憑證沒有到位</td><td><span class="b blocked">BLOCKED</span>；憑證原訂 11/20 前到位。氣象署授權碼<strong>尚未申請</strong>，而申請排在 M0（11/14–11/16），這一項已經落後</td><td>超過 11/22 時 Planner 與 E2 順延；E2 可能縮題。題數不足 12–15 題時必須明示未達原訂的驗收條件</td><td>DESIGN §9.3、§13.5（C3、R17、R21）；P-10</td></tr>
+<tr><td>工作量與時間</td><td>估計 23–32.5 人日當量，另加停等寬放約 1；一個人開發</td><td>到 12/20「沒有緩衝」；落後時先放掉 Should，再把詞彙表改成下拉、說明只用模板、重新規劃減為 1 次</td><td>DESIGN §9.3、§9.4</td></tr>
+<tr><td>大部分的 Must 還沒有 Ticket</td><td>9 個產品模組中，有 Ticket 的只有 <code>ingest</code>、<code>pace</code>、<code>validator</code>（只有規則 3 的範圍判定）與介面（只有 Skeleton）</td><td>M2、M3 的工作量集中在 11/21–12/4 兩週</td><td>本報告 §6、§9.2</td></tr>
+<tr><td>UI Gate</td><td>UI-0 暫定 11/24–11/27；規格晚定會壓縮整合的時間</td><td>即使 11/28 準時通過，正式整合也只有 11/29–12/4 六天；沒有通過就更短</td><td>CR-01 §22；BATCH-1 索引第 5 節</td></tr>
+<tr><td>SPEC-001 沒有凍結</td><td>SB-3、SB-4、SB-5、SB-6、SB-10 未關閉</td><td>Validator 與介面整合的 Tickets 受限</td><td>CR-01 §24–25</td></tr>
+<tr><td>公開路線伺服器</td><td>只能低頻使用；條款頁沒有讀到原文</td><td>服務不可用時只能用已保存的快照或目標 GPX</td><td>DESIGN §13.5 R23</td></tr>
+<tr><td>文件沒有進版控</td><td>規格分支沒有 push；commit <code>df7c8f1</code> 之後的裁決都沒有 commit</td><td>本機資料遺失會同時失去規格與程式；Handover 的要求是下一位開發者能靠 repo 接手</td><td>本報告 §6.2</td></tr>
+<tr><td>期末日期</td><td>課程文件沒有載明</td><td>12/20 可能不是真正的期限 <span class="b nv">NOT VERIFIED</span></td><td>requirements；DESIGN PD-6</td></tr>
+</tbody></table></div>
+
+<div class="warn"><strong>時程可行性的判斷（這是本報告的評估，不是設計文件的結論）。</strong> 依現有文件，12/5 的功能凍結與 12/20 的交付只是<strong>勉強可行</strong>：一個人開發、約 24–33.5 人日當量、除了最後兩天沒有緩衝。它有三個前提：C3 在 11/20 至 11/22 之前解除；路線鏈（<code>routing</code>、<code>routes</code>）盡快開出 Ticket 並開始；落後時照 DESIGN §9.3 已定的順序放掉項目。任何一個前提不成立，12/5 的凍結就守不住，或 E2 必須縮題並明示未達原訂的驗收條件。</div>
+
+<!-- ============================================================ 10 -->
+<h2 id="s10"><span class="num">10</span>Overall Assessment</h2>
+<p>每一項都依現有的證據判斷。「文件已寫定」不算驗收通過。</p>
+<div class="card" style="border-left:4px solid #0b5d6b">
+<h3 style="margin-top:0">最終判準：課程的 ①–⑧ 架構與基本要求</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>判準</th><th>設計</th><th>現況</th><th>說明</th></tr></thead>
+<tbody>
+<tr><td>①–⑧ Domain AI Agent 架構</td><td><span class="b pass">已涵蓋</span> 8／8</td><td><span class="b partial">PARTIAL</span></td><td>④ 與 ⑤ 有部分 Spike；②③⑥⑦⑧ 沒有產品程式；沒有 Demo 證據（第 3A 節）</td></tr>
+<tr><td>完整的 Agent 工作流程，端到端可以執行</td><td><span class="b pass">已涵蓋</span></td><td><span class="b fail">尚未開始</span></td><td>流程從未執行；Planner 等 C3</td></tr>
+<tr><td>取得資料、Analytics、Domain Knowledge、可追溯的建議</td><td><span class="b pass">已涵蓋</span></td><td><span class="b partial">PARTIAL</span></td><td>只有自己的 GPX 與 Analytics 的 Spike；外部資料、知識庫與可追溯的建議都沒有實作</td></tr>
+<tr><td>Streamlit 的端到端互動</td><td><span class="b pass">已涵蓋</span></td><td><span class="b fail">尚未開始</span></td><td><code>app/</code> 不存在；#12 OPEN</td></tr>
+<tr><td>Architecture、Flowchart、行號 Pseudocode</td><td colspan="2"><span class="b partial">PARTIAL</span>（文件）</td><td>Architecture 與 Pseudocode 具備；Flowchart 還是縮減前的版本</td></tr>
+<tr><td>可重現的實驗證據</td><td><span class="b pass">已涵蓋</span></td><td><span class="b nv">NOT VERIFIED</span></td><td>E1 Lite、E2 都沒有執行</td></tr>
+</tbody></table></div>
+<p style="margin-bottom:0">原始 Proposal 的 Scope Reduction（多 Agent、LightGBM、P90、Google Maps、279 趟資料、部分實驗）是已知且接受的決策，記錄在第 3 節與 §10.2，不計入上表的判定。</p>
+</div>
+
+<h3>10.1 目前已完成的程度</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>面向</th><th>判斷</th><th>理由</th><th>證據</th></tr></thead>
+<tbody>
+<tr><td>設計與規格</td><td><span class="b partial">PARTIAL</span></td><td>DESIGN、SPEC-001、CR-01 與各項裁決已經寫定大部分規則；SPEC-001 沒有凍結，五個 Blocker 未關閉；都沒有 push</td><td>CR-01 §24–25；git 狀態</td></tr>
+<tr><td>基礎模組（讀檔、路線目錄、配速、契約）</td><td><span class="b partial">PARTIAL</span></td><td>有 Spike 版與 100 個通過的測試；驗證的是舊契約 v0.2，新規格的測試 0 項實作</td><td>pytest 100 passed；§6.1</td></tr>
+<tr><td>可以操作的產品（端到端）</td><td><span class="b fail">FAIL</span></td><td>不存在。路線、資料工具、Planner、Validator、介面都沒有程式</td><td><code>src/</code> 的實際內容；§6</td></tr>
+<tr><td>真實 API 的驗證</td><td><span class="b blocked">BLOCKED</span></td><td>C3 沒有憑證；沒有發出任何呼叫，沒有以模擬代替</td><td>CR-01 §15</td></tr>
+<tr><td>實驗結果</td><td><span class="b nv">NOT VERIFIED</span></td><td>E1 Lite 與 E2 都沒有執行；沒有任何結果</td><td>DESIGN §11</td></tr>
+<tr><td>GitHub Tickets</td><td><span class="b partial">PARTIAL</span></td><td>6 張 OPEN，都沒有開始；大部分的 Must 還沒有 Ticket</td><td>Issues #7–#12</td></tr>
+</tbody></table></div>
+
+<h3>10.2 Scope Reduction 的紀錄：假設現行 MVP 全部完成，和原始 Proposal 的差異</h3>
+<p class="src">這一節不是最終判準。<span class="b sr">已接受的 Scope Reduction</span> 表示專題負責人已知且接受的裁減。</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>面向</th><th>判斷</th><th>理由</th><th>證據</th></tr></thead>
+<tbody>
+<tr><td>問題與定位（出發前決策輔助、當天來回、天黑前回家）</td><td><span class="b partial">PARTIAL</span></td><td>設計涵蓋三個核心問題（p.24）的大部分，但有三處不同：真實日期的「路況是否允許」答不了（規則 4 是 UNKNOWN）；時間範圍不是 P50／P90；期限對的是回到出發錨點，不是回到住家</td><td>矩陣 #1、#5、#10、#12、#15、#16</td></tr>
+<tr><td>設計原則（LLM 不算數字、程式驗證、可追溯、不猜測補值）</td><td><span class="b partial">PARTIAL</span></td><td>「LLM 不算數字、程式驗證、可追溯、不猜測補值」保留，並加上來源證據與規則 5。但 API 失敗由「視為未通過」放寬成 UNKNOWN，計畫可以是 CONDITIONAL</td><td>矩陣 #9、#26；DESIGN §13.1</td></tr>
+<tr><td>個人配速的建模深度</td><td><span class="b sr">已接受的 Scope Reduction</span></td><td>Proposal 承諾分位數模型、P50／P90 的範圍與 conformal 校正；MVP 只有類別中位數加餘裕，明確不是 P90</td><td>矩陣 #5、#6；p.28–29</td></tr>
+<tr><td>系統架構（五個 Agent、知識庫、記憶、地圖儀表板）</td><td><span class="b sr">已接受的 Scope Reduction</span></td><td>多 Agent 是 Proposal 的副題與主要創新，MVP 放棄（DESIGN §13.1：「不再成立」）。保留的是「規劃與驗證分離」；知識庫縮成最小版本；跨對話記憶、地圖、Google Maps 都不做</td><td>矩陣 #8、#17、#18、#20</td></tr>
+<tr><td>資料與外部來源</td><td><span class="b partial">PARTIAL</span></td><td>21 趟取代 279 趟；真實的路況來源不在 Must；氣象資料被 C3 卡住</td><td>矩陣 #7、#12、#15</td></tr>
+<tr><td>承諾的 Level（L2）</td><td><span class="b partial">PARTIAL</span></td><td>知識庫縮成最小版本、多 Agent 改成單一 Planner 的多步工具呼叫；驗證與重新規劃保留</td><td>DESIGN §2.4；p.28</td></tr>
+</tbody></table></div>
+<div class="note"><strong>這是紀錄，不是不符合的判定。</strong> 核心情境與大部分設計原則和 Proposal 一致；建模深度與實驗範圍小於 Proposal，多 Agent 架構不做，API 失敗時的處理由「視為未通過」放寬成 UNKNOWN。這些都是已知且接受的決策，沒有被隱藏。它們的後果只有一個：期末報告要以縮減後的 MVP 陳述，不能沿用 Proposal 的說法。</div>
+
+<h3>10.3 研究實驗是否足以支持專題的主張</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>主張</th><th>判斷</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>Proposal 的主張 (a)：個人配速比一般導航準</td><td><span class="b sr">不再檢驗（已接受）</span></td><td>現行設計不檢驗這個主張，而且明確不做這個宣稱。期末不能提出這個結論</td></tr>
+<tr><td>現行的研究問題 1：個人配速表的誤差有多大（E1 Lite）</td><td><span class="b nv">NOT VERIFIED</span></td><td>設計可以支持描述性的結論（誤差多大、和單一速度相比如何）；尚未執行。樣本是一位騎士，配速行程上的數字不是事前預測；H1 的方向已經在同一批行程上看過</td></tr>
+<tr><td>現行的研究問題 2：工具加獨立驗證能否提高可行性（E2）</td><td><span class="b nv">NOT VERIFIED</span>；<span class="b blocked">BLOCKED</span></td><td>設計可以支持有限的結論（12–15 題、凍結的路線）；尚未執行，而且需要 C3。Oracle 的時間相依部分沒有實作時，不能宣稱已驗證跨預報時段的對齊。任一指標的分母少於 5 題時只能寫「證據有限」；量到的是有沒有遵守專題自訂的規則，不是規則本身對不對</td></tr>
+<tr><td>核心情境：當天來回、在期限前回到出發點</td><td><span class="b nv">NOT VERIFIED</span></td><td>E1 Lite 不驗證回到出發點的時間；E2 的真實來回行程題可能一題都沒有。這個情境可能沒有任何實測的佐證，只能由 Demo 展示</td></tr>
+<tr><td>Proposal 的主張 (c)、E3、E4</td><td><span class="b sr">不再檢驗（已接受）</span></td><td>消融大部分不做；E3 放棄；E4 沒有獨立的評估</td></tr>
+</tbody></table></div>
+
+<h3>10.4 課程要求的符合程度</h3>
+<div class="tbl-wrap"><table>
+<thead><tr><th>要求</th><th>判斷</th><th>理由</th><th>證據</th></tr></thead>
+<tbody>
+<tr><td>Proposal 階段的交付物（文件、PPT、repo、DESIGN.md）</td><td><span class="b pass">PASS</span>（檔案存在）</td><td>repo 中有 Proposal 的 PDF、簡報與 DESIGN.md，PR #1–#6 已合併。是否在期限內繳交、得分如何 <span class="b nv">NOT VERIFIED</span></td><td><code>docs/proposal/</code>；PR #1–#6</td></tr>
+<tr><td>核心要求：AI Agent + Domain Knowledge + Data Analytics + Real-World Application</td><td><span class="b partial">PARTIAL</span></td><td>設計具備四個要素；目前只有 Data Analytics 的一部分有程式，Agent 與知識庫都沒有</td><td>requirements L21–25；§6</td></tr>
+<tr><td>①–⑧ 架構、流程圖、虛擬碼</td><td><span class="b partial">PARTIAL</span>（文件）</td><td>Proposal 三者齊全（p.25、p.31–32）。現行 DESIGN 有架構圖與 Algorithm 1，但流程圖還是縮減前的版本（DESIGN §8 自己註明），期末前要更新</td><td>DESIGN §3、§8、§13.1</td></tr>
+<tr><td>Level 1 基礎完成線（LLM + Data）</td><td><span class="b fail">FAIL</span>（目前）</td><td>資料分析的部分有 Spike；LLM 的整合完全沒有，被 C3 卡住</td><td>P3 p.7；§6</td></tr>
+<tr><td>Level 2（Knowledge Agent）</td><td><span class="b fail">FAIL</span>（目前）</td><td>是 MVP 承諾的目標；知識庫、Planner、Validator 都尚未實作</td><td>DESIGN §2.4</td></tr>
+<tr><td>IoT 元素</td><td><span class="b nv">NOT VERIFIED</span></td><td>專題的 SENSE 是手機 App 記錄的 GPX 與開放資料，沒有實體感測器或即時串流。對專題有利的是：課程講義把 GPS 列在 IoT Data 之下（P3 p.5 ⑤-1）。課程文件寫資料來源「可以包含」IoT Sensor，沒有載明是否必備；需要向授課教師確認</td><td>requirements L124；P3 p.5、p.7</td></tr>
+<tr><td>Final Handover（README、DESIGN 的 Results、Experiments、PPT 超過 20 頁、影片超過 10 分鐘）</td><td><span class="b fail">FAIL</span>（目前，尚未到期）</td><td>全部尚未完成；README 仍寫「尚未實作」；規格分支沒有 push</td><td>DESIGN §9.5；§6.2</td></tr>
+<tr><td>結果真實性：不得虛構實驗結果</td><td><span class="b pass">PASS</span></td><td>所有文件都標明沒有實驗結果；技術檢查沒有被當成 E1／E2；C3 沒有以模擬代替</td><td>requirements L51；CR-01 §15</td></tr>
+<tr><td>分組</td><td><span class="b nv">NOT VERIFIED</span></td><td>課程的類型是分組作業；專題由一個人開發。課程文件沒有載明一人一組是否可以</td><td>requirements L1–4</td></tr>
+</tbody></table></div>
+
+<h3>10.5 上述判斷還缺少的證據</h3>
+<ul>
+  <li><strong>期末的正式日期與評分方式。</strong> 課程文件沒有載明期末發表日、繳交日與期末的評分權重。</li>
+  <li><strong>IoT 與分組的要求。</strong> 實體感測器是否必備、一人一組是否可以，需要向授課教師確認。</li>
+  <li><strong>C3 的結果。</strong> 選定的模型能否通過工具呼叫的驗收條件、氣象署實際回應的格式與時間解析度。</li>
+  <li><strong>任何實作的證據。</strong> 新規格的驗收測試一項都還沒有實作；端到端的流程從來沒有跑過。</li>
+  <li><strong>E1 Lite 與 E2 的結果。</strong> 兩個研究問題目前沒有任何資料。</li>
+  <li><strong>Streamlit 元件的可行性。</strong> CR-01 新增的畫面只存在於文字描述，要等 UI-0 才能驗證。</li>
+  <li><strong>加油站快照與知識庫內容</strong> 是否已經準備，repo 中沒有紀錄。</li>
+  <li><strong>Proposal 的繳交與評分結果。</strong> 這份審查只確認檔案存在。</li>
+  <li><strong>沒有複核到的引用。</strong> Proposal p.1 與圖頁（p.25、p.31）的引用只在初次擷取時以圖檔確認，審查者只能核對文字頁；GitHub <code>main</code> 上的檔案內容沒有直接讀取，以本機的 <code>origin/main</code> 為準。</li>
+  <li>這份審查沒有讀取 <code>data/</code> 下的任何內容，所以 21 趟行程的數量、清單與保留行程的指定，都是引用既有文件的記載，沒有重新核對。</li>
+</ul>
+
+<h3>10.6 直接回答：目前專案是否仍符合當初的要求？</h3>
+<div class="card">
+<p class="lead" style="margin-top:0"><strong>以老師的 ①–⑧ 架構與課程基本要求為判準：設計上符合；現況尚未符合，原因是還沒有實作，不是 Scope Reduction。</strong></p>
+<ol>
+  <li><strong>①–⑧ 的現況。</strong> 八個階段在設計上都有對應。有程式的只有 ④ 與 ⑤ 的一部分（Spike，契約 v0.2）；②③⑥⑦⑧ 沒有產品程式；沒有任何階段有 Demo 證據。Architecture 與行號 Pseudocode 具備，Flowchart 要補 MVP 的版本；實驗證據是零（第 3A 節）。</li>
+  <li><strong>核心目標仍然一致。</strong> CR-01 之後，MVP 在<strong>設計上</strong>回到 Proposal 的核心情境：以騎士自己的歷史 GPX 建立配速，規劃實際道路上的當天來回，由程式驗證能不能在天黑前回到出發點、油量夠不夠、天氣是否允許。這一點比 CR-01 之前（兩條固定的單向路段）更接近 Proposal。</li>
+  <li><strong>原始 Proposal 有五類承諾已經縮減。這是已知且接受的 Scope Reduction，不影響 ①–⑧ 的符合性，但決定了期末可以主張的內容。</strong> (1)「個人配速比一般導航準」不再被檢驗；(2) 時間範圍不是 P50／P90，保守估計沒有覆蓋率保證，特徵只剩曲率，資料由 279 趟變成 21 趟；(3) 多 Agent 架構放棄，跨對話記憶、地圖與多輪對話不做；(4) 消融實驗大部分不做，歷史封路回測與案例研究放棄，E2 的第二組由「LLM＋知識庫」改為「LLM＋Tools」；(5) 真實的路況來源不在 Must，API 失敗由「視為未通過」放寬成 UNKNOWN，決策目標由「餘裕最大」改為「最晚的可行出發時間」。期末報告必須照這個範圍陳述。</li>
+  <li><strong>現在沒有可以展示的產品，也沒有任何實驗結果。</strong> 目前的成果是設計、規格、原型與 Spike。距離功能凍結 19 天，9 個產品模組中 6 個還沒有程式，兩個實驗也還沒有腳本，關鍵路徑上的 C3 仍然卡在憑證。</li>
+  <li><strong>最需要立刻處理的四件事：</strong>取得 Anthropic 憑證並申請氣象署授權碼；為 <code>routing</code> 與 <code>routes</code> 開出 Ticket，並開始 BATCH-1；把規格分支 push 並改寫 README，讓 repo 反映現況；向授課教師確認期末日期，以及 IoT 與一人一組的要求。</li>
+</ol>
+</div>
+
+<h2 id="s11"><span class="num">11</span>附錄：審查紀錄</h2>
+<p>初稿由兩位獨立的審查者做聚焦審查。這是對報告的審查，不是新的規格審查；沒有產生新的規格決策，也沒有改變 MVP 的範圍。下表是主要的發現與處理方式。</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>審查者</th><th>發現</th><th>依據</th><th>處理</th></tr></thead>
+<tbody>
+<tr><td>review_1</td><td>初稿把 API 失敗的處理判為「保留並加強」；實際上是由「視為未通過」放寬成 UNKNOWN</td><td>Proposal p.31；DESIGN §13.1</td><td>已修正：矩陣 #26、§10.2</td></tr>
+<tr><td>review_1</td><td>初稿寫「設計完整涵蓋三個核心問題」；路況、時間範圍與期限的對象都有差異</td><td>DESIGN §4.2、§12</td><td>已修正：§10.2 第 1 列、矩陣 #1</td></tr>
+<tr><td>review_1</td><td>效度限制漏列：分母少於 5 題的規則、Oracle 套用同一套自訂規則、回到出發點的時間可能沒有樣本、H1 的方向已被預覽</td><td>DESIGN §6.2、§6.3、§12</td><td>已修正：§8.3、§10.3</td></tr>
+<tr><td>review_1</td><td>多 Agent 應判為放棄；縮減清單不完整；決策目標與 E2 第二組的改變沒有說清楚</td><td>Proposal p.1、p.7、p.35；DESIGN §13.1、§13.5</td><td>已修正：矩陣 #8、#13、#23、縮減清單、§10.6</td></tr>
+<tr><td>review_1</td><td>流程圖還是縮減前的版本，不應判 PASS；Level 1 與 Level 2 的判斷標準不一致；IoT 漏引有利的證據</td><td>DESIGN §8；P3 p.5</td><td>已修正：§10.4</td></tr>
+<tr><td>review_2</td><td>初稿寫「LLM 只出現在兩處」；實際上還有工具呼叫、重新規劃的提案與追問</td><td>DESIGN §8；SPEC-001 7.1</td><td>已修正：§4 的圖與表、§5.1、§7 的圖與圖說</td></tr>
+<tr><td>review_2</td><td>關鍵路徑只寫 C3，漏掉 <code>routing</code>、<code>routes</code> 這條沒有 Ticket 的鏈</td><td>DESIGN §9.2</td><td>已修正：§1、§9.3、§10.6</td></tr>
+<tr><td>review_2</td><td>時程風險偏輕：氣象署授權碼尚未申請而且已經落後；整合時間即使準時也只有六天；沒有對可行性下判斷</td><td>DESIGN §9.3、§13.5；BATCH-1 索引第 5 節</td><td>已修正：§9.3，並加上可行性的判斷</td></tr>
+<tr><td>review_2</td><td>「11 個產品模組」其實是 9 個產品模組加 2 個實驗；有 Ticket 的模組是 4 個；未追蹤的項目是 11 個</td><td>DESIGN §9.1；git 狀態</td><td>已修正：§1、§6、§9.3</td></tr>
+<tr><td>review_2</td><td>Spike 的範圍寫得太小（路線目錄與 ETA 也有）；<code>pace</code> 已有拒絕保留行程的檢查；沒有 Ticket 的工作漏了三項</td><td><code>src/</code>、<code>tests/</code> 的實際內容；BATCH-1 索引</td><td>已修正：§7、§8.1、§6、§9.2</td></tr>
+<tr><td>review_2</td><td>時間軸：BATCH-1 的橫條沒有日期依據；各橫條的結束日畫法不一致；圖說不準確</td><td>DESIGN §9.3</td><td>已修正：§9 的時間軸與圖說</td></tr>
+</tbody></table></div>
+<p><strong>兩位審查者確認無誤的部分：</strong>Proposal 與課程文件的頁碼與行號引用（文字頁）；E1 Lite 與 E2 的設計描述；測試結果（100 passed，82 個測試函式，都針對契約 v0.2）；<code>src/</code> 的模組清單；Git 分支與 commit；Issues #7–#12 與 PR #1–#6 的狀態；技術檢查與 Spec Blockers 的狀態；六個路線錯誤代碼；日數與工作量的數字。用語規則沒有違反：保守估計沒有被稱為 P90，降雨機率門檻標為自訂，沒有宣稱比 Google Maps 準，技術檢查沒有被當成 E1／E2，C3 是 BLOCKED。</p>
+<p><strong>審查後仍未解決、列為 Gap 的項目</strong>見 §10.5。</p>
+<p><strong>審查之後的補充。</strong> 第 3A 節、開頭與第 10 節的「最終判準」，以及 §8.2、§10.2、§10.3 中「已接受的 Scope Reduction」的標示，是兩位審查者完成審查之後，依專題負責人 2026-11-16 的指示補充的，沒有再經過 review_1、review_2 審查。內容只引用這份報告已經查證的現況，以及 DESIGN §3、§4.3、§5、§7、§8。</p>
+
+<footer>
+  <p><strong>審查方法。</strong> 逐頁閱讀原始 Proposal（43 頁）與課程文件；交叉核對 DESIGN.md、SPEC-001、CR-01（第 1–25 節）、SPEC-RESOLUTION-001、UI_CR01_DELTA 與裁決紀錄；檢視 <code>src/</code>、<code>tests/</code>、<code>experiments/</code> 的實際檔案；執行 <code>pytest</code>（100 passed）；查詢 GitHub Issues #7–#12 與 Pull Requests 的狀態。初稿經兩位獨立審查者（review_1：Proposal 對齊與研究效度；review_2：架構、實作狀態與時程）審查，發現與處理方式列在第 11 節。</p>
+  <p><strong>限制。</strong> 沒有讀取、列出或搜尋 <code>data/</code>；沒有使用任何私有 GPX 或保留行程；沒有執行 E1 或 E2；沒有修改規格、程式、測試、原型或 GitHub Issues。Proposal 的 PDF 以文字擷取的方式閱讀，表格經過線性化；圖頁另外轉成圖檔檢視。</p>
+  <p>Moto Touring Copilot · Project Status &amp; Proposal Alignment Review · 2026-11-16</p>
+</footer>
+</main>
+</div>
+</body>
+</html>
