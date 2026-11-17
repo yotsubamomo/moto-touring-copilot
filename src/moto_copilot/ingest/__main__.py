@@ -20,11 +20,14 @@ Which files are touched before the research freeze (SPEC-B1 CL-B1-11, decision-2
   * nothing is done to the entry that a non-pace item names: it is not opened, read, hashed or
     even stat-ed. Its `source_file` string is only compared, as text, with the pace entries;
   * the GPX folder is listed for names only;
-  * a selected pace entry is opened only under a name that is exactly an entry of that listing,
-    after its own metadata shows it is a regular file with one hard link and no other spelling of
-    it (letter case, an NTFS stream suffix such as "::$DATA", trailing dots or spaces, its 8.3
-    short name) is named by a non-pace item. Any selected pace entry that fails this refuses the
-    whole run before the first GPX file is opened.
+  * every pace entry of the manifest, selected by `--trips` or not, must name exactly an entry of
+    that listing, and no other spelling of that entry (letter case, an NTFS stream suffix such as
+    "::$DATA", trailing dots or spaces, its 8.3 short name) may be named by a non-pace item;
+    otherwise the whole run is refused before the first GPX file is opened, whichever trips are
+    requested. Short names are asked of pace entries only;
+  * in addition, every selected pace entry must be, by its own metadata, a regular file that is
+    not a symbolic link or other reparse point and has one hard link (CL-B1-11 item 3); otherwise
+    the run is refused before the first GPX file is opened.
   * Not detected here (CL-B1-11 item 4, left to the later upload and de-duplication work): a
     non-pace item that is a symbolic link to a pace file, and two files with the same content
     under different names.
@@ -122,18 +125,29 @@ def short_name(path: Path) -> str | None:
     return PureWindowsPath(buffer.value).name
 
 
-def pace_entry_problem(gpx_dir: Path, name: str, listed: set[str], other_keys: set[str]) -> str | None:
-    """Why a selected pace entry may not be opened, or None when it may.
+def pace_name_problem(gpx_dir: Path, name: str, listed: set[str], other_keys: set[str]) -> str | None:
+    """Why a pace entry's name makes the manifest unusable, or None. Applied to every pace entry.
 
     `listed` holds the names in the GPX folder listing; `other_keys` holds `source_key` of every
-    non-pace item. Only the pace entry itself is queried (lstat and its short name).
+    non-pace item. A name that is not exactly listed may be another spelling of any entry, which
+    cannot be told without touching that entry, so it refuses. Otherwise only the pace entry
+    itself is queried (its short name).
     """
     if name not in listed:
         return "is not exactly the name of an entry in the GPX folder"
-    path = gpx_dir / name
     try:
-        info = os.lstat(path)
-        alias = short_name(path)
+        alias = short_name(gpx_dir / name)
+    except OSError:
+        return "cannot be checked"
+    if alias is not None and source_key(alias) in other_keys:
+        return "has a short name that a non-pace item names"
+    return None
+
+
+def pace_link_problem(gpx_dir: Path, name: str) -> str | None:
+    """Why a selected pace entry may not be opened by its own metadata (CL-B1-11 item 3), or None."""
+    try:
+        info = os.lstat(gpx_dir / name)
     except OSError:
         return "cannot be checked"
     if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & _REPARSE_POINT:
@@ -142,26 +156,31 @@ def pace_entry_problem(gpx_dir: Path, name: str, listed: set[str], other_keys: s
         return "is not a regular file"
     if info.st_nlink != 1:
         return "has more than one hard link"
-    if alias is not None and source_key(alias) in other_keys:
-        return "has a short name that a non-pace item names"
     return None
 
 
 def check_pace_entries(gpx_dir: Path, chosen: list[dict], trips: list[dict]) -> None:
-    """Refuse the run (ManifestError) unless every chosen pace entry may be opened.
+    """Refuse the run (ManifestError) unless the manifest's pace names are consistent and every
+    chosen pace entry may be opened.
 
-    Runs before any GPX file is opened. Lists the GPX folder for names only; never touches the
-    entry that a non-pace item names. Messages name trip ids, never file names.
+    The name check covers every pace entry of the manifest, whichever trips are requested; the
+    link check covers the chosen ones. Runs before any GPX file is opened. Lists the GPX folder
+    for names only; never touches the entry that a non-pace item names. Messages name trip ids,
+    never file names.
     """
     try:
         listed = set(os.listdir(gpx_dir))
     except OSError:
         raise ManifestError("the GPX folder cannot be listed") from None
     other_keys = {source_key(t["source_file"]) for t in trips if t["trip_role"] != PACE}
-    problems = [(t["trip_id"], pace_entry_problem(gpx_dir, t["source_file"], listed, other_keys)) for t in chosen]
+    problems = [(t["trip_id"], pace_name_problem(gpx_dir, t["source_file"], listed, other_keys))
+                for t in trips if t["trip_role"] == PACE]
+    named = {trip_id for trip_id, why in problems if why}
+    problems += [(t["trip_id"], pace_link_problem(gpx_dir, t["source_file"]))
+                 for t in chosen if t["trip_id"] not in named]
     problems = [(trip_id, why) for trip_id, why in problems if why]
     if problems:
-        raise ManifestError("pace source file(s) may not be opened: "
+        raise ManifestError("the pace entries of the manifest do not pass the checks before opening: "
                             + "; ".join(f"{trip_id} {why}" for trip_id, why in problems))
 
 

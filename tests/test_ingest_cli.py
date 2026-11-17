@@ -432,3 +432,63 @@ def test_a_missing_pace_file_refuses_the_run(workspace, opened):
         {"trip_id": "T906", "source_file": "not_there.gpx", "trip_role": "pace"},
     ])
     _assert_refused(_run(workspace, opened), opened, workspace)
+
+
+# --- Cycle 2 correction (C2-R1-F1): the conflict check does not depend on --trips --------------
+
+LONG = "pace_long_named_trip_a.gpx"
+
+
+@pytest.mark.parametrize("requested", [None, ["T904"]])
+@pytest.mark.parametrize("role", ["holdout", "excluded"])
+def test_an_unselected_pace_entry_whose_short_name_a_non_pace_item_names_refuses_the_run(
+        workspace, opened, monkeypatch, role, requested):
+    """C2-R1-F1: T901 (pace, long name) and T902 (non-pace, its short name) are one directory entry.
+    `--trips T904` selects only the other, ordinary pace trip; the manifest is still refused.
+    The short name is asked of pace entries only and replaced so the test does not depend on the
+    volume making short names."""
+    (workspace["gpx"] / LONG).write_text(_gpx(12_000), encoding="utf-8")
+    asked = []
+
+    def fake_short_name(path):
+        asked.append(Path(path).name)
+        return "PACE_L~1.GPX" if Path(path).name == LONG else Path(path).name.upper()
+
+    monkeypatch.setattr(cli, "short_name", fake_short_name)
+    _write_manifest(workspace, [
+        {"trip_id": "T901", "source_file": LONG, "trip_role": "pace"},
+        {"trip_id": "T902", "source_file": "PACE_L~1.GPX", "trip_role": role},
+        {"trip_id": "T904", "source_file": "pace_b.gpx", "trip_role": "pace"},
+    ])
+    _assert_refused(_run(workspace, opened, requested), opened, workspace)
+    assert set(asked) <= {LONG, "pace_b.gpx"}
+
+
+@pytest.mark.parametrize("role", ["holdout", "excluded"])
+@pytest.mark.parametrize("unselected_pace_name, other_name", [
+    ("PACE_L~1.GPX", LONG),                     # 8.3 spelling on the unselected pace entry
+    ("pace_long_named_trip_a.gpx::$DATA", LONG),  # stream spelling on the unselected pace entry
+    (LONG, "PACE_LONG_NAMED_TRIP_A.GPX::$data"),  # stream spelling on the non-pace item
+])
+def test_an_unselected_conflicting_pace_entry_refuses_a_run_that_requests_another_pace_trip(
+        workspace, opened, unselected_pace_name, other_name, role):
+    (workspace["gpx"] / LONG).write_text(_gpx(12_000), encoding="utf-8")
+    _write_manifest(workspace, [
+        {"trip_id": "T901", "source_file": unselected_pace_name, "trip_role": "pace"},
+        {"trip_id": "T902", "source_file": other_name, "trip_role": role},
+        {"trip_id": "T904", "source_file": "pace_b.gpx", "trip_role": "pace"},
+    ])
+    _assert_refused(_run(workspace, opened, ["T904"]), opened, workspace)
+
+
+def test_an_unselected_pace_entry_is_not_link_checked_and_an_ordinary_request_still_runs(workspace, opened):
+    """The link check (CL-B1-11 item 3) is for selected pace entries; an unselected pace entry
+    with a second hard link and no conflicting name does not stop a request for another trip."""
+    os.link(workspace["gpx"] / "pace_a.gpx", workspace["gpx"] / "pace_a_copy.gpx")
+    _write_manifest(workspace, [
+        {"trip_id": "T901", "source_file": "pace_a.gpx", "trip_role": "pace"},
+        {"trip_id": "T904", "source_file": "pace_b.gpx", "trip_role": "pace"},
+    ])
+    assert _run(workspace, opened, ["T904"]) == 0
+    assert _gpx_opened(opened, workspace["gpx"]) == {"pace_b.gpx"}
+    assert _run(workspace, opened, ["T901"]) == 2
