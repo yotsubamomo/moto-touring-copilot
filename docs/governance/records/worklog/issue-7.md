@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #7（BATCH-1 B1-1），OC-1 Formal run `run-20261117-oc1-issue7` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | Cycle 0：Executor 工作完成（`DONE_WITH_CONCERNS`）。Cycle 1：R1 為 BLOCKING（R1-F1），targeted correction 已完成（第 9 節），待 R2 |
+| 狀態 | Cycle 0：Executor 工作完成（`DONE_WITH_CONCERNS`）。Cycle 1：R1 BLOCKING（R1-F1）→ targeted correction（`8981e9d`）→ R2。結案前的狀態見第 10 節；Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
 | Subject | branch `oc1-run1-contracts-v03`；BASE `ff049661f968adace4dd017cf560316e5684440d`；實作 commit **`a304ee2ac0ec3d8468e446b089216f0cb000f72b`**（`a304ee2`）。本 worklog 在其後的 record-only commit 加入（`docs/governance/records/**`，Bindings 第 7 節）。Cycle 1 修正 commit **`8981e9d32d4fb2f1c13dd4909243b88114af06a2`**（第 9 節） |
 | 日期 | 2026-11-17 |
 
@@ -404,7 +404,7 @@ M13 missing-ratio fail-open: 1 failed, 161 passed in 0.32s
 ## 7. Audit status
 
 - **Required**：Formal lane，每張 Ticket 都需要 independent audit（治理 §4.1；Bindings 第 5 節）；#7 涉及 H-3、H-4，audit record 須逐項寫明對所涉類別的核對（高風險類別 record 第 5 節）。依 run record 第 1 節第 4、5 項，R1 由 Codex（`gpt-6.1-sol`／`high`）執行，不兼作 Spec Integration Audit。
-- **進度**：cycle 1 R1 已完成，verdict **BLOCKING**，record `docs/governance/records/audit/issue-7-c1-r1.md`（`881fd7a`），blocking finding R1-F1。Executor 已依 Required fix 作 targeted correction（第 9 節，`8981e9d`）；Executor 的「已修正」不是 closure，R1-F1 的 closure 由 R2 判定。派工由 Orchestrator 進行；Executor 不派正式 audit。
+- **進度**：R1 與 R2 都已完成，record 與最後一行 verdict 見第 10 節。Executor 不派正式 audit，也不判定 closure。
 - **高風險類別**：依 Design Authority 的判定為 H-2、H-3、H-4（`docs/governance/records/decisions/decision-20261117-issue7-h2.md`）。
 - 第 6 節的 mutation 檢查與 self-verification 不是 audit。
 
@@ -417,7 +417,7 @@ M13 missing-ratio fail-open: 1 failed, 161 passed in 0.32s
 | C-3 | 既有（v0.2）的 `validate_eta_output` 在某些 schema 不合法的輸入下會拋例外而不是回報違反，例如字串的 `typ_seg_time_s`、缺 `break_time_s` 的列、沒有時區的時間字串。本次新增的程式路徑已避開（D-8），既有路徑沒有修改（超出 #7 的 AC）。記為觀察，是否處理由之後的工作決定 | 無（記錄） |
 | C-4 | `DESIGN.md` §5 寫「`src/moto_copilot/contracts/` 的驗證程式與契約測試仍然依 v0.2 檢查」，本 commit 之後對停等寬放的部分已不正確；依 SPEC-B1 §8，`DESIGN.md` 的實作狀態陳述由 AB-12 的文件工作處理，本 work item 沒有修改 `DESIGN.md` | AB-12 的文件工作 |
 | C-5 | Fixture 目錄名稱 `contract_v02` 沒有改（不在 Issue #7 範圍；改名會動到 `conftest.py` 與 root `CLAUDE.md` 的指令）。 | 無（記錄） |
-| R-1 | R1 已完成（BLOCKING，R1-F1）；correction 已提交（第 9 節）。剩下 R2 closure review 與其後的 Ticket closure | Orchestrator 派工；Reviewer |
+| R-1 | R1、correction、R2 都已完成（第 10 節）。剩下的是 Orchestrator 依 orch-default §7 判定 Ticket closure，以及第 10 節的 tracked follow-ups | Orchestrator |
 | R-2 | 6 個 strict xfail 依 CL-B1-8 §3.2 在 #9（S-1、S-2）、#10（S-3）、#11（S-4～S-6）結案前移除並恢復檢查 | #9、#10、#11 |
 
 Executor 工作的完成不等於 #7 的 closure（orch-default §7）、SPEC-B1 的 Spec Integration Audit 或 phase acceptance。
@@ -693,3 +693,46 @@ exit=0
 - **E-3**：回歸測試只用 mock fixture 與字面的 NaN／infinity，沒有新增座標、時間或行程。
 - **E-5（self-verification，不是 audit）**：H-4，缺漏與無法核對的路徑不再放行，非有限值不補值，例外改為回傳違反（9.1、9.3）。H-3，結果陳述照實寫出 xfail 數，mutation 與重現都附輸出。H-2（依 `decision-20261117-issue7-h2` 已補標），本次沒有修改 schema 的欄位清單、fixture 或公開版的產生；`git ls-files` 的私有資料樣式計數仍為 0。
 - **C-6（記錄，不屬 R1-F1）**：本票沒有修改的既有欄位如果是非有限值，仍依 v0.2 的行為處理：`stopped_time_s` 等可能無聲通過，`typ_seg_time_s` 可能在 ETA 算術拋例外。R1-F1 明寫不要求處理這部分（D-13、D-14）。是否另開工作由有權角色決定。
+
+## 10. 結案前的狀態（cycle 1 R2 之後）
+
+本節依治理 §3.7 與 orch-default §7 P8，記錄 R2 之後、Ticket closure 判定之前的狀態。本節只引用紀錄，不判定 closure，也不改寫或摘要任何 finding 的判定。
+
+### 10.1 Audit records
+
+| Round | Record | Commit | 最後一行（原文） |
+| --- | --- | --- | --- |
+| Cycle 1 R1 | `docs/governance/records/audit/issue-7-c1-r1.md` | `881fd7a` | `Verdict: BLOCKING` |
+| Cycle 1 R2（scoped closure review） | `docs/governance/records/audit/issue-7-c1-r2.md` | `6316108` | `Verdict: PASS` |
+
+兩份 record 都由 Codex（`primary_reviewer`）撰寫，派工者原樣 commit。各 finding 的內容、severity、判定與 disposition 以 record 原文為準。Binding 的核對結果記在 run record `docs/governance/records/run/run-20261117-oc1-issue7.md` 第 5 節。
+
+### 10.2 Subject
+
+| 項目 | 內容 |
+| --- | --- |
+| Branch | `oc1-run1-contracts-v03`（本機；沒有 push、沒有 PR） |
+| BASE | `ff049661f968adace4dd017cf560316e5684440d` |
+| 實作的最後一個 commit | **`8981e9d32d4fb2f1c13dd4909243b88114af06a2`**（R1-F1 correction）。之前的實作 commit 是 `a304ee2ac0ec3d8468e446b089216f0cb000f72b` |
+| 最終 subject | 本次 worklog 更新的 commit，也就是加入本節之後的 HEAD；其父 commit 是 `6316108`（R2 record）。`8981e9d` 之後的每個 commit 都只改 `docs/governance/records/**`（Bindings 第 7 節的 record-only paths） |
+| 測試狀態 | `8981e9d` 的 E-1：`229 passed, 6 xfailed`（依 `decision-20261117-issue7-spike-tests`；輸出見第 9.4 節）。6 個 xfail 是 S-1～S-6，依 CL-B1-8 §3.2 由 #9、#10、#11 恢復 |
+
+### 10.3 Tracked follow-ups
+
+下列項目都**尚未經 acceptor 接受或授權**。本表只記錄追蹤與交接對象，不構成新的 work item、Outcome Contract 或執行授權。
+
+| ID | 來源 | 內容（引用來源） | Owner | 狀態 |
+| --- | --- | --- | --- | --- |
+| R2-F1 | `issue-7-c1-r2.md` 的 R2-F1 | 依 R2 record 原文：**Disposition／owner**：作為 non-blocking follow-up 記於本 record，owner＝#7 Executor（由 Orchestrator 追蹤；若成為新的 work item，仍須適用接受與授權）。本輪不修改實作或測試。這不是對 blocking finding 的 deferral，也不替任何尚未通過的 gate 標 PASS。 | 依 R2 record：#7 Executor，由 Orchestrator 追蹤 | Open；尚未經 acceptor 接受或授權；本 worklog 沒有對它作任何修改 |
+| C-2 | 本 worklog 第 8 節 C-2 | Spike 的 `python -m moto_copilot.ingest` 在 #9 完成前會回報契約違反（`build_rows` 沒有 `short_stop_time_s`）；未執行（NOT RUN） | #9 | Open；尚未經 acceptor 接受或授權 |
+| C-4 | 本 worklog 第 8 節 C-4 | `DESIGN.md` §5「`contracts` 仍依 v0.2 檢查」的陳述對停等寬放部分已過時 | AB-12 的文件工作 | Open；尚未經 acceptor 接受或授權 |
+| C-6 | 本 worklog 第 9.5 節 C-6 | 本票沒有修改的既有欄位（`stopped_time_s`、`typ_seg_time_s`、`break_time_s` 等）的非有限值仍依 v0.2 的行為處理 | 交給有權限的角色決定是否處理 | Open；尚未經 acceptor 接受或授權 |
+| R-2 | 本 worklog 第 8 節 R-2 | 6 個 strict xfail 在 #9（S-1、S-2）、#10（S-3）、#11（S-4～S-6）結案前移除並恢復檢查（CL-B1-8 §3.2） | #9、#10、#11 | Open（SPEC-B1 已定的後續 Ticket 範圍） |
+
+C-1（H-2 是否涉及）已由 `decision-20261117-issue7-h2.md` 判定；C-3 是第 8 節的記錄項，沒有 owner。
+
+### 10.4 尚未成立的事
+
+- #7 的 Ticket closure（orch-default §7）由 Orchestrator 判定；本 worklog 不宣告已結案。
+- SPEC-B1 的 Spec Integration Audit、Design Authority 的 phase acceptance、SB1-AC3（沒有 xfail 的 pytest 全數通過）與 Bindings 第 5 節的 release gate 都沒有成立。
+- 沒有執行 E1 Lite、E2 或任何真實 GPX 的檢查。
