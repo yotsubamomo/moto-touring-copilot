@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #11（BATCH-1 B1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **實作與 self-verification 完成，待 R1。** 本 worklog 不宣告 Ticket closure；closure 由 Orchestrator 依 orch-default §7 判定 |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `eb1852d262e6b3434364e3e08b6602aa7d24d733`（`eb1852d`，派工時的 HEAD）；實作 commit **`41c848bc03c963599cf936c2e578e50045e4a68f`**（`41c848b`）。本 worklog 在其後的 record-only commit |
+| 狀態 | **Audit 已走完：cycle 1 R1 PASS（`audit/issue-11-c1-r1.md`，Codex `primary_reviewer`，受審 subject `bf8a8e3`），沒有任何 finding；仍有 open 的 tracked follow-ups（第 9.2 節）。** 本 worklog 不宣告 Ticket closure；closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：實作與 self-verification 完成，待 R1（第 1–8 節，保留為歷程） |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `eb1852d262e6b3434364e3e08b6602aa7d24d733`（`eb1852d`，派工時的 HEAD）；實作 commit **`41c848bc03c963599cf936c2e578e50045e4a68f`**（`41c848b`，唯一修改 `src/`、`tests/` 的 commit）。**最終受審 subject `bf8a8e3d9dd51179253d5f24044bcfce39498a53`**（`bf8a8e3`；`41c848b..bf8a8e3` 只改 `docs/governance/records/**`：本 worklog 的 `23decdd` 與 run record 的 `bf8a8e3`）。R1 record 在 `94e1540` commit；本節的更新在其後的 record-only commit |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -162,9 +162,11 @@ CL-B1-9 第 3 項的判定：摘要只有 `passed`；沒有 `xfailed`、`xpassed
 
 ## 7. Audit status
 
-Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；Bindings 第 5 節），尚未派工；由 Orchestrator 依 Bindings 第 3.3、3.7 節派工。高風險類別 H-3、H-4（SPEC-B1 §5 #11 列）的最低核對範圍見高風險類別 record §5。本 worklog 的 self-verification（含 mutation 檢查）不是 audit。
+（撰寫時的狀態；目前狀態見第 9 節。）Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；Bindings 第 5 節），尚未派工；由 Orchestrator 依 Bindings 第 3.3、3.7 節派工。高風險類別 H-3、H-4（SPEC-B1 §5 #11 列）的最低核對範圍見高風險類別 record §5。本 worklog 的 self-verification（含 mutation 檢查）不是 audit。
 
 ## 8. Remaining work 與 concerns
+
+（撰寫時的狀態；R1 之後的 owner／authority 見第 9.2 節。）
 
 | ID | 內容 | 性質 | Authority／owner |
 | --- | --- | --- | --- |
@@ -175,3 +177,35 @@ Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；B
 | — | 真實行程上的行為 NOT VERIFIED | 範圍外 | acceptor（RB-7） |
 
 剩餘工作：R1（Orchestrator 派工）；之後依 audit 結果做 targeted correction（若有）。沒有阻擋本 Ticket 的事項。
+
+## 9. Audit 結果與 open follow-ups（cycle 1 R1 之後）
+
+本節依 Orchestrator 的指示（R1 完成後，同一 worklog identity）更新，只改本 worklog；沒有修改 `src/`、`tests/` 或任何其他 record。
+
+### 9.1 Audit 歷程
+
+| 步驟 | 內容 |
+| --- | --- |
+| Executor return | 實作 commit `41c848b`、worklog commit `23decdd`；E-1 在 `41c848b` 為 `462 passed`，沒有 xfail（第 6 節） |
+| R1 派工 | Orchestrator 以 Codex（`primary_reviewer`，Bindings O-6）派工；受審 subject **`bf8a8e3`**（`41c848b` 之後只有 record-only commit `23decdd`、`bf8a8e3`）。不兼作 Spec Integration Audit |
+| R1 record | `docs/governance/records/audit/issue-11-c1-r1.md`，commit `94e1540`；本 Executor 讀取時的 SHA-256 `586cd1d8ebeae69fce4954bd51c280470b0995ff88e70bc733b6437687ea7b61`。**`Verdict: PASS`**；沒有 blocking finding，沒有 non-blocking finding。Reviewer 在 `bf8a8e3` 獨立重跑 pytest（PATH 的 `python`）兩次均為 `462 passed`，另做 32 組獨立的 Decimal 公式核對與 C1／C2／C3 各自缺配速的 3 例 |
+| R1 的 binding 與存取核對 | 屬 dispatcher（Orchestrator）依 Bindings 第 3.3 節的核對，記在 run record；本 worklog 不轉述其結果 |
+| R2 | 不需要（沒有 finding） |
+
+R1 record 是 Reviewer 自寫的紀錄；本節只引用其結論與路徑，不改寫、不篩選。R1 PASS 不等於 Ticket closure、SPEC-B1 SIA、DA phase acceptance 或 release authorization（R1 record 末段同旨）。
+
+### 9.2 Open follow-ups（不阻擋 #11 的 audit 結果；各自的 owner／authority）
+
+| ID | 內容 | 狀態 | Owner／authority |
+| --- | --- | --- | --- |
+| C-11-1 | D-11-2（配速表的契約 3 核對）、D-11-3（路段完整性核對）是否屬 Issue 範圍 | **R1 已判斷**：兩者都在同一 ETA 函式的輸入防線內，屬本票實作 HOW，沒有需要另作設計裁決的範圍爭議（R1 record「C-11-1 的範圍判斷」）。不再需要 Design Authority；保留為已處理的紀錄 | 已由 R1 判斷；無剩餘 authority |
+| C-11-2 | 路線目錄與配速表的 `category_scheme` 不同時，`compute_eta` 照常計算（RI-1～RI-3） | Open，範圍外。R1 同樣列為排除範圍、未驗證其處理；SPEC-B1 的結案與 SIA 不得宣稱已處理 | 之後的 `routes` Spec；Design Authority |
+| C-11-3 | mock fixture 的 `P-MOCK-2` `unknown_reason` 是中文，`compute_eta` 寫英文；S-5 不比對該欄 | Open，資訊。既有差異，未修改 | 無需 authority；若要統一，屬之後的 fixture／介面文字工作，由該 work item 的契約決定 |
+| C-11-4 | `DESIGN.md`（與 `README.md`）的實作狀態陳述在本 Ticket 之後過時 | Open，範圍外 | AB-12 的文件工作（`derivation-spec-b1.md` §8）；不由本 Ticket 宣告完成 |
+| — | 真實行程建立的配速表與 ETA 的行為 | **NOT VERIFIED／NOT RUN**（Executor 與 R1 皆然） | acceptor（RB-7） |
+| — | SB1-AC2 的完整 `ingest` → 配速表 → ETA 整合 | 本 Ticket 不涵蓋；R1 不是 SIA | Orchestrator／SPEC-B1 SIA 的 Reviewer |
+| — | R1 record 列為 NOT VERIFIED 的「Executor mutation 原始輸出與完整歷史存取紀錄」、「本次 Primary 的全程 runtime binding／存取紀錄」 | 屬派工機制的核對 | Orchestrator（dispatcher） |
+
+### 9.3 Binding
+
+本次更新由同一 `gov-executor`（agentId `ad6a4bc20b0a498ea`）以 SendMessage 續派進行；全程 binding 由 Orchestrator 依 Bindings 第 3.6 節核對。沒有使用 bounded assignment，沒有派工任何 subagent。
