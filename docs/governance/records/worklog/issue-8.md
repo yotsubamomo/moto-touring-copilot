@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #8（BATCH-1 B1-5），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **實作與 self-verification 完成，待 R1。** 本 worklog 不宣告 Ticket closure；closure 由 Orchestrator 依 orch-default §7 判定 |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `05e0a98890f1dc5a20bb0c02c54f3f2b0c2dece0`（`05e0a98`，派工時的 HEAD）；實作 commit **`47f1cdb89214d3eba6b4a3003c89f7021c5fabe1`**（`47f1cdb`，唯一修改 `src/`、`tests/` 的 commit）。本 worklog 在其後的 record-only commit |
+| 狀態 | **Audit 已走完：cycle 1 R1 PASS（`audit/issue-8-c1-r1.md`，Codex `primary_reviewer`，受審 subject `22f7e2a`），沒有任何 finding；仍有 open 的 tracked follow-ups（第 9.2 節）。** 本 worklog 不宣告 Ticket closure；closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：實作與 self-verification 完成，待 R1（第 1–8 節，保留為歷程） |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `05e0a98890f1dc5a20bb0c02c54f3f2b0c2dece0`（`05e0a98`，派工時的 HEAD）；實作 commit **`47f1cdb89214d3eba6b4a3003c89f7021c5fabe1`**（`47f1cdb`，唯一修改 `src/`、`tests/` 的 commit）。**最終受審 subject `22f7e2a8ce512dbf70f2dbcab262b3ea750d9a3f`**（`22f7e2a`；`47f1cdb..22f7e2a` 只改 `docs/governance/records/**`：本 worklog 的 `725956d` 與 run record 的 `22f7e2a`）。R1 record 在 `9cae863` commit；本節的更新在其後的 record-only commit |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -172,9 +172,11 @@
 
 ## 7. Audit status
 
-Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；Bindings 第 5 節），尚未派工；由 Orchestrator 依 Bindings 第 3.3、3.7 節派工。高風險類別 H-4（SPEC-B1 §5 #8 列）的最低核對範圍見高風險類別 record §5。本 worklog 的 self-verification（含 mutation 檢查）不是 audit。
+（撰寫時的狀態；目前狀態見第 9 節。）Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；Bindings 第 5 節），尚未派工；由 Orchestrator 依 Bindings 第 3.3、3.7 節派工。高風險類別 H-4（SPEC-B1 §5 #8 列）的最低核對範圍見高風險類別 record §5。本 worklog 的 self-verification（含 mutation 檢查）不是 audit。
 
 ## 8. Remaining work 與 concerns
+
+（撰寫時的狀態；R1 之後的 owner／authority 見第 9.2 節。）
 
 | ID | 內容 | 性質 | Authority／owner |
 | --- | --- | --- | --- |
@@ -184,3 +186,37 @@ Formal：本 Ticket 的 independent audit（R1）**required**（治理 §4.1；B
 | C-8-4 | `DESIGN.md` 的實作狀態陳述（`validator` 尚未實作）在本票之後部分過時 | 範圍外 | AB-12 的文件工作 |
 
 剩餘工作：R1（Orchestrator 派工）；之後依 audit 結果做 targeted correction（若有）。沒有阻擋本 Ticket 的事項。
+
+## 9. Audit 結果與 open follow-ups（cycle 1 R1 之後）
+
+本節依 Orchestrator 的指示（R1 完成後，同一 worklog identity）更新，只改本 worklog；沒有修改 `src/`、`tests/` 或任何其他 record。
+
+### 9.1 Audit 歷程
+
+| 步驟 | 內容 |
+| --- | --- |
+| Executor return | 實作 commit `47f1cdb`、worklog commit `725956d`；E-1 在 `47f1cdb` 為 `555 passed`，沒有 xfail、沒有 skip（第 6 節） |
+| R1 派工 | Orchestrator 以 Codex（`primary_reviewer`，Bindings O-6）派工；受審 subject **`22f7e2a`**（`47f1cdb` 之後只有 record-only commit `725956d`、`22f7e2a`）。不兼作 Spec Integration Audit |
+| R1 record | `docs/governance/records/audit/issue-8-c1-r1.md`，commit `9cae863`；本 Executor 讀取時的 SHA-256 `fe01529545720c695c444134fb4f76ab5887690ae7a47c8829eb5e271e6a6e1f`。**`Verdict: PASS`**；blocking 0、non-blocking 0，沒有 required fix。Reviewer 在 `22f7e2a` 以 PATH 的 Python 3.11.2、限定 worktree 內暫存目錄後兩次重跑為 `555 passed`（`-q` 與 `-q -rxX`）；初次執行因 sandbox 拒絕預設外部暫存目錄而有 97 個 setup errors，record 已揭露、未記為 PASS。另有 29,892 組整數範圍／分類窮舉、9 個十進位邊界與相鄰 float 案例、9 個不合法 k，以及 AST 匯入核對，均與產品一致 |
+| R1 的 binding 與存取核對 | 屬 dispatcher（Orchestrator）依 Bindings 第 3.3 節的核對，記在 run record 事件 35；本 worklog 不轉述其結果 |
+| R2 | 不需要（沒有 finding） |
+
+R1 record 是 Reviewer 自寫的紀錄；本節只引用其結論與路徑，不改寫、不篩選。R1 PASS 不等於 Ticket closure、SPEC-B1 SIA、DA phase acceptance 或 release authorization（R1 record 末段同旨）。
+
+### 9.2 Open follow-ups（不阻擋 #8 的 audit 結果；各自的 owner／authority）
+
+| ID | 內容 | 狀態 | Owner／authority |
+| --- | --- | --- | --- |
+| C-8-1 | 來回行程的 k 由折返點（SPEC-001 7.11 第 2 項）產生的方式，以及 `in_range` 寫進 WeatherSegment `in_rule3_range` 的整合 | Open，範圍外。R1 維持為既有 tracked item，不是本票的 finding | 之後的 `routes`／`validator` Spec；Design Authority（run record G-VAL） |
+| C-8-2 | `src/moto_copilot/__init__.py` 的說明已過時 | Open，資訊，範圍外 | AB-12 的文件工作（`derivation-spec-b1.md` §8） |
+| C-8-3 | 邊界以 `repr()` 的十進位值精確比較；上游以累加得來的 float 表示「剛好 0.8 × T」時，結果依該 float 的實際十進位而定 | **R1 已判斷**：`repr`／`Fraction` 是嚴格邊界的實作 HOW，沒有加容差、沒有另定範圍；本函式不應猜測呼叫者未提供的精度，未發現需裁決的 material ambiguity（R1 record CL-B1-6 item 3 列）。上游捨入仍是 tracked item | 後續 producer／整合工作（`routes`／`validator`）；有 material ambiguity 時 Design Authority |
+| C-8-4 | `DESIGN.md`（與 `README.md`）中 `validator` 的實作狀態陳述在本票之後部分過時 | Open，範圍外 | AB-12 的文件工作；不由本 Ticket 宣告完成 |
+| NV-1（R1） | Executor 的 14 個 mutation 原始腳本與輸出不在 worktree，R1 記為 NOT VERIFIED；R1 的 verdict 不依賴它 | 腳本仍在 scratchpad `C:/Users/yotsu/AppData/Local/Temp/claude/4fa6cbf1f948238d/4aa33b53-7e44-4d34-b9b8-e631fb6f55c2/scratchpad/mutate8.py`（SHA-256 `da53b6bcad06fd1062f4fd52a82e676650aaf7d297ff6a39627792e0da25018e`），未追蹤、未 commit；輸出只記在第 6 節 | Executor／dispatcher（若需要可審的原始證據）；不是 E-1～E-5 的必要條件 |
+| NV-2（R1） | 真實路線與預報下的結果、上游 k 的正確性 | **NOT VERIFIED／NOT RUN**（Executor 與 R1 皆然） | acceptor（RB-7） |
+| NV-3（R1） | 本次 Primary 的全程 rollout binding、存取紀錄（含初次 pytest 的暫存目錄探查）與 record hash 的原樣複製核對 | 屬派工機制的核對 | Orchestrator（dispatcher），run record 事件 35 |
+| NV-4（R1） | E2 Oracle、E1 Lite／E2、原因代碼、WeatherSegment／RuleResult schema、鄉鎮對應、預報讀取、其他規則與介面 | Issue 排除範圍，NOT RUN | 後續 Spec 的 Design Authority；正式實驗由 acceptor 指示 |
+| NV-5（R1） | 跨 Ticket 整合、SPEC-B1 的 Spec AC（含 SB1-AC4）、SIA closure 與 phase acceptance | 本 Ticket 不涵蓋；R1 不是 SIA | Orchestrator 派 SPEC-B1 SIA；之後 Design Authority phase acceptance |
+
+### 9.3 Binding
+
+本次更新由同一 `gov-executor`（agentId `a9c66ffc5117ca116`）以 SendMessage 續派進行；全程 binding 由 Orchestrator 依 Bindings 第 3.6 節核對。沒有使用 bounded assignment，沒有派工任何 subagent。
