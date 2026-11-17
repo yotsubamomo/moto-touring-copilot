@@ -1,8 +1,8 @@
 # Outcome Contract OC-1 — Moto Touring Copilot MVP
 
-> **狀態：草稿（2026-11-17），不是契約。** 依 acceptor 2026-11-17 的指示（原文「開始起草」）由無角色 session 起草（Project Bindings m2 第 2.3 節、第 3.5 節）。檔尾的接受紀錄填上之前，本檔不構成任何接受或授權，不得據以啟動 Formal run 或開始實作。
+> **狀態：已接受（2026-11-17）。** acceptor 針對 commit `873e37a` 接受，接受紀錄在第 10 節。本檔由無角色 session 依 acceptor 2026-11-17 的指示（原文「開始起草」）起草（Project Bindings m2 第 2.3 節、第 3.5 節）；第 9 節 D-1～D-5 與第 4.1 節、第 8 節、AB-9 的修正由 acceptor 同日裁決。
 >
-> 第 9 節 D-1～D-5 已由 acceptor 於 2026-11-17 裁決，並依同一則指示修正第 4.1 節、第 8 節與 AB-9。這則指示只授權修訂並 commit 本草稿，**不是接受**；acceptor 明確回覆「接受 <SHA>」之前，不得依本檔啟動 Formal run、執行 derived Tickets 或開始新的實作。
+> 契約內容以 commit `873e37a` 的本檔為準。之後在本檔加入的只有本狀態欄與第 10 節的接受紀錄，是接受之後的轉錄，沒有改動任何條文。
 
 本檔依治理 §3.1 的七項 properties 組織：1 Intent（第 1 節）、2 Scope（第 2 節）、3 Acceptance（第 3 節）、4 Authority（第 4 節）、5 Context（第 5 節）、6 Assurance（第 6 節）、7 Stable reference（第 7 節）。
 
@@ -156,4 +156,12 @@ acceptor（GitHub `yotsubamomo`，Bindings 第 2.1 節）接受本契約時，�
 
 ## 10. 接受紀錄
 
-（acceptor 接受後填寫：acceptor 的原始指示原文、日期、所接受的本檔 commit SHA，以及第 9 節各項的最終選擇。）
+| 欄位 | 內容 |
+| --- | --- |
+| Acceptor | 本 repo 擁有者（GitHub `yotsubamomo`，Bindings 第 2.1 節） |
+| 原始指示（原文） | 「接受 873e37a」 |
+| 日期 | 2026-11-17 |
+| 所接受的 commit | `873e37ae98d701c076b1bc533c7993ca62c2dd6c`（本檔在該 commit 的內容） |
+| 第 9 節的最終選擇 | D-1～D-5 全部採用預設，內容如第 9 節表格；第 4.1 節、第 8 節的本機 commit 授權與 AB-9 的實際整合驗收依 acceptor 2026-11-17 的指示加入 |
+| 接受前已知的事項 | 第 9.1 節 C-1（AB-1、AB-9 在另有 API 額度授權前只能 BLOCKED）與 C-2，以條文現狀接受 |
+| 轉錄者 | 無角色 session，依 acceptor 的指示轉錄；本列不改動任何條文 |

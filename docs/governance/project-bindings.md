@@ -351,7 +351,7 @@ docs/
 | 2 | 從本 repo 根目錄開新的 Claude Code session，確認九個 `gov-*` definitions 已載入 | 完成（2026-11-17，session `6ccb50de-5234-4a2d-8637-7a94bc585260`：九個 definitions 都在該 session 的可用 agent 清單，dry-run 觀測到的 `agentType` 涵蓋全部九個） |
 | 3 | Binding dry-run：對九個 `gov-*` definition 各派一次不做事的任務；另以 per-dispatch 參數各派一次，核對 alias 的實際 model：`model: fable`、`gov-investigator`＋`model: opus`（E-IN）、`gov-bounded-worker`＋`model: haiku`（Haiku qualification probe）。以第 3.6 節指令核對，結果記在 [`binding-verification.md`](binding-verification.md) | 完成（2026-11-17）：12 列中 11 列符合 m1；第 10 列觀測為 `claude-fable-5-2`，acceptor 決定改為 Fable 5.2（O-4，m2；m2 於 2026-11-17 針對 commit `2d4c270` 接受並生效）。Haiku qualification probe 通過 |
 | 4 | 高風險類別由 Design Authority 確認（第 5 節 H-1～H-3） | 完成（2026-11-17）：[`decision-20261117-high-risk-categories.md`](records/decisions/decision-20261117-high-risk-categories.md)。確認 H-1～H-3 並修訂範圍，新增 H-4（決策關卡的 fail-closed 語義）；高風險類別以該 record 為準。派工 binding 核對（第 3.6 節）：agentId `a6a2489068e2dda6c`，`agentType` `gov-design-authority`，觀測 `claude-opus-5-5`／`high`（25 則），符合。本欄由無角色 session 依 acceptor 2026-11-17 指示（原文「轉錄並 commit」）轉錄 |
-| 5 | Outcome Contract 有 acceptor 接受紀錄（第 2.3 節） | 未完成 |
+| 5 | Outcome Contract 有 acceptor 接受紀錄（第 2.3 節） | 完成（2026-11-17）：[`outcome-contract.md`](records/outcome-contract.md)（OC-1，Moto Touring Copilot MVP）。acceptor 針對 commit `873e37a` 回覆原文「接受 873e37a」；接受紀錄在該檔第 10 節。本欄由無角色 session 轉錄 |
 | 6 | Design Authority 的 derivation record（第 8.1 節） | 未完成 |
 
 ## 9. 變更紀錄
