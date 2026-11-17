@@ -1,0 +1,29 @@
+flowchart TB
+    U["① 使用者與情境：重機旅遊騎士"] --> Q["② 問題輸入：Web 對話 + GPX 匯入"]
+    Q --> O
+    subgraph P["③ Planner & Reasoning（多 Agent）"]
+        direction TB
+        O["規劃 Agent（Orchestrator）"]
+        MEM[("騎士記憶：偏好・歷史計畫")]
+        subgraph SP["專責 Agent"]
+            direction LR
+            PA["配速分析 Agent"]
+            WA["天氣 Agent"]
+            RA["路況與補給 Agent"]
+        end
+        VA{"驗證 Agent<br/>規則 1–5"}
+        O <--> MEM
+        O --> SP
+        SP --> VA
+        VA -- 不通過：重新規劃 --> O
+    end
+    subgraph BASE["資料、分析與知識"]
+        direction LR
+        D["④ 資料取得<br/>GPX・氣象署・TDX<br/>地形・路網・加油站<br/>Google Routes API"]
+        A["⑤ Analytics Engine<br/>個人配速模型 P50/P90<br/>風險規則・續航計算"]
+        K["⑥ Domain Knowledge<br/>RAG：警特報・公路資訊<br/>騎乘安全・車系規格"]
+    end
+    SP <--> BASE
+    VA -- 通過 --> R["⑦ 決策與建議：出發時間・P50/P90・加油點・風險說明"]
+    R --> OUT["⑧ 輸出與互動：對話 + Google Maps 行程儀表板 + 行程計畫"]
+    L3["L3 延伸：手機定位 → MQTT → 即時更新與語音提醒"] -.-> PA

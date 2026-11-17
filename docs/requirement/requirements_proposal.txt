@@ -1,0 +1,207 @@
+类型
+分组作业
+分组梯次
+期末報告 proposal
+开放缴交
+2026-10-05 00:00
+缴交期限
+2026-11-11
+已缴交
+0人
+允许迟交
+是
+成绩比重
+10%
+评分方式
+直接打分数
+说明
+期末專題提案作業規範
+Final Project Proposal Requirements
+一、作業目的與基本要求
+本期末專題旨在訓練學生完成一個從問題發現、資料蒐集、領域研究、AI 分析、系統設計，到實作與驗證的完整專案。專題應以真實世界問題為核心，原則上採用：
+
+AI Agent + Domain Knowledge + Data Analytics + Real-World Application
+
+學生不應只訓練一個 AI Model 或製作單純 Chatbot，而應設計一個具有特定專業能力的 Domain AI Agent（領域智慧代理人），能夠理解使用者需求、取得與分析資料、結合領域知識進行推理，最後提供有依據的結果、預測、診斷或建議。
+
+例如：AI Plant Doctor、Energy Detective、Warehouse Manager、Factory Doctor、Financial Analyst、Architect Assistant、Pet Life Analyst 等。
+
+二、Final Project Proposal（10%）
+Proposal 為期末專題第一階段，占成績 10%，須完成以下四部分：
+
+1. Abstract 摘要
+摘要應形成完整的研究故事，建議採用以下 A–F 六段式結構：
+
+A. Attention Getter — Motivation
+以具體證據說明「為什麼這個問題現在很重要、創新或有趣」。應優先尋找 2025–2026 的研究論文、政府/產業報告、統計資料、公開資料集、科技新聞或真實案例，不應只寫「近年來 AI 快速發展」。
+
+B. But — Challenge
+指出現有技術、應用或研究仍存在的問題、限制與 Research Gap。
+
+C. Cure — Proposed Solution
+清楚說明：「為了解決上述問題，本專題提出一個新的 ______ AI Agent / System。」
+
+D. Development — Method
+簡述系統如何整合 AI、資料來源、分析方法及 Domain Knowledge。
+
+E. Experiments — Evaluation
+說明預計使用的 Dataset、Case Study、Baseline、Evaluation Metrics 或使用者測試。
+
+F. Findings — Expected Outcomes
+Proposal 尚未完成實驗者應寫 Expected Findings / Expected Outcomes，不得虛構實驗結果。
+
+Abstract Story：Attention Getter → But → Cure → Development → Experiments → Findings
+
+2. Introduction 緒論
+Introduction 必須回答：Why is this project worth doing?
+
+建議使用 A–F 結構：
+
+**A. Attention Getter：**以公開數據、研究、報告或案例引題。
+**B. Background：**說明應用領域、使用者及技術背景。
+**C. Problem：**明確定義真正需要解決的問題。
+**D. Existing Limitations：**說明目前方法的不足與挑戰。
+**E. Innovation：**說明你的方法與既有系統有何不同。
+**F. Contributions：**條列本專題預期的主要技術與應用貢獻。
+
+Introduction 中的重要論述應盡可能有客觀證據與來源支持。
+
+3. Related Work 相關研究
+Related Work 應同時涵蓋：
+
+約 1/2 AI Technology + 1/2 Domain Know-how
+
+例如「AI Plant Doctor」不能只研究 CNN、Transformer、LLM，也必須研究植物病害、環境因子、土壤濕度、農業感測器及相關農業資料。
+
+可使用 Perplexity、Connected Papers、NotebookLM、Google Scholar、GitHub、Udemy 等工具協助研究，但學生必須確認原始來源及內容正確性。
+
+Proposal 必須包含 Article Summary Table：
+
+Ref.	Year	Problem	AI Method	Domain Knowledge	Dataset	Findings	Limitation
+[1]	2025	…	…	…	…	…	…
+[2]	2026	…	…	…	…	…	…
+最後必須歸納：
+
+Existing Research → Limitations → Research Gap → Our Project
+
+三、Deep Research：三大核心問題
+每組必須針對自己的專業領域進行深入研究，回答：
+
+Q1. 五個核心思維模式
+
+這個領域的專家普遍認同的五個核心思維模式是什麼？
+
+每一項須說明其意義、證據，以及如何影響系統設計。
+
+Q2. 三個最重要的專業爭論
+
+這個領域專家爭論最激烈的三個問題是什麼？雙方最有力的證據是什麼？目前共識是什麼？還有哪些問題尚未解決？
+
+建議結構：
+
+觀點 A ↔ 觀點 B → Evidence → Consensus → Unresolved Problems
+
+Q3. 十個深度理解問題
+
+設計 10 個問題，用來判斷一個人是真正深入了解這個領域，還是只有死記硬背。
+
+問題應包含 Why、What-if、Trade-off、Failure Case、Evidence、Comparison、Design Decision、Real-world Scenario 等推理層次。
+
+四、Proposed Scheme / Proposed Design
+Proposed Scheme 是本 Proposal 最重要的技術內容，必須將專題設計成可實作的 AI Agent System。
+
+基本架構可參考：
+
+① User/Application Scenario
+→ ② Query/Input
+→ ③ Planner & Reasoning Agent
+→ ④ Data Acquisition/Retrieval
+→ ⑤ Analytics Engine
+→ ⑥ Domain Knowledge Integration
+→ ⑦ Decision/Recommendation
+→ ⑧ Output & Interaction
+
+資料來源可以包含 IoT Sensor、Database、CSV/Excel、API、Web、Open Data、PDF/Paper、Knowledge Base、Vector DB 等。
+
+Proposal 必須提供以下三種技術表示
+1. System Architecture
+必須有完整架構圖，各主要模組以 ①②③… 編號，並在正文逐一說明。
+
+2. Flowchart
+呈現 Input → Processing → AI/Analytics → Decision → Output 的完整處理流程；必要時加入 Decision、Loop、Exception 或 Human Interaction。
+
+3. Pseudocode
+核心演算法必須提供具有行號的 Pseudocode，例如：
+
+Algorithm 1: Domain AI Agent
+Input : User Query Q
+Output: Domain-specific Result R
+
+01: Receive user query Q
+02: Analyze intent and requirements
+03: Decompose Q into subtasks
+04: Select appropriate data sources and tools
+05: Retrieve and preprocess relevant data
+06: Analyze data using AI/ML methods
+07: Integrate results with domain knowledge
+08: Generate candidate solutions
+09: Evaluate evidence, uncertainty, and limitations
+10: Generate final recommendation R
+11: Present results and supporting evidence
+12: return R
+五、AI 使用規範
+AI is OK — 可以使用 AI
+本專題允許並鼓勵合理使用 AI。可使用 ChatGPT、Claude、Gemini、NotebookLM、Perplexity、Connected Papers、GitHub Copilot、Codex 等工具進行：
+
+Research、Literature Review、Coding、Debugging、Architecture、Data Analysis、Pseudocode、Documentation、PPT 等工作。
+
+但基本原則為：
+
+AI 可以幫你完成工作，但你必須能解釋它做了什麼、為什麼這樣設計，以及如何驗證結果。
+
+教師可針對 Architecture、DESIGN.md、論文、資料、程式碼與實驗結果進行口頭提問。
+
+六、繳交要求與 Final Handover
+A. Proposal 階段
+須提交：
+
+① Proposal Document：Abstract、Introduction、Related Work、Deep Research、Proposed Scheme、References。
+② Proposal PPT：完整呈現研究動機、文獻、Research Gap、Agent Design、Architecture、Flowchart、Pseudocode。
+③ GitHub Repository：建立正式專題 Repository。
+④ DESIGN.md：從 Proposal 階段開始建立並持續維護系統設計文件。
+
+B. Final Project 最終交付
+期末須完成完整 Final Handover Package：
+
+必繳項目	最低要求
+GitHub	完整 Source Code、資料/資料來源、執行與測試方式
+README.md	專題介紹、Installation、How to Run、Demo
+DESIGN.md	Architecture、Components、Data Flow、AI Model、Domain Knowledge、Algorithm、Implementation Mapping、Results、Limitations
+Final PPT	超過 20 頁（>20 pages）
+Final Video	YouTube 專題簡報與 Demo，超過 10 分鐘（>10 min）
+Experiments	Dataset、Evaluation Metrics、Results、Comparison
+Conclusion	Contributions、Limitations、Future Work
+DESIGN.md 必須使其他人能了解：
+
+Problem → Requirements → Architecture → Components → Data → AI/Analytics → Domain Knowledge → Algorithm → Implementation → How to Run → Results
+
+Final Handover 的標準不是只有「程式可以跑」，而是：
+
+即使原開發者不在，下一位開發者仍能透過 GitHub + README.md + DESIGN.md 理解、執行、驗證並繼續開發此專題。
+
+七、Proposal 評分（10%）
+評分項目	比例
+Introduction：重要性、動機、Evidence、Innovation	20%
+Related Work：AI + Domain + Article Summary	20%
+Deep Research：5 Mindsets + 3 Controversies + 10 Questions	20%
+Proposed AI Agent + System Architecture	20%
+Flowchart + Pseudocode + Technical Feasibility	15%
+GitHub + DESIGN.md + 完整度	5%
+Total	100%
+核心評量原則
+不要只做一個 Model，也不要只做一個 Chatbot。
+請設計一個懂領域、會取得資料、會分析、會推理、能提供有用結果，而且能用客觀證據驗證的 Domain AI Agent。
+
+完整專題故事：
+
+Public Evidence → Important Problem → AI + Domain Research → Deep Understanding → Research Gap → Proposed AI Agent → Architecture / Flowchart / Pseudocode → Implementation → Experiments → Final Handover
