@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #9（BATCH-1 B1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節 C-9-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）。本 worklog 在其後的 record-only commit 加入（`docs/governance/records/**`，Bindings 第 7 節） |
+| 狀態 | Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節）。C-9-1、C-9-2 經 Design Authority 裁決（CL-B1-9、CL-B1-10），同一 worklog identity 續派完成 CL-B1-10 的測試與 CL-B1-9 的 E-1（第 9 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）；CL-B1-10 的測試 commit **`b4d1f84eca1b4f80bd0265c81369384d62b055e0`**（`b4d1f84`，父 commit 是 DA record 的 `e165907`）。**最終受審的程式與測試 subject 是 `b4d1f84`**；本 worklog 在其後的 record-only commit 更新（`docs/governance/records/**`，Bindings 第 7 節） |
 | 日期 | 2026-11-17 |
 
 ## 1. Contract reference
@@ -13,15 +13,17 @@
 - **Ticket**：GitHub Issue #9 的內文與 4 項 AC。以 `gh issue view 9 --json body,updatedAt` 唯讀取得：`updatedAt` `2026-11-15T11:10:58Z`，`body` 的 UTF-8 SHA-256 `30a898f84957f2ddeab16cad09512c82c807857656b0ac89211e75e79fa69895`，與 BD-3（`decision-20261117-oc1-first-run-derivation.md` §3）相同；Orchestrator 提供的 scratchpad 原文檔的 SHA-256 也相同。本 work item 沒有修改 Issue #9。
 - **Spec**：SPEC-B1 v1（`docs/governance/records/decisions/derivation-spec-b1.md`）：§2 引用的段落；§4 CL-B1-1、**CL-B1-3**、CL-B1-7；§5 #9 列（Issue 的 4 項 AC＋CL-B1-3 第 4、5 項的三項測試；高風險類別 H-2、H-3、H-4）與 E-1～E-5。
 - **CL-B1-8**：`docs/governance/records/decisions/decision-20261117-issue7-spike-tests.md`（第 3.2 節：#9 結案時 S-1、S-2 的 strict xfail 移除、原斷言不帶標記通過）。
+- **CL-B1-9、CL-B1-10**：`docs/governance/records/decisions/decision-20261117-issue9-e1-and-trim.md`（DA 對 C-9-1、C-9-2 的裁決；E-1 在 #9 的判定方式，以及停等事件跨修剪邊界的處理與另加的驗證條件）。在本 work item 執行中加入 SPEC-B1 的引用集合。
 - **其他引用**：`decision-20261117-high-risk-categories.md` 第 5 節（H-2、H-3、H-4 的核對範圍）；`docs/governance/records/worklog/issue-7.md` 第 8 節 C-2（acceptor 指定在 #9 處理）；Outcome Contract OC-1（`docs/governance/records/outcome-contract.md`，acceptor 2026-11-17 針對 `873e37a` 接受）。
 - **規格來源**：`DESIGN.md` §5（資料處理流程、契約 1 的欄位與不變條件、「凍結之前不產生保留行程的列」）；`docs/spec/SPEC-RESOLUTION-001-sb2-sb8-sb9.md` §1.1、§1.4、§1.6（SB2-T1、T2、T3、T11）。
-- 契約在本 work item 執行中沒有變更。
+- 契約在本 work item 執行中的變更：DA 以 CL-B1-9、CL-B1-10 補上 SPEC-B1 的 clarification（不改變 accepted 語義；CL-B1-10 第 6 項第 3 款為 #9 另加一項驗證條件）。
 
 ## 2. Executing role and binding reference
 
 - 角色：`executor`，由 Orchestrator（run `run-20261117-oc1-run2`，root session `4aa33b53-7e44-4d34-b9b8-e631fb6f55c2`）以 `gov-executor` 派工。有效 mapping：`claude-opus-5-5`／`high`（Bindings O-1）。沒有 escalation、沒有替代。
 - Binding 證據（Bindings 第 3.6 節）：`~/.claude/projects/D--nchu-2026-AIoT-git-repository-moto-touring-copilot/4aa33b53-7e44-4d34-b9b8-e631fb6f55c2/subagents/agent-a6f915a1860417bc9.{meta.json,jsonl}`。`meta.json` 的 `agentType` 是 `gov-executor`。
 - Executor 自行觀測（實作 commit 之後、worklog 寫入前，以第 3.6 節的掃描方式）：agentId `a6f915a1860417bc9`，(`claude-opus-5-5`, `high`) 84 則，集合只有一個元素。**這是 Executor 的自我觀測，不是派工者的核對**；依第 3.6 節，Orchestrator 採用本 return 之前須自行核對該 agent 的全部 assistant 訊息。
+- 續派後再觀測（CL-B1-10 測試 commit 之後、worklog 更新前）：同一 agentId，(`claude-opus-5-5`, `high`) 111 則，集合仍只有一個元素。同樣是自我觀測。
 - Bounded assignments：沒有使用 `gov-investigator` 或 `gov-bounded-worker`，沒有派工任何 subagent。
 
 ## 3. Work performed
@@ -50,7 +52,7 @@
 
 | # | 決定 | 理由 |
 | --- | --- | --- |
-| D-9-1 | 停等事件由修剪後軌跡的步組成；事件若跨過修剪邊界，只有修剪範圍內的步屬於該事件，分類依這部分的長度 | `DESIGN.md` §5 的資料處理流程是先裁頭尾（第 1 步）、再分離移動與停留（第 3 步）；`build_rows` 的步只存在於修剪後的軌跡；AC 3 的「修剪後的總歷時」也以修剪後為準。1.3 試算所依的參考程式（`data_common.segment_stops`，唯讀閱讀）同樣在修剪後的軌跡上組成事件。我認為這是唯一與既有流程一致的讀法，不是新的語義；若 Reviewer 或 DA 認為不是，見第 8 節 C-9-2 |
+| D-9-1 | 停等事件由修剪後軌跡的步組成；事件若跨過修剪邊界，只有修剪範圍內的步屬於該事件，分類依這部分的長度 | **由 CL-B1-10 取代為契約內容**（`decision-20261117-issue9-e1-and-trim.md` 第 6 項）：DA 寫定這是 measurement 語義，不是 Executor 的 HOW，並裁決為與本實作相同的讀法。實作沒有因此修改；依第 6 項第 3 款另加的測試見第 9 節。（原先的理由——流程順序、AC 3、唯讀閱讀的參考程式——保留作背景；DA 的裁決不依賴參考程式） |
 | D-9-2 | 分類邊界：`duration < 3` 是假停留，`3 ≤ duration < 180` 是短停留，`≥ 180` 是長停留；兩個門檻是 `IngestParams` 的欄位 | Issue #9「長度小於 3 秒」「3 秒以上、不到 180 秒」「180 秒以上」；CL-B1-3 第 6 項 |
 | D-9-3 | `stopped_time_s` 以「短停留＋長停留」計算，`short_stop_time_s` 是其中的短停留；兩者都在四捨五入到 0.1 之前由同一組數值算出 | 浮點加總順序不同可能讓 `short > stopped`；以加法構成保證 `short ≤ stopped`（不變條件 6），四捨五入是單調的 |
 | D-9-4 | `ingest_version` 取 `ingest-b1-1` | CL-B1-3 第 6 項只要求不同於 `ingest-spike-0.2`；不用 `0.3` 字樣，避免看起來像宣稱契約 v0.3（CL-B1-2 的精神、H-3） |
@@ -66,7 +68,7 @@
 | --- | --- |
 | `src/moto_copilot/ingest/segments.py` | 第 3 節第 2 項 |
 | `src/moto_copilot/ingest/__main__.py` | 第 3 節第 3 項 |
-| `tests/test_ingest.py` | S-1、S-2 恢復；新增 9 個測試 |
+| `tests/test_ingest.py` | S-1、S-2 恢復；新增 9 個測試（`a281cb0`），另加 CL-B1-10 的 1 個測試（`b4d1f84`，第 9.1 節） |
 | `tests/test_ingest_cli.py` | 新增 |
 | `docs/governance/records/worklog/issue-9.md` | 本檔（record-only commit） |
 
@@ -74,7 +76,7 @@
 
 ## 6. Verification
 
-### E-1：`.venv/Scripts/python.exe -m pytest -q`（在 `a281cb0`，完整輸出）
+### E-1（中間結果，在 `a281cb0`；不是最終 E-1 證據，最終 E-1 見第 9 節）：`.venv/Scripts/python.exe -m pytest -q`
 
 ```text
 ........................................................................ [ 28%]
@@ -93,7 +95,7 @@ XFAIL tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_
 XFAIL tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
 ```
 
-`--runxfail tests/test_ingest.py tests/test_ingest_cli.py tests/test_routes_pace_eta.py`：`4 failed, 53 passed`；失敗的恰好是上面 4 個，訊息只涉及 `margin_coeff`（及其他配速表表頭的 v0.3 欄位）與 `stop_allow_s`，與 #7 記錄的缺口相同，本 work item 沒有改變它們。
+`--runxfail tests/test_ingest.py tests/test_ingest_cli.py tests/test_routes_pace_eta.py`：`4 failed, 53 passed`（**更正：這個計數是在加入 `test_a_stop_in_a_short_tail_goes_with_the_tail_into_the_previous_segment` 之前執行的結果，與 `a281cb0` 不對應；在 `a281cb0` 應為 `4 failed, 54 passed`，與 DA 在 `bb47d7b` 的觀測相同。本節是中間結果，最終 E-1 見第 9 節**）；失敗的恰好是上面 4 個，訊息只涉及 `margin_coeff`（及其他配速表表頭的 v0.3 欄位）與 `stop_allow_s`，與 #7 記錄的缺口相同，本 work item 沒有改變它們。
 
 BASE（`0c109aa`）是 `229 passed, 6 xfailed`；差異：S-1、S-2 由 xfail 改為通過並併回原測試（235 → 233 個測試），新增 23 個案例（9＋14），233＋23 ＝ 256 ＝ 252＋4。E-1 在 #9 如何判定見第 8 節 C-9-1。
 
@@ -165,8 +167,8 @@ Formal：本 Ticket 的 independent audit **required**（治理 §4.1；Bindings
 
 | # | 項目 | 所需 authority／負責者 |
 | --- | --- | --- |
-| C-9-1 | **E-1 在 #9 的判定。** SPEC-B1 E-1 要求 pytest「全數通過」；本 work item 結束時是 `252 passed, 4 xfailed`。剩下的 4 個是 CL-B1-8 指向 #10、#11 的 strict xfail，依 CL-B1-8 §3.2 第 1 項，它們最遲在 #10、#11 恢復，#9 的範圍內無法讓它們通過（需要修改 `pace/`）。但 CL-B1-8 第 7 節 #9 列寫「其 E-1 不得有本 record 的 xfail」，字面上涵蓋全部 6 個，與第 3.2 節第 1、4 項（各 Ticket 只負責指向自己的標記）不一致；CL-B1-8 §3.3 的判定方式只寫了 #7。我依第 3.2 節的讀法處理（只移除 S-1、S-2），沒有自行解釋 E-1 在 #9 是否滿足 | Design Authority（CL-B1-8 的解讀；E-1 在 #9 的適用方式，orch-default §7 P3） |
-| C-9-2 | 停等事件跨過修剪邊界時的分類（D-9-1）。我依既有流程（先修剪、後分離）只以修剪範圍內的步組成事件。若 Reviewer 或 DA 認為應以修剪前的完整事件分類，需要另行裁決；那會改變修剪邊界附近事件的分類，但不影響 AC 1～4 的測試 | 無（記錄）；有疑義時 Design Authority |
+| C-9-1 | **已裁決（CL-B1-9），處置見第 9 節。** 原提問：**E-1 在 #9 的判定。** SPEC-B1 E-1 要求 pytest「全數通過」；本 work item 結束時是 `252 passed, 4 xfailed`。剩下的 4 個是 CL-B1-8 指向 #10、#11 的 strict xfail，依 CL-B1-8 §3.2 第 1 項，它們最遲在 #10、#11 恢復，#9 的範圍內無法讓它們通過（需要修改 `pace/`）。但 CL-B1-8 第 7 節 #9 列寫「其 E-1 不得有本 record 的 xfail」，字面上涵蓋全部 6 個，與第 3.2 節第 1、4 項（各 Ticket 只負責指向自己的標記）不一致；CL-B1-8 §3.3 的判定方式只寫了 #7。我依第 3.2 節的讀法處理（只移除 S-1、S-2），沒有自行解釋 E-1 在 #9 是否滿足 | Design Authority：已裁決 |
+| C-9-2 | **已裁決（CL-B1-10），處置見第 9 節。** 原提問：停等事件跨過修剪邊界時的分類（D-9-1）。我依既有流程（先修剪、後分離）只以修剪範圍內的步組成事件。若 Reviewer 或 DA 認為應以修剪前的完整事件分類，需要另行裁決；那會改變修剪邊界附近事件的分類，但不影響 AC 1～4 的測試 | Design Authority：已裁決 |
 | C-9-3 | **C-2 的處置。** issue-7 worklog C-2 所述的契約違反（`build_rows` 沒有 `short_stop_time_s`）在 `a281cb0` 已由產生者輸出該欄位解決，以合成資料執行 `python -m moto_copilot.ingest` 時契約檢查全部 OK、exit 0（第 6 節）。以真實行程執行時是否也沒有違反：**NOT VERIFIED**（需要讀取私有資料；Issue #9 排除範圍） | acceptor（是否授權以真實資料執行，RB-7） |
 | C-9-4 | 介面變更：`python -m moto_copilot.ingest` 不再自動建立清單；沒有清單的使用者會被拒絕。現有的私有輸出資料夾若已有清單，行為只差在非 `pace` 項目不再開啟。`DESIGN.md` §10 與 `README.md` 沒有這個指令的說明，所以沒有文件要改；之後的文件工作（AB-12）若加入這個指令，需寫明要先有清單 | AB-12 的文件工作 |
 | C-9-5 | 契約 1 的 `trip_role` enum 只有 `pace`、`holdout`；重建流程跳過的「被排除」行程在清單中的實際寫法不在 repo 內（版控外的清單），本 work item 沒有讀取。實作對任何非 `pace` 的值都不開啟，所以不依賴它的寫法 | 無（記錄） |
@@ -174,3 +176,156 @@ Formal：本 Ticket 的 independent audit **required**（治理 §4.1；Bindings
 | R-9-2 | S-3（#10）、S-4～S-6（#11）的恢復 | #10、#11 |
 
 Executor 工作的完成不等於 #9 的 closure（orch-default §7）、SPEC-B1 的 Spec Integration Audit 或 phase acceptance。
+
+## 9. 續派：CL-B1-9、CL-B1-10 的處置（同一 work item，cycle 0）
+
+| 欄位 | 內容 |
+| --- | --- |
+| 依據 | Orchestrator 的續派訊息（同一 worklog identity）；`decision-20261117-issue9-e1-and-trim.md`（HEAD `e165907` 時已 commit）第 11 節 #9 列的 (a)(b)(c) |
+| 新 commit | `b4d1f84eca1b4f80bd0265c81369384d62b055e0`：只改 `tests/test_ingest.py`（新增一個測試）。程式沒有修改 |
+| 最終 subject | `b4d1f84`（程式與測試）；之後只有本 worklog 的 record-only commit |
+
+### 9.1 CL-B1-10：修剪邊界落在停等事件中間
+
+新增 `tests/test_ingest.py::test_a_stop_event_cut_by_the_trim_is_classified_by_its_part_inside_the_trimmed_track`（PASS）。合成軌跡（虛構原點）：以 20 m/s 行進 1940 m，接著停 200 秒，停的期間每秒向前漂移 0.5 m（1.8 km/h，仍是停止步），共漂移 100 m，使累計距離在停的期間越過 `trim_m` = 2000 m；之後再行進 10 km。測試先以 `clean_points`、`trim_ends` 確認修剪起點落在停留之中，且修剪前的完整事件（200 秒）≥ 180 秒、範圍內部分（實測 80 秒）在 3～180 秒之間，再斷言：
+
+- 報告的事件是 1 個短停留、0 個長停留；
+- 第一段的 `stopped_time_s` 與 `short_stop_time_s` 都等於範圍內部分的秒數，全趟的總和也是，修剪掉的 120 秒不出現在任何欄位；
+- 移動加停留等於修剪後的總歷時；契約 1 的檢查沒有違反。
+
+測的是前端（構造方式由 Executor 選擇，CL-B1-10 第 6 項第 3 款）。CL-B1-10 第 8 項 DA 閱讀的結論（`a281cb0` 的行為符合第 1、2 款）在測試中成立；實作沒有修改。
+
+### 9.2 E-1：依 CL-B1-9 第 2 項，在最終 subject `b4d1f84` 執行
+
+**(i) `.venv/Scripts/python.exe -m pytest -q`**（exit code 0）：
+
+```text
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+...............................x....x.xx.                                [100%]
+253 passed, 4 xfailed in 0.78s
+```
+
+**(iii) `.venv/Scripts/python.exe -m pytest -q -rxX`**（exit code 0）：
+
+```text
+........................................................................ [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+...............................x....x.xx.                                [100%]
+=========================== short test summary info ===========================
+XFAIL tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+253 passed, 4 xfailed in 0.83s
+```
+
+K-1：`grep -rn "xfail\|skip" tests/` 只有 `tests/test_routes_pace_eta.py` 第 117（`restored by #10`）、159、173、182 行（`restored by #11`）的 4 個 CL-B1-8 標記；沒有 `restored by #9`，沒有其他 `xfail`／`skip`。
+
+**(iv) `.venv/Scripts/python.exe -m pytest -q --runxfail tests/test_ingest.py tests/test_ingest_cli.py tests/test_routes_pace_eta.py`**（exit code 1；`--collect-only` 為 59 個測試；以 `PYTHONIOENCODING=utf-8` 執行，使 mock fixture 的路線名稱正確顯示）：
+
+```text
+.................................................F....F.FF.              [100%]
+================================== FAILURES ===================================
+___________ test_pace_table_matches_the_mock_fixture__v03_contract ____________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; "
+                                           "build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet")
+    def test_pace_table_matches_the_mock_fixture__v03_contract(data):
+        header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="user-01",
+                                              min_segments=2, built_at=NOW)
+>       assert validate_pace_table(header, categories, data["derived_segments"]) == []
+E       assert ['pace_header...red property'] == []
+E         
+E         Left contains 5 more items, first extra item: "pace_header[0] schema: (record): 'margin_coeff' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:122: AssertionError
+_____________ test_eta_reproduces_the_mock_fixture__v03_contract ______________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_reproduces_the_mock_fixture__v03_contract(data):
+        header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
+>       assert rows == [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
+E       AssertionError: assert [{'plan_id': ...: 600.0, ...}] == [{'plan_id': ...s': 0.0, ...}]
+E         
+E         At index 0 diff: {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'} != {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'stop_allow_s': 0.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'}
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:163: AssertionError
+________ test_eta_is_unknown_when_a_category_has_no_pace__v03_contract ________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
+        header, rows = eta_for(data, "R02", "P-MOCK-2", [])
+        data["eta_headers"], data["eta_segments"] = [header], rows
+>       assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                   data["pace_header"], data["pace_categories"]) == []
+E       assert ['eta_segment...red property'] == []
+E         
+E         Left contains 2 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:178: AssertionError
+_________ test_eta_output_passes_the_contract_with_and_without_breaks _________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_output_passes_the_contract_with_and_without_breaks(data):
+        for plan_id, breaks in (("P-A", []), ("P-B", [{"after_checkpoint_id": "R01-CP04", "duration_s": 900.0}])):
+            header, rows = eta_for(data, "R01", plan_id, breaks)
+>           assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                       data["pace_header"], data["pace_categories"]) == []
+E           assert ['eta_segment...status is ok'] == []
+E             
+E             Left contains 5 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E             Use -v to get more diff
+
+tests\test_routes_pace_eta.py:187: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks
+4 failed, 55 passed in 0.49s
+```
+
+失敗的恰好是 (iii) 的 4 個 xfail 測試；訊息只涉及配速表表頭的 `margin_coeff`（必填）、ETA 路段列的 `stop_allow_s`（必填），以及 S-4 的列比對只差 `stop_allow_s`，都在 CL-B1-8 §3.3 第 4 項列舉的 v0.3 項目之內。
+
+**計數的核對與更正**：DA record 開頭觀測到 `bb47d7b`（＝`a281cb0` 的程式與測試）上是 `4 failed, 54 passed`，我在第 6 節記的是 `53 passed`。原因：我在加入短尾併入的測試之前執行並記下了那次輸出，之後又新增了該測試，沒有重跑該指令就寫進 worklog。`a281cb0` 的正確數字是 `54 passed`（58 個測試），與 DA 的觀測一致；最終 subject `b4d1f84` 多了 CL-B1-10 的測試，是 `4 failed, 55 passed`（59 個測試）。第 6 節已加註更正。
+
+**(v) S-1、S-2 與 S-3～S-6**：S-1、S-2 依 CL-B1-8 §3.2 第 1、3 項恢復（第 6 節 E-4，原文逐字相同）。`git diff 0c109aa b4d1f84 --stat -- tests/test_routes_pace_eta.py tests/conftest.py tests/test_contracts.py pyproject.toml` 沒有輸出：S-3～S-6 的測試與標記沒有修改。
+
+**判定所需的事實**（依 CL-B1-9 第 2 項逐款）：(i) exit code 0；(ii) 摘要行只有 `passed` 與 `xfailed`；(iii) 4 個 xfail 全部是 `restored by #10`／`#11`，對應 S-3～S-6，沒有 `restored by #9` 與其他標記；(iv) `--runxfail` 失敗的恰好是那 4 個，訊息只涉及 v0.3 項目；(v) 如上。**結果照實寫：`253 passed, 4 xfailed`（依 CL-B1-8、CL-B1-9）。** 這不是「全數通過」；E-1 是否滿足由 Reviewer 依 CL-B1-9 核對。
+
+測試數：BASE `0c109aa` 是 235 個（`229 passed, 6 xfailed`）；S-1、S-2 併回後 233 個；新增 24 個案例（`test_ingest.py` 10 個、`test_ingest_cli.py` 14 個），233＋24 ＝ 257 ＝ 253＋4。
+
+### 9.3 E-2 的增列
+
+| 條件 | 測試 | 結果（`b4d1f84`） |
+| --- | --- | --- |
+| CL-B1-10 第 6 項第 3 款：修剪邊界落在停等事件中間，完整事件與範圍內部分的分類不同；範圍內依範圍內長度分類、範圍外秒數不出現、移動＋停留＝修剪後總歷時、契約 1 通過 | `tests/test_ingest.py::test_a_stop_event_cut_by_the_trim_is_classified_by_its_part_inside_the_trimmed_track` | PASS |
+
+第 6 節 E-2 的其他列在 `b4d1f84` 仍全部 PASS（同一次 (i) 的執行）。
+
+### 9.4 E-3、E-5 的增補
+
+新測試的座標、時間都是合成的（同一虛構原點、2026-01-01 UTC 起算）；diff 沒有真實座標、軌跡或騎乘時間。H-4：新測試釘住了修剪邊界附近移動時間與停留分類的計算路徑。本次續派沒有讀取 `data/`、`.env`，沒有執行或讀取 `experiments/` 下的檔案，沒有派工任何 subagent。
+
+### 9.5 C-9-1、C-9-2 的處置與剩餘工作
+
+- C-9-1：依 CL-B1-9 處理；#9 只移除 S-1、S-2 的標記，E-1 依第 2 項的條件記錄（第 9.2 節）。不再是 open concern。
+- C-9-2：CL-B1-10 寫定與 D-9-1 相同的讀法；依第 6 項第 3 款加入測試（第 9.1 節）。不再是 open concern。
+- 仍 open：C-9-3（以真實行程執行重建流程，NOT VERIFIED，acceptor／RB-7）；C-9-4（AB-12 文件工作）；R-9-1（independent audit：R1 以 `b4d1f84` 為受審 subject，並依 CL-B1-9、CL-B1-10 核對）；R-9-2（S-3～S-6 由 #10、#11 恢復）。
