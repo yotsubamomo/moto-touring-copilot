@@ -12,7 +12,9 @@ rebuilt (SPEC-B1 CL-B1-3 items 4 and 5):
   * without a manifest the run is refused and no GPX file is opened;
   * manifest entries whose trip_role is not "pace" are not opened and give no rows;
   * a requested trip (`--trips`) that is not a pace trip in the manifest is refused before any
-    file is opened.
+    file is opened;
+  * a manifest that gives one source file both a pace role and another role is refused before any
+    GPX file is opened, whichever trips are requested.
 
 Only counts are printed.
 """
@@ -22,7 +24,8 @@ import argparse
 import dataclasses
 import json
 import sys
-from pathlib import Path
+import unicodedata
+from pathlib import Path, PureWindowsPath
 
 from ..contracts import validate_derived_segments, validate_public_private_pair
 from . import IngestParams, build_rows, read_gpx, to_public
@@ -52,7 +55,33 @@ def load_manifest(path: Path) -> list[dict]:
         if trip["trip_id"] in seen:
             raise ManifestError(f"trip manifest lists {trip['trip_id']} more than once")
         seen.add(trip["trip_id"])
+    _refuse_conflicting_roles(trips)
     return trips
+
+
+def source_key(source_file: str) -> str:
+    """A comparison key under which names that can open the same file in the GPX folder are equal.
+
+    It keeps only the last path component (either separator), and ignores letter case, Unicode
+    normalization form and trailing dots and spaces, which Windows file names do not distinguish.
+    Two names with the same key are treated as the same file, even where they might not be: the
+    check errs towards refusing.
+    """
+    name = PureWindowsPath(unicodedata.normalize("NFC", source_file)).name
+    return name.rstrip(" .").casefold()
+
+
+def _refuse_conflicting_roles(trips: list[dict]) -> None:
+    """A source file listed both as a pace trip and with any other role may not be opened at all."""
+    pace_ids: dict[str, str] = {}
+    other_ids: dict[str, str] = {}
+    for trip in trips:
+        target = pace_ids if trip["trip_role"] == PACE else other_ids
+        target.setdefault(source_key(trip["source_file"]), trip["trip_id"])
+    clashes = sorted(pace_ids.keys() & other_ids.keys())
+    if clashes:
+        pairs = ", ".join(f"{pace_ids[k]} (pace) and {other_ids[k]}" for k in clashes)
+        raise ManifestError(f"the trip manifest gives the same source file a pace role and another role: {pairs}")
 
 
 def select_pace_trips(trips: list[dict], requested: list[str] | None) -> tuple[list[dict], int]:

@@ -182,3 +182,61 @@ def test_select_pace_trips_and_load_manifest_directly(tmp_path):
         select_pace_trips(trips, ["T902"])
     with pytest.raises(ManifestError, match="no trip manifest"):
         load_manifest(tmp_path / "missing.json")
+
+
+# --- R1-F1: one source file with a pace role and another role -----------------------------------
+
+@pytest.mark.parametrize("other_name, other_role, requested", [
+    ("pace_a.gpx", "holdout", None),
+    ("pace_a.gpx", "holdout", ["T901"]),
+    ("pace_a.gpx", "excluded", None),
+    ("pace_a.gpx", "excluded", ["T901"]),
+    ("PACE_A.GPX", "holdout", None),          # letter case
+    ("Pace_A.gpx", "holdout", ["T901"]),
+    ("pace_a.gpx.", "holdout", None),          # trailing dot (Windows ignores it)
+    ("pace_a.gpx ", "holdout", None),          # trailing space
+    ("sub/pace_a.gpx", "holdout", None),       # a path whose last part is the same name
+    (r"sub\pace_a.gpx", "excluded", ["T901"]),
+])
+def test_a_source_file_with_a_pace_and_a_non_pace_role_is_refused_before_any_gpx_is_opened(
+        workspace, opened, other_name, other_role, requested):
+    """R1-F1: T901 (pace) and T902 (non-pace) name the same file. Whether the pace trips are chosen
+    automatically or requested, the rebuild refuses and opens no GPX file and writes no rows."""
+    trips = [
+        {"trip_id": "T901", "source_file": "pace_a.gpx", "trip_role": "pace", "route_id": None},
+        {"trip_id": "T902", "source_file": other_name, "trip_role": other_role, "route_id": None},
+        {"trip_id": "T904", "source_file": "pace_b.gpx", "trip_role": "pace", "route_id": "R01"},
+    ]
+    workspace["manifest"].write_text(json.dumps({"trips": trips}), encoding="utf-8")
+    argv = ["--gpx-dir", str(workspace["gpx"]), "--out", str(workspace["out"])]
+    if requested:
+        argv += ["--trips", *requested]
+    opened.clear()
+    code = main(argv)
+    assert code == 2
+    assert _gpx_opened(opened, workspace["gpx"]) == set()
+    assert not (workspace["out"] / "derived_segments_private.json").exists()
+    assert not (workspace["out"] / "ingest_report.json").exists()
+
+
+def test_the_conflict_is_reported_by_trip_id_and_found_by_load_manifest(tmp_path):
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"trips": [
+        {"trip_id": "T902", "source_file": "x.gpx", "trip_role": "holdout"},
+        {"trip_id": "T901", "source_file": "X.GPX", "trip_role": "pace"},
+    ]}), encoding="utf-8")
+    with pytest.raises(ManifestError, match=r"T901 \(pace\) and T902"):
+        load_manifest(manifest)
+
+
+def test_non_pace_entries_sharing_a_file_and_distinct_pace_files_are_not_a_conflict(workspace, opened):
+    trips = [
+        {"trip_id": "T901", "source_file": "pace_a.gpx", "trip_role": "pace", "route_id": None},
+        {"trip_id": "T902", "source_file": "kept_back.gpx", "trip_role": "holdout", "route_id": None},
+        {"trip_id": "T903", "source_file": "KEPT_BACK.gpx", "trip_role": "excluded", "route_id": None},
+        {"trip_id": "T904", "source_file": "pace_b.gpx", "trip_role": "pace", "route_id": "R01"},
+    ]
+    workspace["manifest"].write_text(json.dumps({"trips": trips}), encoding="utf-8")
+    code = main(["--gpx-dir", str(workspace["gpx"]), "--out", str(workspace["out"])])
+    assert code == 0
+    assert _gpx_opened(opened, workspace["gpx"]) == {"pace_a.gpx", "pace_b.gpx"}
