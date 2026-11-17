@@ -209,3 +209,73 @@ R1 record 是 Reviewer 自寫的紀錄；本節只引用其結論與路徑，不
 ### 9.3 Binding
 
 本次更新由同一 `gov-executor`（agentId `ad6a4bc20b0a498ea`）以 SendMessage 續派進行；全程 binding 由 Orchestrator 依 Bindings 第 3.6 節核對。沒有使用 bounded assignment，沒有派工任何 subagent。
+
+## 10. SIA correction：SIA-R1-F1（SPEC-B1 Spec Integration Audit cycle 1 R1）
+
+依 Orchestrator 的派工（orch-default §6：SIA 的修正是契約內 rework；同一 worklog identity）。只新增一個測試檔；沒有修改 `src/`、既有測試、fixture、`conftest.py`、`pyproject.toml` 或任何 record 以外的檔案。
+
+### 10.1 依據
+
+- Finding：`docs/governance/records/audit/spec-SPEC-B1-c1-r1.md`（commit `3cb4593`；本 Executor 讀取時 SHA-256 `963ab59adaee0d94dce042396291e19a473ba1b435beea1cf7f461494b881a49`），**SIA-R1-F1**（Medium／blocking）：缺少 `derivation-spec-b1.md` §6 **SB1-AC2** 要求的單一整合測試（ingest → `user-` 配速表 → ETA）。Required fix 與 owner（#11 Executor）以該 record 原文為準；本節不改寫其結論。
+- 契約：SB1-AC2（`derivation-spec-b1.md` §6）；`decision-20261118-issue10-pace-contract.md` §3.2 第 4 項與 §9（SB1-AC2 列）：這條路徑上驗證程式只核對 `n_segments` 合計，不得宣稱驗證程式逐類別核對；路線須是 `category_scheme` 與配速表相同的**合成契約 2 紀錄**，RI-1～RI-3 不在範圍。
+
+### 10.2 Work performed（`98e5a1a`）
+
+新增 `tests/test_integration_b1.py::test_sb1_ac2_tracks_to_ingest_to_user_pace_table_to_eta`（一個 pytest 測試，`tmp_path` 內寫檔）：
+
+1. **Ingest（契約 1）**：三條產生的軌跡（直線與半徑 500 m／150 m 的圓弧，原點是 `test_ingest.py` 的虛構座標，每秒一點），停留以同一位置的重複點寫入。T901 一條軌跡同時含 1 秒重複位置、30 秒短停留與 200 秒長停留；T902、T903 另有不同位置的短停留、長停留與 1 秒重複位置。實際呼叫 `build_rows`／`to_public`。斷言：每趟 `stop_events`（T901 為 false／short／long＝1／1／1）；每列與「同一軌跡、沒有任何停留」的對照相比，`length_m` 相同、`moving_time_s` 只多出 1 秒假停留、`short_stop_time_s` 等於該段的短停留、`stopped_time_s` 等於該段 3 秒以上的停留；全部 `quality = ok`；private／public 兩版與成對檢查都通過契約 1。
+2. **`user-` 配速表（契約 3）**：`create_pace_table(tmp_path, …, kind="user")` 寫出 `user-01.json`；`latest_user_pace_table` 選到它、`load_pace_table` 讀回相同內容。表頭 `category_scheme` 為 `curv-tercile-110-360`（與衍生表的 `curv-spike0-80-250` 不同）；3 趟 → `default`／0.20。`validate_pace_table(header, categories, 衍生列) == []`——**在這條路徑上驗證程式只核對合計**（CL-B1-12 §3.2）。各類別的 `n_segments`（各 6）與 `stop_ratio`（Σ短停留 ÷ Σ移動時間）由**測試依軌跡設計**（每趟第 0、3 段直線、第 1、4 段 R=500、第 2、5 段 R=150）逐類別斷言，不歸功於驗證程式；C1 的比例另以手算的 (30＋45＋60) ÷ Σ移動時間核對；三個類別都有配速且停等比例大於 0。
+3. **ETA（契約 4）**：手建的合成路線 R08（C1／C2／C3／C1，終點座標是 (0, 0.01×i) 的佔位值），`category_scheme` 設為配速表表頭的值；沒有使用 `routes`。以讀回的配速表計算無休息與途經點後 600 秒休息兩次，都是 `status = ok`；表頭 `margin_coeff` 與 `pace_version` 等於配速表；逐列斷言 `typ_seg_time_s`、`stop_allow_s = stop_ratio × typ_seg_time_s`（且 > 0）、`eta_typ`、`eta_safe − eta_typ = margin_coeff × RIDE`（容許 1 秒）；`validate_eta_output`（帶同一份配速表，涵蓋不變條件 8、9）為 `[]`；休息只平移 `eta_typ`／`eta_safe`，寬放與餘裕秒數不變。
+4. **整條鏈**：衍生列、路線、配速表與兩份 ETA 組成一份資料集，`validate_dataset` 四項都是 `[]`。
+
+Self-verification：曲率的實測值（112.1／120.0、361.4／365.7）先以探測確認門檻 (110, 360) 使每趟各類別恰好兩段，再寫入斷言；初版因軌跡產生器把切段後的長度捨入而使有無停留的幾何不同（測試自身的錯誤，不是產品缺陷），改為在同樣的步數中插入停留後通過。另以三個暫時的產品變異確認這個測試本身會失敗（每次以原始位元組還原，之後 `git status` 只有新測試檔）：ETA 寬放恆為 0 → failed；`stop_ratio` 改用 `stopped_time_s`（含長停留）→ failed；ingest 不再分出長停留 → failed。
+
+**整合測試沒有揭露產品缺陷**；沒有修改產品程式，沒有需要依治理 §2.4 回報的事項。
+
+### 10.3 E-1：在 `98e5a1a` 執行（主 checkout，`git status --short` 為空）
+
+`.venv/Scripts/python.exe -m pytest -q`，exit code 0，完整輸出：
+
+```text
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 38%]
+........................................................................ [ 51%]
+........................................................................ [ 64%]
+........................................................................ [ 77%]
+........................................................................ [ 90%]
+....................................................                     [100%]
+556 passed in 1.80s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`，exit code 0，完整輸出（沒有 XFAIL／XPASS 列）：
+
+```text
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 38%]
+........................................................................ [ 51%]
+........................................................................ [ 64%]
+........................................................................ [ 77%]
+........................................................................ [ 90%]
+....................................................                     [100%]
+556 passed in 1.88s
+```
+
+- 摘要只有 `passed`：沒有 `xfailed`、`xpassed`、`failed`、`error`、`skipped`。`grep -rn "xfail\|skip" tests/` 沒有輸出（exit 1）。結果陳述：**`556 passed`，沒有 xfail**（SIA R1 在其 subject 觀測為 555 passed；+1 是本測試）。
+- `PYTHONPATH=src .venv/Scripts/python.exe -m moto_copilot.contracts tests/fixtures/contract_v02/mock_dataset.json`：四項 `OK`，exit 0。
+- `git ls-files` 對 `.env`、`*.gpx`、`*.fit`、`data/` 沒有命中；新測試檔對 P90／percentile／quantile／百分位／分位／警特報與 xfail／skip 沒有命中。
+
+### 10.4 E-2、E-3、E-4、E-5
+
+- **E-2**：SB1-AC2 → `tests/test_integration_b1.py::test_sb1_ac2_tracks_to_ingest_to_user_pace_table_to_eta`，PASS（`98e5a1a`）。
+- **E-3**：全部合成：產生的直線／圓弧軌跡（虛構原點）、虛構行程代號 T901–T903、手寫的停留秒數、佔位的路線終點座標。沒有讀取、列出或搜尋 `data/`，沒有讀 `.env`，沒有執行 `experiments/` 下任何腳本，沒有讀保留行程。
+- **E-4**：沒有修改任何既有測試。
+- **E-5**：H-3——測試說明寫明驗證程式在這條路徑只核對合計、逐類別由測試斷言，以及 RI-1～RI-3 不在涵蓋內；沒有 P90／百分位數的用語，沒有把本測試稱為 E1 Lite／E2 的結果。H-4——這是 `ok` 路徑的整合；`unknown` 與缺漏路徑的測試不變（第 6 節 E-2）。
+
+### 10.5 Subject、binding 與 audit status
+
+- 修正 commit：**`98e5a1a78aa489f76632b62cadb47439c6a3b732`**（`98e5a1a`，父 commit 是 SIA R1 record 的 `3cb4593`）；本節在其後的 record-only commit。供 SIA R2 closure review 的受審 subject 由 Orchestrator 指定（含 `98e5a1a` 與本 worklog commit 的 HEAD）。
+- Binding：同一 `gov-executor`（agentId `ad6a4bc20b0a498ea`）以 SendMessage 續派；自我觀測（本節寫入前）全部 assistant 訊息為 (`claude-opus-5-5`, `high`) 125 則，集合只有一個元素。**這是自我觀測**，Orchestrator 須自行核對。沒有使用 bounded assignment。
+- Audit status：SIA-R1-F1 的 closure 由 SIA R2（Reviewer）判定；本節的「已修正」不是 closure。
+- Remaining：SIA R2；第 9.2 節的 follow-ups 不變（C-11-2／RI-1～RI-3 仍不在涵蓋內，本測試以手建的相同 `category_scheme` 路線避開它，不得記為已處理）。
