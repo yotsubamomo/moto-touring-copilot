@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #10（BATCH-1 B1-3），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **CL-B1-15（C-10-7 的 DA 裁決）已實作（第 11 節，`e4fc93b`），待 R2。** 最終 implementation subject 是 `e4fc93b`；最終 E-1 evidence 是第 11.3 節（第 6、9.3、10.3 節保留為歷程）。以下為先前狀態：**Cycle 1 R1 BLOCKING（`audit/issue-10-c1-r1.md`：R1-F1、R1-F2）→ targeted correction 完成（第 10 節，`93e52b8`），待 R2。** 最終 E-1 evidence 是第 10.3 節（取代第 6、9.3 節作為最終證據；兩節保留為歷程）。以下為先前狀態：**實作與 self-verification 完成（第 9 節，`e0f6c78`），待 R1。** 第一次 return 時因 C-10-1 BLOCKED（第 1–8 節，保留原文作為歷程）；Design Authority 以 `decision-20261118-issue10-pace-contract.md`（CL-B1-12～14）裁決後完成 rework，S-3 已恢復，#10 的 E-1 依 CL-B1-9 第 3 項滿足（第 9.3 節）。本 worklog 不宣告 closure。 |
+| 狀態 | **Audit 已走完：cycle 1 R2 PASS（`audit/issue-10-c1-r2.md`，受審 subject `8177015`，實作最後 commit `e4fc93b`），沒有未解 blocking finding；仍有 open 的 tracked follow-ups（第 12.2 節）。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：R1 BLOCKING（R1-F1、R1-F2）→ targeted correction `93e52b8` → DA 裁決 C-10-7（CL-B1-15）→ `e4fc93b` → R2 PASS（第 12 節）。以下為先前狀態：**CL-B1-15（C-10-7 的 DA 裁決）已實作（第 11 節，`e4fc93b`），待 R2。** 最終 implementation subject 是 `e4fc93b`；最終 E-1 evidence 是第 11.3 節（第 6、9.3、10.3 節保留為歷程）。以下為先前狀態：**Cycle 1 R1 BLOCKING（`audit/issue-10-c1-r1.md`：R1-F1、R1-F2）→ targeted correction 完成（第 10 節，`93e52b8`），待 R2。** 最終 E-1 evidence 是第 10.3 節（取代第 6、9.3 節作為最終證據；兩節保留為歷程）。以下為先前狀態：**實作與 self-verification 完成（第 9 節，`e0f6c78`），待 R1。** 第一次 return 時因 C-10-1 BLOCKED（第 1–8 節，保留原文作為歷程）；Design Authority 以 `decision-20261118-issue10-pace-contract.md`（CL-B1-12～14）裁決後完成 rework，S-3 已恢復，#10 的 E-1 依 CL-B1-9 第 3 項滿足（第 9.3 節）。本 worklog 不宣告 closure。 |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `20939aa`（派工時的 HEAD）；實作 commit **`be0074d51805b2f912c3d35350f3c9d52f76e8c8`**（`be0074d`）；rework commit **`e0f6c7833620acb959a3e6bff8278b0506997eeb`**（`e0f6c78`，父 commit 是 DA record 的 `e0626a3`）。R1 受審 subject 是 `e0f6c78`（R1 worktree HEAD `c47716c`）；R1-F1 的 correction commit **`93e52b8abb2f98a0bf2f9e7701c786c2c3b57019`**（`93e52b8`，父 commit 是 R1 record 的 `e3606f2`）。`93e52b8` 之後，CL-B1-15 的 implementation commit **`e4fc93b5a95494dca946b7702023bc01ddc952e6`**（`e4fc93b`，父 commit 是 DA record 的 `a9d1cd9`）。**最終 implementation subject 是 `e4fc93b`**；本 worklog 的更新在其後的 record-only commit |
 | 日期 | 2026-11-18 |
 
@@ -765,3 +765,40 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 - Binding（自我觀測，不是派工者的核對）：agentId `a54ac9cf0e452782b`，`e4fc93b` 與 E-1 之後、本節寫入前，(`claude-opus-5-5`, `high`) 184 則，集合只有一個元素。沒有使用 bounded assignments，沒有派工任何 subagent。
 - Audit status：R1 BLOCKING（R1-F1、R1-F2，已 targeted correction）；CL-B1-15 的 delta 已實作。R2 以 `e4fc93b` 為受審 subject，範圍依 DA record 第 7 節。本節的突變檢查是 self-verification，不是 audit。
 - Concerns：無新增。契約 2 第 205 行的同類缺陷屬 R1-1（CL-R1-11），不在 #10。DA record 第 8 節末列也指出：只盤點了 `isinstance(..., int)` 的寫法，其他以整數為前提的路徑沒有檢查；本 worklog 同樣不宣稱已無同類問題。真實行程上的行為仍是 NOT VERIFIED（RB-7，required authority = acceptor）。
+
+## 12. Audit 結果與 open follow-ups（cycle 1 R2 之後）
+
+本節是 record-only 更新（Orchestrator 指示）；沒有修改 `src/`、`tests/`。
+
+### 12.1 Audit 歷程
+
+| 階段 | Record／commit | 受審 subject | 結果 |
+| --- | --- | --- | --- |
+| 實作與 self-verification（第 3–8 節） | `be0074d` | — | 第一次 return BLOCKED（C-10-1） |
+| DA 裁決 C-10-1～C-10-3 | `decisions/decision-20261118-issue10-pace-contract.md`（CL-B1-12～14） | — | 契約修訂，#10 範圍擴及 `contracts/validate.py` 的不變條件 3 |
+| Rework（第 9 節） | `e0f6c78` | — | E-1 依 CL-B1-9 第 3 項滿足；S-3 恢復 |
+| Cycle 1 R1（Codex，`primary_reviewer`） | `audit/issue-10-c1-r1.md` | `c47716c`（實作 `e0f6c78`） | **BLOCKING**：R1-F1（Medium，合計檢查對整數值 float 失效）、R1-F2（Medium，worklog 的 E-1 輸出不完整） |
+| Targeted correction（第 10 節） | `93e52b8` | — | R1-F1 修正與 17 個 regression 案例；R1-F2 在 `93e52b8` 重跑並完整保存 E-1 |
+| DA 裁決 C-10-7 | `decisions/decision-20261118-issue10-c107.md`（CL-B1-15 歸 #10；CL-R1-11 歸 #13） | — | #10 再修改 `validate.py` 兩處 |
+| CL-B1-15（第 11 節） | `e4fc93b`（最後一個 implementation commit） | — | 22 個新案例；E-1 在 `e4fc93b` 完整保存（第 11.3 節，`426 passed, 3 xfailed`） |
+| Cycle 1 R2（Codex，`primary_reviewer`；scoped closure review＋CL-B1-15 delta 的首次獨立審查） | `audit/issue-10-c1-r2.md` | **`8177015`**（實作最後 commit `e4fc93b`；其後只有 record-only commit） | **PASS**：R1-F1 RESOLVED、R1-F2 RESOLVED、CL-B1-15 delta PASS；新增 findings 無（blocking 與 non-blocking 皆無），沒有 deferral 或 gate waiver |
+
+- R2 record 自述：本次 Codex rollout 的實際 model／effort／sandbox、存取紀錄與作者核對由 dispatcher（Orchestrator）依 Bindings 第 3.3 節完成並記入 run record 事件 27；正式採用 R2 前須完成。本 worklog 不代替該核對。
+- R2 記為 NOT VERIFIED as historical execution 的項目：Executor 當時的 raw stdout 擷取過程與突變操作歷程（未版控）。R2 以 worklog 保存的最終 stdout 與自己的重跑比對，並以自己的正反案例核對行為；Executor 的突變紀錄仍只是 self-verification。
+- Model diversity：R1、R2 records 都記為 no model diversity claim（Primary 的實際 binding 待 dispatcher 核對）。
+- 最終 E-1 evidence：第 11.3 節（`e4fc93b`：`426 passed, 3 xfailed`；3 個 xfail 是 #11 的 S-4～S-6，不是通過）。SPEC-B1 層級的 SB1-AC3（沒有任何 `xfailed`）仍待 #11。
+
+### 12.2 Open follow-ups（不阻擋 #10 的 audit 結果；各自的 owner／authority）
+
+| ID | 內容 | Owner／authority | 狀態 |
+| --- | --- | --- | --- |
+| C-10-4 | `compare_methods`（DC-10 的方法比較）仍以衍生表的 `seg_category` 分組，與配速表的分類來源不同；它的輸出不寫入配速表，不在 #10 與 SPEC-B1 的 AC 內 | Design Authority（DA record `decision-20261118-issue10-pace-contract.md` 第 10 節：tracked item；若之後用於 E1 的方法選擇，由屆時涵蓋凍結清單與實驗的 Spec 處理） | Open（tracked） |
+| C-10-5 | mock fixture 的配速表（`curv-mock`）不再是以 fixture 衍生列建立的結果；它是契約資料的樣本，不宣稱是 #10 的輸出 | Design Authority（同一 record 第 9 節：資訊，維持現狀） | Open（資訊；不需動作） |
+| C-10-6 | `DESIGN.md` 的實作狀態陳述（§6.1「都尚未實作」等）在 #10 之後部分過時 | AB-12 的文件工作（`derivation-spec-b1.md` §8）；由 Orchestrator 依之後的 Spec／work item 安排 | Open |
+| CL-R1-11 | 契約 2 `validate_route_catalog` 的 `after_seg_count` 範圍檢查（現行第 205 行附近）對整數值 float 同樣 fail open；#10 沒有修改 | R1-1／Issue #13（DA record `decision-20261118-issue10-c107.md` 第 3.2 節）；Orchestrator 派工時 pack 須含該 record | Open（屬 #13） |
+| 其他以整數為前提的路徑 | DA record 與本 worklog 只盤點 `isinstance(..., int)` 的寫法；其他路徑沒有檢查，不宣稱已無同類問題 | Design Authority（同一 record 第 8 節末列） | Open（未盤點） |
+| SPEC-B1 層級 | SB1-AC2 整合測試、SB1-AC3（沒有 `xfailed`，需 #11 恢復 S-4～S-6）、Spec Integration Audit、phase acceptance；SIA 不得記為驗證程式已逐類別核對重算後的路段數（CL-B1-12 §3.2 第 4 項），也不得把契約 2 第 205 行記為 SPEC-B1 已涵蓋 | Orchestrator 派 SIA；Design Authority phase acceptance | Open（#11 之後） |
+| 真實資料 | 以真實配速行程重建、留一趟、回歸檢查（G-REG），以及私有位置與保留行程隔離的真實資料驗證 | **acceptor**（RB-7；Issue #10 排除範圍） | NOT VERIFIED／NOT RUN |
+| E1 Lite、E2、holdout 解封 | 不在 #10 驗收範圍；本工作的數字都不是 E1／E2 的結果 | **acceptor** | NOT RUN |
+
+C-10-1、C-10-2、C-10-3、C-10-7 已由 Design Authority 裁決並處置（第 9、11 節），沒有剩餘工作。
