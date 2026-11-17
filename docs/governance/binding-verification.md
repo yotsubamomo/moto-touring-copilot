@@ -1,6 +1,6 @@
 # Binding verification — dry-run（Project Bindings 第 8.2 節 #3）
 
-- **狀態**：**已執行（2026-11-17）。** 12 列中 11 列符合 m1 的預期。第 10 列（Fable alias）觀測為 `claude-fable-5-2`，與 m1 所列的 Fable 5.1 不符；acceptor 決定改為 Fable 5.2（Bindings m2 的 O-4）。O-4 在 m2 生效後才生效，在那之前任何 Fable 路徑都不得使用。
+- **狀態**：**已執行（2026-11-17）。** 12 列中 11 列符合 m1 的預期。第 10 列（Fable alias）觀測為 `claude-fable-5-2`，與 m1 所列的 Fable 5.1 不符；acceptor 決定改為 Fable 5.2（Bindings m2 的 O-4）。m2 已於 2026-11-17 針對 commit `2d4c270` 接受並生效，Fable 路徑依 O-4 以 `claude-fable-5-2` 使用。
 - **為什麼不沿用 `aiot-classwork` 的紀錄**：binding 證據是針對特定 repo、特定 session 與當時載入的 definitions 觀測的。本專案的 `gov-*` definitions 是 2026-11-17 改寫後的版本，必須在從本 repo 根目錄啟動的新 session 重新觀測（Bindings 第 3.6、6 節）。
 - **方法**：對每一列以 Agent tool 派一次不做事的任務（指示不呼叫工具，不讀、不寫、不執行、不搜尋任何檔案，特別是 `data/`，不作任何判斷，只回一行 ack），再以 Bindings 第 3.6 節的核對指令讀取 harness 紀錄，核對 `agentType` 與全部 assistant 訊息的 (model, effort)。
 - **完成條件**：每一列的觀測值集合只有一個元素，且等於預期。任何一列不符時，該 definition 不得用於正式派工，依 Bindings 第 3.1 節處理並記錄。
@@ -18,7 +18,7 @@
 | 7 | `orchestrator`（只核對 definition 的 binding；正式 run 由主 session 擔任） | `gov-orchestrator` | `claude-opus-5-5`／`medium` | `ada1dcce3055d7e07` | `claude-opus-5-5`／`medium`（2） | 符合 |
 | 8 | `investigator` | `gov-investigator` | `claude-sonnet-5-5`／`high` | `a845a4cebc6a2eb4e` | `claude-sonnet-5-5`／`high`（1） | 符合 |
 | 9 | `bounded_worker`（`standard`） | `gov-bounded-worker` | `claude-sonnet-5-5`／`high` | `a26c0694f5a6507e1` | `claude-sonnet-5-5`／`high`（1） | 符合 |
-| 10 | Fable 路徑（E-DA／E-AR／E-FA 與各 fallback） | `gov-alternate-reviewer`＋`model: fable` | m1：`claude-fable-5-1`／`xhigh`。m2（O-4）：`claude-fable-5-2`／`xhigh` | `af267b8ab2ac6a0aa` | `claude-fable-5-2`／`xhigh`（1） | 對 m1 **不符**；acceptor 決定改為 Fable 5.2（O-4），對 m2 符合。m2 生效前不得使用 |
+| 10 | Fable 路徑（E-DA／E-AR／E-FA 與各 fallback） | `gov-alternate-reviewer`＋`model: fable` | m1：`claude-fable-5-1`／`xhigh`。m2（O-4）：`claude-fable-5-2`／`xhigh` | `af267b8ab2ac6a0aa` | `claude-fable-5-2`／`xhigh`（1） | 對 m1 **不符**；acceptor 決定改為 Fable 5.2（O-4），對 m2 符合。m2 已生效（2026-11-17，`2d4c270`） |
 | 11 | E-IN | `gov-investigator`＋`model: opus`、`effort: high` | `claude-opus-5-5`／`high` | `a43b9f2e01d831b36` | `claude-opus-5-5`／`high`（1） | 符合 |
 | 12 | Haiku qualification probe（`mechanical`） | `gov-bounded-worker`＋`model: haiku`、`effort: high` | `claude-haiku-5-5`／`high` | `a08170a8bdd0eeab3` | `claude-haiku-5-5`／`high`（1） | 符合。依 Bindings 第 3.4 節，`mechanical` 自本紀錄起以 Haiku 派工 |
 
