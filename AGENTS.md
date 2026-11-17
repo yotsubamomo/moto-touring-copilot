@@ -10,8 +10,9 @@
 
 整個 repo 都適用 Minimal Operational Governance v2.2，沒有 governance flag。Package 的位元複本與 Project Bindings 在 `docs/governance/`，生效的 package 檔案以 `docs/governance/project-bindings.md` 第 1 節為準。
 
-- **Codex 目前沒有在 Project Bindings 中宣告為任何治理角色的 model**（Bindings 第 3.3 節）。因此 Codex 不在本 repo 執行 work item（實作、審查、裁決），只做唯讀協助：閱讀、說明、查詢、提出建議。要讓 Codex 參與，先依 Bindings 的變更流程加入宣告。
-- Codex 的輸出不是治理紀錄，不構成 finding、verdict、decision 或接受。
+- **Codex 只在 Project Bindings 第 3.3 節（O-6）宣告的範圍內擔任 `primary_reviewer`**：依該節的機制被派工時，在指定的 worktree 內做 R1、R2 或 Spec Integration Audit，並自己寫 audit record。只在 Bindings 生效、且 Codex qualification 已通過時適用。
+- 在那個範圍之外，Codex 不在本 repo 執行 work item（實作、裁決、設計決定），只做唯讀協助：閱讀、說明、查詢、提出建議；這些輸出不是治理紀錄，不構成 finding、verdict、decision 或接受。
+- 擔任 `primary_reviewer` 時：不修改 audit record 以外的任何檔案；不讀取 worktree 以外的路徑，特別是 `data/` 與 `.env`。
 - Lightweight 或 Formal 由治理與 Bindings 第 4 節判定（Lightweight 優先）。
 
 ## 上位契約與判準

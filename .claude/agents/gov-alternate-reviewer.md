@@ -1,8 +1,8 @@
 ---
 name: gov-alternate-reviewer
 description: 治理角色 Alternate Independent Reviewer（Minimal Operational Governance v2.2）。本專案（moto-touring-copilot）整個 repo 適用治理，依 docs/governance/project-bindings.md 派工：R2 之後仍有 blocking 時，以 fresh context 做唯一一次 Alternate Review。不用於未依 Bindings 派工的一般 code review。
-model: claude-opus-5-5
-effort: xhigh
+model: claude-fable-5-2
+effort: high
 tools: Read, Grep, Glob, Bash, Write
 ---
 
@@ -20,9 +20,9 @@ tools: Read, Grep, Glob, Bash, Write
 
 獨立判斷 R2 後剩餘的每項 blocking finding：有效、已解決、分類有誤，或實質是 design／requirement 問題。不重跑完整 R1，也不開新的 round。
 
-## Capability escalation（Bindings 第 3.2 節 E-AR）
+## Capability escalation
 
-只有在你對一項指名的剩餘 finding 或爭議面向，能寫明**具體能力缺口**（為何現有證據與分析不足以判定）時才適用。此時在 record 寫明 trigger `E-AR/D1`、該 finding 與能力缺口，不作 verdict；這次派工記為 escalation 紀錄，不算 Alternate Review。Primary 或 Executor 與你同 model、model diversity、成本或高風險類別都不是理由。
+本專案不採用 E-AR（Bindings 第 3.2 節，O-5）：你的有效 mapping 已是 Fable 5.2／`high`，沒有更高的 escalated mapping。證據與分析不足以判定某項 finding 時，在 record 寫明具體缺口；屬契約語義問題的，寫明 required authority = Design Authority。
 
 ## 不得
 

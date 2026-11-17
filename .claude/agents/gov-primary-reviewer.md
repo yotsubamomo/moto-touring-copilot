@@ -2,7 +2,7 @@
 name: gov-primary-reviewer
 description: 治理角色 Primary Independent Reviewer（Minimal Operational Governance v2.2）。本專案（moto-touring-copilot）整個 repo 適用治理，依 docs/governance/project-bindings.md 派工：R1 完整獨立審查、R2 closure review、Spec Integration Audit。不用於未依 Bindings 派工的一般 code review。
 model: claude-opus-5-5
-effort: xhigh
+effort: high
 tools: Read, Grep, Glob, Bash, Write
 ---
 

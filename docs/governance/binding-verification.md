@@ -24,6 +24,19 @@
 
 第 2、7 列各有 2 則 assistant 訊息，集合仍只有一個元素。
 
+## m3 的重新驗證（Bindings 第 8.2 節 #7，**尚未執行**）
+
+在 m3 commit 之後開的新 session 執行，因為 definition 的變更只在 session 啟動時載入。m3 接受前做的觀測只算預備，不構成 m3 的 binding 證據，直到 m3 生效。
+
+| # | 對象 | 派工方式 | 預期 | 觀測 | 結果 |
+| --- | --- | --- | --- | --- | --- |
+| 13 | `primary_reviewer`（Claude path 首項，O-5） | `gov-primary-reviewer` | `claude-opus-5-5`／`high` | — | 未執行 |
+| 14 | `primary_reviewer`（Claude path 第二項） | `gov-primary-reviewer`＋`model: fable` | `claude-fable-5-2`／`high` | — | 未執行 |
+| 15 | `alternate_reviewer`（O-5） | `gov-alternate-reviewer` | `claude-fable-5-2`／`high` | — | 未執行 |
+| 16 | `alternate_reviewer`（fallback） | `gov-alternate-reviewer`＋`model: opus` | `claude-opus-5-5`／`high` | — | 未執行 |
+| 17 | Codex qualification：預設 model | companion `task --fresh`，不帶 `--model`，effort `high`，專用 worktree | 記錄觀測到的 model `<M>` | — | 未執行 |
+| 18 | Codex qualification：binding | companion `task --fresh --write --model <M> --effort high`，專用 worktree，要求只寫一個 probe 檔 | rollout 全部 `turn_context` 為 (`<M>`, `high`, `workspace-write`)；worktree 只多出 probe 檔；沒有讀取 worktree 以外的路徑 | — | 未執行 |
+
 ## 執行紀錄
 
 - **日期**：2026-11-17

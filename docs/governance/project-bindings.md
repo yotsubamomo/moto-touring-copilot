@@ -2,9 +2,9 @@
 
 本檔是本 repo 依 Minimal Operational Governance v2.2 §5.1 宣告的 Project Bindings：治理的適用範圍，以及權限來源、角色與模型、lane、assurance、工具與紀錄位置。
 
-- **Bindings 版本**：m2（2026-11-17，**已生效**：acceptor 於 2026-11-17 針對 commit `2d4c270` 接受）。m2 相對 m1（2026-11-17 針對 commit `39e77ec` 接受）只新增 O-4（Fable mapping 改為 Fable 5.2，第 3.1、3.2 節）。第 8.2 節的狀態欄是紀錄轉錄，不是規則變更。
+- **Bindings 版本**：m3（2026-11-17，**待接受**）。m3 相對 m2 新增 O-5（Primary Reviewer 的 Claude path 改為 `high`；Alternate Reviewer 改為 Fable 5.2／`high`，不採用 E-AR）與 O-6（授權 Codex 擔任 `primary_reviewer`，qualification-gated），並修改兩個 reviewer 的 definition 與 `AGENTS.md` 的對應文字。**m3 生效前，生效的是 m2**（2026-11-17 針對 commit `2d4c270` 接受；m1 於 2026-11-17 針對 `39e77ec` 接受），O-5、O-6 不生效。第 8.2 節的狀態欄是紀錄轉錄，不是規則變更。
 - **來源**：由 `aiot-classwork` 的 Project Bindings b5（2026-10-14）移植。第 3 節（角色與模型）照原樣沿用；第 0、2、4、5、7、8 節依本專案改寫。兩個 repo 的 Bindings 各自獨立，之後的變更不互相連動。
-- **生效條件**：acceptor 明確接受本版，方式是下列之一：(a) 把引入本版的 PR 合併進 `main`；(b) 在對話中針對含本版的 commit SHA 明確表示接受，原文與日期記入第 9 節。生效前本檔只是提案，不構成任何授權（含第 2.5 節的 standing authorization）。**m1、m2 都已依 (b) 生效**，接受紀錄在第 9 節。
+- **生效條件**：acceptor 明確接受本版，方式是下列之一：(a) 把引入本版的 PR 合併進 `main`；(b) 在對話中針對含本版的 commit SHA 明確表示接受，原文與日期記入第 9 節。生效前本檔只是提案，不構成任何授權（含第 2.5 節的 standing authorization）。**m1、m2 都已依 (b) 生效**，接受紀錄在第 9 節；m3 待接受。
 - **優先順序**（治理 §5.3；orch-default §1）：治理本文 ＞ 本檔 ＞ Accepted Work Contract ＞ Implementation Profile ＞ Orchestrator Contract ＞ Runtime 工具。Root `CLAUDE.md` 的其他規則視為本檔的一部分；與治理 MUST 衝突時以治理為準。
 - **整體取向：Lightweight 優先。** 本專案是一人進行的課程期末專題。在治理允許的範圍內一律選最輕的做法：預設 Lightweight lane（第 4 節）、Lightweight 預設不做 independent audit（第 5 節）、bounded assignments 只採用 `investigator` 與 `bounded_worker` 兩種（第 3.4 節）、不宣告額外的 escalation trigger 或 diversity 要求。治理的 MUST 不因此放寬。
 
@@ -26,7 +26,7 @@
 | Artifact | 採用版本 | Overrides | 生效檔案 |
 | --- | --- | --- | --- |
 | Minimal Operational Governance（normative authority） | v2.2（Adopted／Frozen 2026-10-12） | — | [`PKG/Minimal_Operational_Governance_v2.2_Candidate.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/Minimal_Operational_Governance_v2.2_Candidate.md)（檔名沿用 Candidate 字樣，狀態以 header 為準） |
-| Reference Model Profile | `default` `v2.5`（Adopted／Frozen 2026-10-11），連同其以引用方式沿用的 `default` `v2.4` 章節 | 見第 3 節（O-1、O-2、O-3、O-4） | [`PKG/references/model-profiles/default-v2.5.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/model-profiles/default-v2.5.md)、[`default-v2.4.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/model-profiles/default-v2.4.md) |
+| Reference Model Profile | `default` `v2.5`（Adopted／Frozen 2026-10-11），連同其以引用方式沿用的 `default` `v2.4` 章節 | 見第 3 節（O-1～O-6） | [`PKG/references/model-profiles/default-v2.5.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/model-profiles/default-v2.5.md)、[`default-v2.4.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/model-profiles/default-v2.4.md) |
 | Implementation Profile | `impl-default` `v2`（Adopted／Frozen 2026-09-22） | none | [`PKG/references/implementation-profiles/default-v2.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/implementation-profiles/default-v2.md) |
 | Reference Orchestrator Contract | `orch-default` `v2.2`（Adopted／Frozen 2026-10-12） | none | [`PKG/references/orchestrator-contracts/default-v2.2.md`](Minimal_Governance_Reusable_Package_v2.2_2026-10-12b/Minimal_Governance_Reusable_Package_v2.2/references/orchestrator-contracts/default-v2.2.md) |
 
@@ -104,15 +104,15 @@ Outcome Contract 不得超出上位契約。
 
 ### 3.1 有效 mapping
 
-採用 `default` `v2.5`，overrides 為 O-1、O-2、O-3（O-3 見第 3.4 節）、O-4（m2，見本節「Fable alias」）。六個治理角色與 `executor` fallback 的 definition 放在 `.claude/agents/`：
+採用 `default` `v2.5`，overrides 為 O-1、O-2、O-3（O-3 見第 3.4 節）、O-4（m2，見本節「Fable alias」）、O-5（m3，見本節「O-5」）、O-6（m3，Codex，見第 3.3 節）。六個治理角色與 `executor` fallback 的 definition 放在 `.claude/agents/`：
 
 | Identifier | Definition | Model | Effort | 依據 |
 | --- | --- | --- | --- | --- |
 | `design_authority` | [`gov-design-authority`](../../.claude/agents/gov-design-authority.md) | `claude-opus-5-5` | `high` | Profile 預設 |
 | `executor` | [`gov-executor`](../../.claude/agents/gov-executor.md) | `claude-opus-5-5` | `high` | **O-1** |
 | `executor`（fallback） | [`gov-executor-fallback`](../../.claude/agents/gov-executor-fallback.md) | `claude-opus-4-8` | `high` | O-1 的 fallback（＝Profile F-EX\* 列） |
-| `primary_reviewer` | [`gov-primary-reviewer`](../../.claude/agents/gov-primary-reviewer.md) | `claude-opus-5-5` | `xhigh` | Profile Claude path 首項；Codex 未宣告，屬 resolution（Profile §7＝v2.4 §6 條件 1），不記 substitution |
-| `alternate_reviewer` | [`gov-alternate-reviewer`](../../.claude/agents/gov-alternate-reviewer.md) | `claude-opus-5-5` | `xhigh` | Profile 預設 |
+| `primary_reviewer` | Codex（O-6，第 3.3 節；qualification 通過後為有效 Primary）；Claude path：[`gov-primary-reviewer`](../../.claude/agents/gov-primary-reviewer.md) | Codex：第 3.3 節；Claude path：`claude-opus-5-5` | Codex：`high`；Claude path：`high` | Profile Codex-preferred resolution（Profile §7＝v2.4 §6）。Codex qualification 通過前，有效 mapping 是 Claude path 首項（條件 3，resolution，不記 substitution）。Claude path 的 effort 依 **O-5** |
+| `alternate_reviewer` | [`gov-alternate-reviewer`](../../.claude/agents/gov-alternate-reviewer.md) | `claude-fable-5-2` | `high` | **O-5** |
 | `final_adjudicator` | [`gov-final-adjudicator`](../../.claude/agents/gov-final-adjudicator.md) | `claude-opus-5-5` | `xhigh` | Profile 預設 |
 | `orchestrator` | [`gov-orchestrator`](../../.claude/agents/gov-orchestrator.md)（root role session，不以 subagent 派工） | `claude-opus-5-5` | `medium` | Profile 預設 |
 
@@ -125,9 +125,8 @@ Outcome Contract 不得超出上位契約。
 | F-DA | Opus 5.5／`high` | Fable 5.2／`high` | `gov-design-authority`＋`model: fable`、`effort: high` |
 | F-DA\* | Fable 5.2／`xhigh`（E-DA） | Opus 5.5／`xhigh` | `gov-design-authority`＋`effort: xhigh` |
 | F-EX\*（O-1） | Opus 5.5／`high` | Opus 4.8／`high` | `gov-executor-fallback` |
-| R-PR | Opus 5.5／`xhigh` | Fable 5.2／`xhigh` | `gov-primary-reviewer`＋`model: fable` |
-| F-AR | Opus 5.5／`xhigh` | 無（列耗盡 → 治理 §1.5 recovery） | — |
-| F-AR\* | Fable 5.2／`xhigh`（E-AR） | Opus 5.5／`xhigh` | `gov-alternate-reviewer`（frontmatter 即此 mapping） |
+| R-PR | Codex（O-6，qualification 通過後）或 Opus 5.5／`high`（O-5） | 單一 Claude path：Opus 5.5／`high` → Fable 5.2／`high`。Codex 為有效 Primary 時自首項起替代；Opus 5.5 為有效 Primary 時自第二項起。Codex 不在 fallback 列 | `gov-primary-reviewer`；`gov-primary-reviewer`＋`model: fable` |
+| F-AR | Fable 5.2／`high`（O-5） | Opus 5.5／`high` | `gov-alternate-reviewer`＋`model: opus` |
 | F-FA | Opus 5.5／`xhigh` | Fable 5.2／`xhigh` | `gov-final-adjudicator`＋`model: fable` |
 | F-FA\* | Fable 5.2／`xhigh`（E-FA） | Opus 5.5／`xhigh` | `gov-final-adjudicator`（frontmatter 即此 mapping） |
 | F-OR／F-OR\* | Opus 5.5／`medium`（`high`） | 依 Profile 列：Opus 4.8 → Sonnet 5.5／`high` | Root session 以完整 model id 啟動（`claude --model claude-opus-4-8 --effort <effort>` 或 `/model`、`/effort`），不受 alias 限制 |
@@ -143,6 +142,15 @@ Outcome Contract 不得超出上位契約。
 - 授權：acceptor 2026-11-17 決定（原文）：「gov-alternate-reviewer＋model: fable ，改為Fable 5.2」。
 - 派工方式不變，仍以 `model: fable` 派工，每次都以 transcript 核對實際 model 是 `claude-fable-5-2`（第 3.6 節）。alias 之後解析到其他 model 時，該次派工不是合格產出，依本節的替代規則處理，並在下一次使用 Fable 路徑前由 acceptor 決定是否修改 O-4。
 - 要改回 Profile 的 Fable 5.1，刪除 O-4 並記入第 9 節。
+- m3 起，E-AR 不採用（O-5）；O-4 對 Alternate Reviewer 的作用改為其有效 mapping 本身（Fable 5.2／`high`）。
+
+**O-5 reviewer mapping override**（m3）：
+- `primary_reviewer` 的 Claude path 由 Opus 5.5／`xhigh` → Fable 5.2／`xhigh` 改為 Opus 5.5／`high` → Fable 5.2／`high`。`gov-primary-reviewer` 的 frontmatter 改為 `effort: high`。
+- `alternate_reviewer` 的有效 mapping 由 Opus 5.5／`xhigh` 改為 Fable 5.2（`claude-fable-5-2`）／`high`；fallback 為 Opus 5.5／`high`（`gov-alternate-reviewer`＋`model: opus`）。`gov-alternate-reviewer` 的 frontmatter 改為 `model: claude-fable-5-2`、`effort: high`。E-AR（Fable 5.2／`xhigh`）不採用，第 3.2 節同步刪除。
+- 其他角色（`design_authority`、`final_adjudicator`、E-DA、E-FA 與其 fallback）不變。
+- 依據：成本。acceptor 2026-11-17 指示（原文）：「在那之前調整一下 gov-alternate-reviewer 的effort , fable 5.2 我們想切換成high 就好, 不需進使用xhigh , 然後reviewer 的部份目前使用xhigh 也是有成本上的壓力樣子，gov-primary-reviewer 換成high , 其他不變.」
+- 影響：Profile 的 review effort 預設是 `xhigh`；本 override 降低 review 的推理深度，換取成本。Independence 不受影響（治理 §2.3 的四項 properties 與 effort 無關）。
+- 要改回，刪除 O-5、恢復 frontmatter 並記入第 9 節。改了 frontmatter 之後要在新 session 重新做 binding 驗證（第 8.2 節 #7）。
 
 ### 3.2 Capability escalation
 
@@ -151,7 +159,7 @@ Outcome Contract 不得超出上位契約。
 | ID | Identifier | Escalated mapping | 本專案採用的 trigger | 派工方式 |
 | --- | --- | --- | --- | --- |
 | E-DA | `design_authority` | Fable 5.2／`xhigh` | (D1)、(D2)。(M1) 不採用：本檔不宣告任何類別的 DA 決定使用 Fable | `gov-design-authority`＋`model: fable`、`effort: xhigh` |
-| E-AR | `alternate_reviewer` | Fable 5.2／`xhigh` | (D1)，含 Profile 所列三項條件 | `gov-alternate-reviewer`＋`model: fable`（fresh context） |
+| E-AR | `alternate_reviewer` | **不採用**（m3，O-5） | 有效 mapping 已是 Fable 5.2／`high`；acceptor 不採用 `xhigh`。能力不足時不升級，依治理 §2.5 照常 route | — |
 | E-FA | `final_adjudicator` | Fable 5.2／`xhigh` | (M2)、(D1)。(M1) 不採用：本檔不宣告以高風險類別觸發 Fable | `gov-final-adjudicator`＋`model: fable`（fresh context） |
 | E-OR | `orchestrator` | Opus 5.5／`high` | (M1)、(D1)；於 activation 或 successor session 生效，記入 run record | Root session 以 `--effort high`（或 `/effort high`）啟動 |
 | E-BW | `bounded_worker` | `mechanical` → `standard`（Sonnet 5.5／`high`，O-3） | (D1)：呼叫者核對後記錄 `mechanical` 輸出不足或錯誤；`standard` 不再升級 | `gov-bounded-worker`（frontmatter 即 `standard`） |
@@ -161,7 +169,30 @@ E-EX 不適用（O-1）；E-AD 不適用（`advisor` 未採用，第 3.4 節）�
 
 ### 3.3 Codex
 
-Codex **未宣告**：不作任何角色的 mapping 或 override，也不在任何 fallback 列。`primary_reviewer` 因此解析為 Opus 5.5／`xhigh`（resolution）。要讓 Codex 擔任 `primary_reviewer`，先在本節完成 Profile v2.4 §5 的四項宣告與 qualification，並記入第 9 節。
+**O-6 Codex 擔任 `primary_reviewer`**（m3）。acceptor 2026-11-17 指示（原文）：「這邊的codex 的review 授權可以使用」。依 Profile §7（＝v2.4 §5 Codex 段、§6），授權後 Codex 是 `primary_reviewer` 的 preferred mapping：qualification 通過且當次可用時，R1、R2 與 Spec Integration Audit **MUST** 由 Codex 執行；只在 Profile v2.4 §6 條件 1–4 時進入 R-PR 的 Claude path（第 3.1 節）。Codex 只用於 `primary_reviewer`，不擔任其他角色，不在任何 fallback 列，也不做實作。
+
+**(1) 呼叫機制、model 與 effort、binding 證據**
+- 機制：Codex CLI（2026-11-17 觀測為 `codex-cli 0.169.0`，以 ChatGPT 帳號登入），經 Claude Code 的 codex plugin 的 companion script 呼叫：`node <codex plugin root>/scripts/codex-companion.mjs task --fresh --write --model <M> --effort high "<bounded pack>"`。工作目錄是為該次 audit 建立的專用 git worktree（`git worktree add --detach <暫存路徑> <受審 commit SHA>`），audit 結束後移除。
+- Model `<M>`：在 qualification probe（第 8.2 節 #7）中，以不帶 `--model` 的呼叫觀測 Codex 的預設 model，記入 `binding-verification.md`，之後每次呼叫都以 `--model <M>` 固定。要換 model 屬 mapping 變更，authority 為 acceptor。
+- Effort：`high`（與 O-5 一致）。Sandbox：`workspace-write`，只為了讓 Codex 自己寫 record（第 4 項）。
+- Binding 證據：Codex 的 session rollout（`~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-*-<session id>.jsonl`；session id 由 companion 輸出的 `Codex session ID` 取得）。派工者核對其中**全部** `turn_context` 的 `model`、`effort` 與 `sandbox_policy`：集合只有一個元素，且等於 (`<M>`, `high`, `workspace-write`)。不符即不是合格產出，依第 3.1 節 R-PR 處理。
+- 同一份 rollout 也是存取紀錄：派工者核對 Codex 執行過的指令與讀寫的路徑，確認沒有讀取 `data/`、`.env` 或 worktree 以外的 repo 檔案。發現違反時，該次 audit 不合格，並依高風險類別 decision record 第 5 節「已實際外洩」的處理停止並 route 至 acceptor。
+
+**四項 independence properties（治理 §2.3）的滿足方式**
+1. Independent context：每次都是 `--fresh` 的新 Codex thread，不帶 `--resume-last`，不繼承任何 Claude 或 Codex 的對話。Bounded pack 只放 Outcome Contract、Spec／Ticket、worklog、受審 subject 的路徑與識別，不放 Executor 的結論。依 Profile v2.4 §3 R-PR 列，Codex 的 R2 也是 fresh context，MUST 重讀 R1 record 與修正後的證據。
+2. Verifiable binding：上面的 rollout 核對。
+3. Autonomous access：Codex 在 worktree 內自行讀檔、讀 git 歷史、執行測試。Worktree 只含追蹤中的檔案，沒有 `data/`、`.env` 與其他未追蹤檔案；RB-7 對 Codex 同樣適用，bounded pack 明文禁止讀取 worktree 以外的路徑。
+4. Self-written record：Codex 在 worktree 內把 record 寫到第 7 節的 audit 路徑。派工者 (a) 確認 worktree 的 `git status` 只有這一個新增檔案，有其他修改則該次 audit 不合格；(b) 把該檔原樣複製到主 checkout，核對兩者 SHA-256 相同後原樣 commit，不改寫、不刪減。Rollout 內 Codex 寫入該檔的事件即為作者證據。
+
+**(2) 當次可用性的 live 證據**：`codex login status` 的輸出，以及該次 companion 或 Codex CLI 的錯誤原文（含 usage limit）。不得憑先前的不可用狀態預先排除 Codex。
+
+**(3) Audit record 引用證據的方式**：派工者把 Codex session id、rollout 路徑、觀測到的 (model, effort, sandbox) 與 turn 數，以及 record 的 SHA-256，寫進 worklog（Lightweight）或 run record（Formal）的 binding 欄位；audit record 的 (b) 欄引用該處。Bounded pack 要求 Codex 在 record 開頭寫明 Work Contract、受審 subject、audit 種類、round／cycle 與角色 `primary_reviewer`，格式同 `gov-primary-reviewer` definition 的「紀錄」一節，最後一行是 verdict。
+
+**(4) Substitution 的記錄位置**：進入 Claude path 時（條件 4），在 run record（Formal）或 worklog（Lightweight）記錄原 mapping、替代 mapping 與證據（Profile §8）。條件 1–3 是 resolution，不記 substitution。
+
+**Qualification**：第 8.2 節 #7 的 probe 通過並記入 `binding-verification.md` 之前，Codex 未完成 binding qualification（條件 3），`primary_reviewer` 解析為 Opus 5.5／`high`。
+
+**資料外送與費用**：Codex 會把它讀到的內容送到 OpenAI。acceptor 的授權涵蓋把追蹤中的 repo 內容與 bounded pack 送往 OpenAI 做審查；私有資料與憑證不得送出（RB-3、RB-7）。Codex 的用量計入 acceptor 的 ChatGPT 方案，不動用 RB-4 的 Anthropic API 額度。
 
 ### 3.4 Bounded assignments 與其他 subagents
 
@@ -200,6 +231,7 @@ Codex **未宣告**：不作任何角色的 mapping 或 override，也不在任�
   - Root role session 的工作被用作 commit、gate、routing、rollover 交接或 completion 的依據之前，核對自上次核對以來的該段 transcript；direct-execution Executor 至少在結案前核對一次。
   - 無法取得涵蓋該段工作的證據時 fail closed：該段工作不作上述依據。
 - 核對結果以「agentId（或 session-id）＋觀測到的 (model, effort) 與則數」寫進 worklog、audit record 或 run record 的 binding 欄位。
+- Codex（O-6）的證據來源與核對方式見第 3.3 節。
 
 核對指令（`<session-dir>` 換成 `~/.claude/projects/<專案 slug>/<session-id>`）：
 
@@ -228,7 +260,7 @@ EOF
 
 ### 3.7 Independent dispatch 機制（治理 §2.3）
 
-正式 audit 與裁決由 Orchestrator 或主 session 透過 Claude Code 的 Agent tool 派工，`subagent_type` 指定 `gov-primary-reviewer`、`gov-alternate-reviewer` 或 `gov-final-adjudicator`。四項 properties 的滿足方式：
+正式 audit 與裁決由 Orchestrator 或主 session 透過 Claude Code 的 Agent tool 派工，`subagent_type` 指定 `gov-primary-reviewer`、`gov-alternate-reviewer` 或 `gov-final-adjudicator`。Codex 為有效 `primary_reviewer` 時，改用第 3.3 節的機制，四項 properties 依該節滿足。以下是 Agent tool 派工時四項 properties 的滿足方式：
 
 1. **Independent context**：非 fork 的 subagent 從空白 context 開始，不繼承派工者的對話。派工內容只放 bounded pack：Outcome Contract、Spec／Ticket、worklog、受審 subject（branch 與 commit SHA）的**路徑與識別**，不放 Executor 的結論或摘要。審查與裁決一律不得使用 fork 型 subagent。R2 可延續同一 reviewer 的 R1 context（以 SendMessage 續派同一個 agent），但 MUST 重讀修正後的檔案與 diff；以 escalated mapping 重派的 review 或 adjudication 一律是新的 fresh 派工。
 2. **Verifiable binding**：依第 3.6 節核對。
@@ -269,7 +301,7 @@ Claude Code 的自動記憶（memory）不是權威紀錄：不得以它代替 r
   - `.venv/Scripts/python.exe -m pytest -q` 全數通過，輸出記在 worklog 或 run record。
   - `README.md` 的安裝與執行步驟有變動時，已實際跑過，結果與證據記在 worklog。
   - 沒有追蹤中的機密或私有資料：`git ls-files` 不含 `.env`、`*.gpx`、`*.fit`、`data/raw/`、`data/private/`、`data/bmw/`；diff 內沒有金鑰字串。
-- **Model diversity**（治理 §2.2 V22-11；Profile §5）：因 O-1，Executor、Primary Reviewer、Alternate Reviewer 預設同為 `claude-opus-5-5`，Profile §5 的 D1、D3 在本專案的拓樸下不成立；本檔不宣告任何 diversity 關係（D1–D4 皆記「未宣告」），所以不記 `diversity_lost`。Audit record 分兩欄記載：(a) context independence 四項 properties 的滿足方式；(b) Executor、Primary、Alternate 的實際 model（引用第 3.6 節證據），相同時記「無 model diversity」，不得主張 diversity。Diversity 不影響 independence 的判定；本專案沒有要求恢復 diversity 才能 audit 的類別。
+- **Model diversity**（治理 §2.2 V22-11；Profile §5）：m3 起，Executor 是 `claude-opus-5-5`（O-1），Primary Reviewer 是 Codex（O-6，qualification 通過後）或 `claude-opus-5-5`，Alternate Reviewer 是 `claude-fable-5-2`（O-5）。實際組合依當次 mapping 而定，但本檔仍不宣告任何 diversity 關係（D1–D4 皆記「未宣告」），所以不記 `diversity_lost`。Audit record 分兩欄記載：(a) context independence 四項 properties 的滿足方式；(b) Executor、Primary、Alternate 的實際 model（引用第 3.6 節證據），相同時記「無 model diversity」，不得主張 diversity。Diversity 不影響 independence 的判定；本專案沒有要求恢復 diversity 才能 audit 的類別。
 
 ## 6. Skills and runtime
 
@@ -353,6 +385,7 @@ docs/
 | 4 | 高風險類別由 Design Authority 確認（第 5 節 H-1～H-3） | 完成（2026-11-17）：[`decision-20261117-high-risk-categories.md`](records/decisions/decision-20261117-high-risk-categories.md)。確認 H-1～H-3 並修訂範圍，新增 H-4（決策關卡的 fail-closed 語義）；高風險類別以該 record 為準。派工 binding 核對（第 3.6 節）：agentId `a6a2489068e2dda6c`，`agentType` `gov-design-authority`，觀測 `claude-opus-5-5`／`high`（25 則），符合。本欄由無角色 session 依 acceptor 2026-11-17 指示（原文「轉錄並 commit」）轉錄 |
 | 5 | Outcome Contract 有 acceptor 接受紀錄（第 2.3 節） | 完成（2026-11-17）：[`outcome-contract.md`](records/outcome-contract.md)（OC-1，Moto Touring Copilot MVP）。acceptor 針對 commit `873e37a` 回覆原文「接受 873e37a」；接受紀錄在該檔第 10 節。本欄由無角色 session 轉錄 |
 | 6 | Design Authority 的 derivation record（第 8.1 節） | 未完成 |
+| 7 | m3 的 binding 重新驗證（在 m3 commit 之後開的新 session 進行）：`gov-primary-reviewer`（預期 `claude-opus-5-5`／`high`）、`gov-primary-reviewer`＋`model: fable`（`claude-fable-5-2`／`high`）、`gov-alternate-reviewer`（`claude-fable-5-2`／`high`）、`gov-alternate-reviewer`＋`model: opus`（`claude-opus-5-5`／`high`）；加上 Codex qualification probe（第 3.3 節：觀測預設 model `<M>`，再以 `--model <M> --effort high` 確認 rollout 的 (model, effort, sandbox)，以及 self-written record 的流程）。結果記在 [`binding-verification.md`](binding-verification.md) | 未完成 |
 
 ## 9. 變更紀錄
 
@@ -360,3 +393,4 @@ docs/
 | --- | --- | --- | --- | --- |
 | m1 | 2026-11-17 | 初版：整個 repo 採用 Minimal Governance — Reusable Package v2.2，沒有 governance flag。由 `aiot-classwork` Bindings b5 移植：第 1 節 package 與版本相同；第 3 節角色、模型、overrides（O-1、O-2、O-3）、escalation 與 dispatch 機制相同，只改了檔案路徑、Haiku qualification 改為在本專案重新觀測、reviewer 的 autonomous access 排除 `data/`。依本專案改寫：第 0 節適用範圍；第 2.2 節上位契約與最終判準；第 2.4 節範圍邊界；第 2.5 節只保留本機 commit 的 SA-1，未移植 push、SA-2、SA-3；第 2.6 節 RB-1 擴及 push 與 PR、RB-3 只允許本機 `.env`、RB-4 記載 API 額度、RB-5 改為上位契約＋治理檔案＋已凍結基線、新增 RB-7 私有騎乘資料；第 5 節高風險類別候選 H-1～H-3、release gates 改為 pytest 與私有資料檢查，移除 Vercel 與 GitHub Pages 的內容；第 7 節紀錄位置改為 `docs/governance/records/`；第 8 節採用前產出的處理。 | acceptor 2026-11-17 指示（原文）：「我們要把治理原則從這邊搬到新專案去，然後原本這邊是只用在homework ，在final project 的話就是不設限。」 | **已接受並生效（2026-11-17）。** acceptor 在對話中針對 commit `39e77ec` 回覆原文「接受 39e77ec」；該 commit 含本檔 m1、`PKG/`、九個 `gov-*` definitions、root `CLAUDE.md` 與 `AGENTS.md`。本列與檔首、第 8.2 節 #1 的狀態更新是在接受之後由無角色 session 依 acceptor 指示轉錄的，沒有改動任何規則內容。接受前的內容確認：起草時所作的選擇（未移植 push、SA-2、SA-3；RB-7；H-1～H-3 候選；Fable alias 以 dry-run 觀測為準；Codex 未宣告）於 2026-11-17 向 acceptor 逐項列出，acceptor 回覆原文「照草稿」；第 2.2 節的版控決定（講義 PDF 與架構圖不進版控）同日另行決定，已含在 `39e77ec`。m1 不適用生效前已完成的產出（第 8.1 節）；生效時沒有進行中的 work item。 |
 | m2 | 2026-11-17 | 新增 O-4：Profile 所列的 Fable 5.1 改為 Fable 5.2（`claude-fable-5-2`），effort 不變；改寫第 3.1 節 fallback 表的 F-DA、F-DA\*、R-PR、F-AR\*、F-FA、F-FA\* 列、「Fable alias」段，以及第 3.2 節的 E-DA、E-AR、E-FA 列；第 1、3.1 節的 overrides 清單加入 O-4；檔首改為 m2。其他規則不變。同時轉錄第 8.2 節 #2、#3 的狀態（紀錄，不是規則變更）。 | 第 8.2 節 #3 的 binding dry-run（2026-11-17，`binding-verification.md` 第 10 列）觀測到 `model: fable` 解析為 `claude-fable-5-2`；第 3.1 節「Fable alias」規定此時由 acceptor 決定。 | acceptor 2026-11-17 在對話中的決定（原文）：「gov-alternate-reviewer＋model: fable ，改為Fable 5.2」。本列由無角色 session 依該指示轉錄。**已接受並生效（2026-11-17）。** acceptor 在對話中針對 commit `2d4c270` 回覆原文「接受 2d4c270」；該 commit 含本檔 m2 與 `binding-verification.md` 的 dry-run 結果。本列與檔首、第 8.2 節 #3 的狀態更新是在接受之後由無角色 session 依 acceptor 指示轉錄的，沒有改動任何規則內容。 |
+| m3 | 2026-11-17 | 新增 O-5：`primary_reviewer` 的 Claude path 改為 Opus 5.5／`high` → Fable 5.2／`high`；`alternate_reviewer` 改為 Fable 5.2／`high`，fallback Opus 5.5／`high`；刪除 F-AR\* 列，E-AR 改為不採用；O-4 段補充 E-AR 的變化。新增 O-6：授權 Codex 擔任 `primary_reviewer`，第 3.3 節依 Profile v2.4 §5 寫明四項宣告與 qualification；第 3.6、3.7 節加入指向第 3.3 節的說明。第 1、3.1 節的 overrides 清單、第 3.1 節角色表的兩個 reviewer 列、第 5 節 model diversity 段同步修改。第 8.2 節新增 #7（m3 的 binding 重新驗證與 Codex qualification probe）。修改 `.claude/agents/gov-primary-reviewer.md`（`effort: high`）、`.claude/agents/gov-alternate-reviewer.md`（`model: claude-fable-5-2`、`effort: high`、刪除 E-AR 段），以及 `AGENTS.md` 中 Codex 角色的說明。其他規則不變。 | acceptor 2026-11-17 指示（原文）：「在那之前調整一下 gov-alternate-reviewer 的effort , fable 5.2 我們想切換成high 就好, 不需進使用xhigh , 然後reviewer 的部份目前使用xhigh 也是有成本上的壓力樣子，gov-primary-reviewer 換成high , 其他不變.  然後這邊的codex 的review 授權可以使用.」 | 本列由無角色 session 依該指示起草。**尚未接受**：依檔首生效條件，須 acceptor 針對含 m3 的 commit SHA 明確接受。起草時的解讀（待 acceptor 確認）：Alternate 的有效 mapping 改為 Fable 5.2／`high`（不只是 E-AR 的 effort）；R-PR 的 Fable fallback 一併改為 `high`；Codex 授權依 Profile 的 Codex-preferred 規則，qualification 通過後成為 Primary 的有效 mapping。 |
