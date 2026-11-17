@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #12（UI-0），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator）。依 run record，SPEC-UI0 不採 fast path：#12 的 R1 是一般 Ticket audit，SIA 另派 |
-| 狀態 | **cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試；R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor。本 worklog 不宣告 Ticket closure。以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-4、UI0-7、UI0-10 列已依第 10 節更新 |
+| 狀態 | **cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試。依 Design Authority 的 `decision-20261118-issue12-ui07.md`：K9 不是 UI0-7 的 FAIL（日期可只用鍵盤以年／月／日欄修改），K3-B（作業系統的檔案對話框）不在 #12 的 UI0-7 範圍內、記為範圍外的 NOT VERIFIED；依該 record 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分。UI0-7 是否 PASS、R1-F2 是否 RESOLVED 由 R2 判定。本 worklog 不宣告 Ticket closure。（已取代的敘述：「R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor」——由上述 DA record 取代。）以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-2、UI0-4、UI0-7、UI0-10 列與第 9.1 節已依第 10 節更新 |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `3906e077ab850c027d7833b30d3eebfa16f67761`（`3906e07`）；實作 commit `6a278b40dc79dcbede9486902e52dc8504a8d30e`（`6a278b4`）；**correction commit `619268ad2732b4cdd04593ff20ebe35374a7710c`（`619268a`，只修改 `app/ui0_mock_app.py`、`tests/test_ui0_skeleton.py`）**；R1 受審 HEAD `e836c99`，R1 record 在 `e94d182`；本節的更新在 `619268a` 之後的 record-only commit |
 | 日期 | 2026-11-18 |
 
@@ -179,10 +179,10 @@
 | UI0-4 追問一輪；行程型態與方向同一輪；方向只在來回需要回答 | **PASS（R1-F1 修正後）** | AppTest（5、6a、6b）；E-2 第 8 列（鍵盤）；第 10.1 節的 regression 測試與第 10.2 節 K9（瀏覽器、只用鍵盤） |
 | UI0-5 期限名稱隨行程型態切換；值是否保留照實記錄 | **PASS：值會保留**，採用隨行程型態改變的標籤，不需要退路 | AppTest（16:45 在切換前後保留）；E-2 第 11 列（瀏覽器中 17:00 與 16:45 都在切換後保留）。條件：widget 有固定的 key（D-12-3）。行程型態未選時用固定標籤「期限」（D-12-6） |
 | UI0-6 375 像素沒有整頁的水平溢出 | **PASS** | E-2：23 個情境（含追問回覆後、欄位錯誤後的狀態）、兩個分頁、Profile／公路與地標／全部候選展開時，`scrollWidth` 都是 375，沒有未裁切的溢出；寬表格在自己的容器內捲動 |
-| UI0-7 所有操作都可以只用鍵盤完成 | **未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS**（第 10.3 節）。R1 前本列寫「大部分 PASS；一項 NOT VERIFIED」，已由第 10 節取代 | 只用鍵盤 PASS：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出選檔請求、「Remove …」移除檔案、行程描述的輸入、公路與地標 expander、行程型態、日期（年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander。**BLOCKED**：在作業系統的檔案選擇對話框中選取檔案（缺少的能力：瀏覽器工具無法操作 OS 對話框）。**FAIL（本環境觀察）**：日曆彈窗開得起來，但鍵盤焦點進不到日期格子；改日期可以用年／月／日欄完成。required authority = acceptor（第 10.3 節） |
+| UI0-7 所有操作都可以只用鍵盤完成 | **待 R2 判定。依 `decision-20261118-issue12-ui07.md`，#12 範圍內沒有 BLOCKED 或 FAIL 的部分**（該 record 第 3、4.3 節）。已取代的判定：(1) R1 前「大部分 PASS；一項 NOT VERIFIED」；(2) correction 時「未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS」 | 以操作為單位（DA record 第 3.1 節）。只用鍵盤完成的操作紀錄：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出多選且限 `.gpx` 的選檔請求（K3）、移除檔案（K5）、選檔之後按「更新 Profile」（K6）、行程描述的輸入、公路與地標 expander、行程型態、日期（K10，年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander（第 10.2 節、第 6 節 E-2）。**K9**（日曆彈窗內鍵盤焦點進不去）：不是 UI0-7 的 FAIL，記為元件的限制（UI0-2 限制 7），日期這項操作由 K10 完成（DA record 第 3.2 節）。**K3-B**（在作業系統的原生檔案對話框中只用鍵盤多選 GPX）：不在 #12 的 UI0-7 範圍內，**範圍外，NOT VERIFIED**；#12 範圍內的上傳操作由 K3、K5、K6 涵蓋（DA record 第 4.2 節）。沒有任何人驗證過作業系統對話框中可只用鍵盤多選，本 worklog 不作此宣稱 |
 | UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **PASS（清單如下）** | 下方「UI0-8 清單」 |
 | UI0-9 沒有真實資料；全部標示為模擬 | **PASS** | E-5；E-6 H-3 的模擬標示 |
-| UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況 |
+| UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況；依 `decision-20261118-issue12-ui07.md` 更新 UI0-7 列、UI0-2 限制 7 與第 10.2、10.3 節的 K3-B、K9 判定（原判定標明已取代）。UI0-7 的最終判定屬 R2 |
 
 **元件的對應、替代與限制（UI0-2）**
 
@@ -196,6 +196,7 @@
 | 限制 4：`st.number_input` 若有非空的初值，AppTest 無法清空；瀏覽器中是否能清空沒有實測 | 情境 9 的出發油量預設為空，示範必填檢查（D-12-3） |
 | 限制 5：`st.tabs` 不能以程式切換 | 與 G3 已知差異相同；Trip Result 是第一個分頁 |
 | 限制 6：上傳的 multipart 解析由框架處理，超過 1 MB 的部分會暫時 spool 到暫存檔 | C-3 |
+| 限制 7（R1 後新增，依 `decision-20261118-issue12-ui07.md` 第 6 節第 3 項）：`st.date_input` 的日曆彈窗 | 本環境中鍵盤焦點進不了彈窗（K9），沒有困住焦點；日期可以在同一元件的年／月／日欄只用鍵盤修改（K10）。元件前端有 `role=dialog` 與鍵盤操作說明，本環境的現象是元件還是工具造成的未確定 |
 
 **UI0-8 清單**（`UI_CR01_DELTA.md` 第 11.1 節的條件）
 
@@ -237,7 +238,7 @@
 ### 9.1 剩餘工作
 
 - R1（Orchestrator 派工）；之後的 SPEC-UI0 SIA 與 DA phase acceptance。
-- UI0-7 的 NOT VERIFIED 項目與 UI0-6、UI0-7 的實際檢視，由 acceptor 在 UI Delta Review 進行（CL-UI0-4）；UI Delta Review 不在本 run。
+- UI0-7 的 NOT VERIFIED 項目（依 `decision-20261118-issue12-ui07.md`：K3-B 為 #12 範圍外的 NOT VERIFIED；K9 為元件限制的觀察）與 UI0-6、UI0-7 的實際檢視，由 acceptor 在 UI Delta Review 進行（CL-UI0-4 末句）；UI Delta Review 不在本 run，也不是 #12 的 evidence（DA record 第 4.1 節）。
 - 本 Ticket 不修改 `docs/ui/`（含 `UI_CR01_DELTA.md`）；下表與 Issue／DELTA 不一致之處由 UI Delta Review 之後的工作處理（CL-UI0-3）。
 
 ### 9.2 和 Issue 不一致或規格沒有定義之處、concerns
@@ -283,13 +284,13 @@ C-1～C-3 不影響本 Ticket 的 AC 結果（Skeleton 沒有自行決定語義�
 | --- | --- | --- | --- | --- |
 | K1 | 從頁面載入開始到情境選單，選情境 3 | Tab ×6（Skip to main content → Main menu → main → 兩個標題連結 → 模擬情境）；Ctrl+A；輸入 `3.`；Enter | 焦點 `INPUT 模擬情境`；畫面出現情境 3 的說明「畫面上已經有上次規劃的結果…」 | PASS |
 | K2 | 打開 Profile，沒有選檔就按「更新 Profile」 | Tab（Profile summary）、Enter；Tab ×2（Upload → 更新 Profile）；Enter | Profile 展開；提示「還沒有選取任何 .gpx 檔。」；沒有處理結果 | PASS |
-| K3 | 以鍵盤按「Upload」 | Shift+Tab（Upload）；Enter；Space | 為了不在使用者的桌面留下開著的 OS 對話框，事先在頁面掛一個 capture listener，記錄並取消 file input 的 `click`（只有這個作用）。Enter 與 Space 各送出一次選檔請求：`{multiple: true, accept: "application/streamlit,.gpx"}` ×2 | 按鈕可以用鍵盤啟動：PASS。**對話框內選取多個檔案：BLOCKED**（K3-B） |
+| K3 | 以鍵盤按「Upload」 | Shift+Tab（Upload）；Enter；Space | 為了不在使用者的桌面留下開著的 OS 對話框，事先在頁面掛一個 capture listener，記錄並取消 file input 的 `click`（只有這個作用）。Enter 與 Space 各送出一次選檔請求：`{multiple: true, accept: "application/streamlit,.gpx"}` ×2 | 按鈕可以用鍵盤啟動：PASS。對話框內選取多個檔案：**#12 範圍外，NOT VERIFIED**（K3-B；`decision-20261118-issue12-ui07.md` 第 4.2 節）。已取代的判定：「BLOCKED」 |
 | K4 | 放入三個合成檔（**以程式放入，不是鍵盤**） | —（`input.files = DataTransfer` 加 `change` 事件） | 元件列出 `synthet...mpty-a.gpx 0.0B`、`synthet...mpty-b.gpx 0.0B`、`synthet...r-only.gpx 48.0B` | 不算鍵盤操作，只是讓 K5、K6 能進行 |
 | K5 | 以鍵盤移除第二個檔 | Tab 走到 `Remove synthetic-empty-b.gpx`（focusin 紀錄：Remove a → Remove b → Remove header-only → Add files → 更新 Profile）；Shift+Tab 回到它；Enter | 清單只剩 `synthetic-empty-a.gpx`、`synthetic-header-only.gpx`。觀察：移除後焦點離開被移除的按鈕（`activeElement` 一度是 BODY），再按 Tab 從下一個控制項繼續 | PASS（焦點的移動記為觀察） |
 | K6 | 以鍵盤按「更新 Profile」 | Tab／Shift+Tab 到 `更新 Profile`；Enter | 「處理結果（模擬，與選取的 2 個檔案的內容無關）：新增 3 個；略過 1 個內容重複的；1 個無法讀取…」；`st.status`「Profile 更新完成（模擬）」；「結果已過期。Profile 已更新。…」；分頁仍是 2 個（沒有自動規劃）；可用的行程數 12 | PASS |
 | K7 | 行程描述的輸入（輸入保護命中） | Tab 到 `TEXTAREA 行程描述`；Ctrl+A；輸入「從中正路一段 123 號出發，走示範縣道丙到示範老街。」；Tab ×14 到「規劃」；Enter | textarea 的值是輸入的文字；欄位下方「行程描述中有看起來像門牌地址或座標的內容，系統沒有送出這段文字…」；上次的結果保留並標示「上次規劃後變更了：行程描述」。（第一次少按一個 Tab，焦點在標題連結上，沒有輸入任何字；退回後重做，如實記錄） | PASS |
 | K8 | 行程描述改為公路寫法、目標 GPX 路徑、Snapshot Mode、規劃 | Shift+Tab ×14 回 textarea；Ctrl+A；輸入「從示範車站出發，不要走國道 3 號，改走台 9 線到示範老街。」；Tab ×12 到 `INPUT 目標路線 GPX 的檔案路徑`；輸入 `synthetic/keyboard-demo.gpx`；Tab 到 `Snapshot Mode`；Space；Tab 到「規劃」；Enter | checkbox 由 false 變 true；規劃後沒有輸入保護訊息、沒有過期提示；頁首「Snapshot Mode：目前顯示的結果使用固定的資料快照」；採用的條件「Snapshot Mode（固定的資料快照）」；路線確認有「資料快照」標籤；textarea 與路徑欄的值是輸入的文字 | PASS |
-| K9 | 日曆彈窗 | Shift+Tab ×8 到 `Choose date`；Enter → 彈窗開啟（`role=dialog`，文字「Use arrow keys to navigate dates. Enter to select. Escape to close.」），焦點仍在按鈕；→、↓：日期不變、焦點不動；Tab：焦點跳到「最早可出發時間」的小時欄，彈窗關閉；Space 再開；Shift+Tab：焦點到日欄；Escape：彈窗關閉、焦點回按鈕 | 彈窗內有可聚焦的「Previous month」「Next month」等按鈕與日期格子，但在這個環境中**鍵盤焦點進不去**，沒有辦法用鍵盤在彈窗中選日期 | **FAIL（本環境觀察）**（K9-F） |
+| K9 | 日曆彈窗 | Shift+Tab ×8 到 `Choose date`；Enter → 彈窗開啟（`role=dialog`，文字「Use arrow keys to navigate dates. Enter to select. Escape to close.」），焦點仍在按鈕；→、↓：日期不變、焦點不動；Tab：焦點跳到「最早可出發時間」的小時欄，彈窗關閉；Space 再開；Shift+Tab：焦點到日欄；Escape：彈窗關閉、焦點回按鈕 | 彈窗內有可聚焦的「Previous month」「Next month」等按鈕與日期格子，但在這個環境中**鍵盤焦點進不去**，沒有辦法用鍵盤在彈窗中選日期 | **觀察／元件限制，不是 UI0-7 的 FAIL**（`decision-20261118-issue12-ui07.md` 第 3 節；日期由 K10 完成）。已取代的判定：「FAIL（本環境觀察）」（K9-F） |
 | K10 | 日期改用年／月／日欄 | Shift+Tab 到日欄；↑；Shift+Tab 到月欄；輸入 `11`；Tab ×2 | 日期 2026/12/06 → 2026/12/07 → 2026/11/07；過期提示列出「日期」 | PASS（選日期這件事可以只用鍵盤完成） |
 | K11 | 最早可出發時間與出發油量 | 在小時欄按 ↑；Tab ×4 到出發油量；Ctrl+A；輸入 `55`；Tab | 最早可出發時間 12:00 → 13:00；油量 55；過期提示「上次規劃後變更了：日期、最早可出發時間、出發油量」 | PASS |
 | K12 | R1-F1 的路徑（6b，單向＋取消） | Shift+Tab ×20 回情境選單；Ctrl+A；輸入 `6b.`；Enter；Tab ×19 到「規劃」；Enter；Tab ×2 到行程型態題；Space、↓（單向）；Tab 到方向題；Space、↓×2（不安排這段休息）；Tab 到「回覆並繼續規劃」；Enter | 回覆後沒有任何追問 radio；回覆表：行程型態「單向」、方向題「不安排這段休息」；休息表只有「示範觀景台／—／15 分鐘／依 Profile 排入的預設休息」，沒有騎士指定的那一筆 | PASS |
@@ -302,11 +303,11 @@ C-1～C-3 不影響本 Ticket 的 AC 結果（Skeleton 沒有自行決定語義�
 | --- | --- | --- |
 | K1、K2、K5～K8、K10～K12，以及第 7 節列出的其他控制項（公路與地標 expander、分頁、全部候選 expander、追問的 radio） | PASS | 實際按鍵操作的紀錄在第 10.2 節與第 6 節 E-2 |
 | K3「Upload」按鈕的啟動 | PASS | 選檔請求有送出；對話框以 listener 取消，沒有實際打開 |
-| **K3-B 在作業系統的檔案選擇對話框中選取多個合成或空的 GPX** | **BLOCKED** | 缺少的能力：內建瀏覽器的工具（`mcp__Claude_Browser__*`）只能操作頁面，不能操作作業系統的對話框，也沒有上傳檔案的工具；為了不在使用者的桌面留下無法關閉的對話框，沒有實際打開它。檔案只能以程式放入（K4），那不是鍵盤操作。**required authority = acceptor**：在 UI Delta Review 中實際以鍵盤操作對話框，或另作決定 |
-| **K9-F 以鍵盤在日曆彈窗中選日期** | **FAIL（本環境觀察）** | Streamlit 1.67.0 的 `st.date_input` 日曆彈窗在這個瀏覽器中，焦點無法進入彈窗（Enter／Space 開啟、Tab 離開時關閉、方向鍵沒有作用）。日期本身可以只用鍵盤在年／月／日欄改（K10），所以「選日期」的操作可以完成；但日曆彈窗這個控制項不能只用鍵盤操作。沒有修改元件或驗收條件。是否以年／月／日欄滿足 UI0-7、或要求改用其他元件，**required authority = acceptor**（UI Delta Review）；如需修改契約或元件對應，經 Design Authority |
+| **K3-B 在作業系統的檔案選擇對話框中選取多個合成或空的 GPX** | **#12 範圍外，NOT VERIFIED**（`decision-20261118-issue12-ui07.md` 第 4.2 節）。已取代的判定：「BLOCKED」 | 缺少的能力：內建瀏覽器的工具（`mcp__Claude_Browser__*`）只能操作頁面，不能操作作業系統的對話框，也沒有上傳檔案的工具；為了不在使用者的桌面留下無法關閉的對話框，沒有實際打開它。檔案只能以程式放入（K4），那不是鍵盤操作。**required authority = acceptor**：在 UI Delta Review 中實際以鍵盤操作對話框，或另作決定。依上述 DA record，作業系統的原生檔案對話框不是 Skeleton 的畫面，不在 #12 的 UI0-7 範圍內；#12 範圍內的上傳操作由 K3、K5、K6 涵蓋。原記的「required authority = acceptor」已取代：acceptor 可在 UI Delta Review 檢視（CL-UI0-4 末句），不是 #12 結案的條件 |
+| **K9-F 以鍵盤在日曆彈窗中選日期** | **觀察／元件限制，不是 UI0-7 的 FAIL**（`decision-20261118-issue12-ui07.md` 第 3 節）。已取代的判定：「FAIL（本環境觀察）」 | Streamlit 1.67.0 的 `st.date_input` 日曆彈窗在這個瀏覽器中，焦點無法進入彈窗（Enter／Space 開啟、Tab 離開時關閉、方向鍵沒有作用）。日期本身可以只用鍵盤在年／月／日欄改（K10），所以「選日期」的操作可以完成；但日曆彈窗這個控制項不能只用鍵盤操作。沒有修改元件或驗收條件。是否以年／月／日欄滿足 UI0-7、或要求改用其他元件，**required authority = acceptor**（UI Delta Review）；如需修改契約或元件對應，經 Design Authority。依上述 DA record 第 3.1、3.2 節，UI0-7 以操作為單位，「設定日期」已由 K10 只用鍵盤完成，彈窗沒有困住焦點；不需要修改程式。原記的 required authority 已取代；是否在正式整合要求彈窗本身可用鍵盤，屬 DELTA 11.2「驗收清單定稿時確認」的事項（DA record 第 3.3、7 節） |
 | K5 的焦點移動（移除檔案後焦點離開該按鈕） | 觀察，不是失敗 | 下一個 Tab 從下一個控制項繼續；交 UI Delta Review 檢視 |
 
-UI0-7 因 K3-B（BLOCKED）與 K9-F（FAIL）**不能標為 PASS**；本 worklog 不以「標準元件」推定任何未操作的項目。
+依 `decision-20261118-issue12-ui07.md` 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分；各操作的鍵盤證據是否足夠、UI0-7 是否 PASS、R1-F2 是否 RESOLVED，由 R2 判定，本 worklog 不宣告。本 worklog 不以「標準元件」推定任何未操作的項目。（已取代的敘述：「UI0-7 因 K3-B（BLOCKED）與 K9-F（FAIL）**不能標為 PASS**」。）
 
 ### 10.4 Gates（主 checkout，`619268a` 的工作目錄）
 
@@ -346,9 +347,16 @@ UI0-7 因 K3-B（BLOCKED）與 K9-F（FAIL）**不能標為 PASS**；本 worklog
 
 - Binding 自我觀測：見第 10.6 節（record-only commit 前掃描）。這是自我觀測，Orchestrator 採用前須自行核對。
 - 高風險類別：修正只改追問回覆的顯示與模擬休息列，H-2（上傳的處理不變）、H-3（沒有新的宣稱文字；新增的只有既有常數的使用）的核對結果不變；H-1、H-4 仍不涉及。
-- R1-F2 的 BLOCKED（K3-B）與 FAIL（K9-F）由 acceptor 處理；R1 record 的 NV-1～NV-4、Q-1 不屬本次 correction 的範圍，本節沒有處理。
+- K3-B 與 K9 依 `decision-20261118-issue12-ui07.md` 改記為範圍外的 NOT VERIFIED 與元件限制的觀察（已取代的敘述：「R1-F2 的 BLOCKED（K3-B）與 FAIL（K9-F）由 acceptor 處理」）；交 acceptor 的資訊見該 record 第 7 節；R1 record 的 NV-1～NV-4、Q-1 不屬本次 correction 的範圍，本節沒有處理。
 - 剩餘：R2（Orchestrator 派工；只核對 R1-F1、R1-F2 的修正與回歸）。
 
 ### 10.6 Binding 自我觀測（correction 之後）
 
 agentId `acf4b1c528124a22e`（`agentType` `gov-executor`，同第 2 節的派工，correction 以 SendMessage 續派），全部 assistant 訊息 (`claude-opus-5-5`, `high`) 346 則，集合只有一個元素（record-only commit 前掃描）。沒有 escalation、替代或 bounded assignment。
+
+### 10.7 依 Design Authority record 的更新（record-only）
+
+- 依據：`decision-20261118-issue12-ui07.md`（Design Authority，commit `efea0dd`），第 6 節「對 #12 的要求」第 1～5 項。
+- 更新的位置：檔首「狀態」列；第 7 節 UI0-7、UI0-10 列與 UI0-2 的限制 7（新增）；第 9.1 節；第 10.2 節 K3、K9 列的判定；第 10.3 節的 K3-B、K9-F 列與末段；第 10.5 節。每一處都引用該 record，原先的判定以「已取代」標明保留。
+- 沒有修改 `app/`、`tests/`、`.streamlit/`、`pyproject.toml`；沒有重做瀏覽器操作；受審的實作 subject 仍是 `619268a`。
+- 本節不宣告 UI0-7 PASS，也不宣告 R1-F2 RESOLVED；由 R2 判定。
