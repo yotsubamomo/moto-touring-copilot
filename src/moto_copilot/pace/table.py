@@ -6,7 +6,9 @@ gets a speed (unweighted median) and a stop ratio (sum of short stops / sum of m
 safety margin coefficient comes from a leave-one-trip-out rule on the same trips. `eta_safe` is the
 typical estimate plus that margin; it is not a P90 and carries no coverage guarantee.
 
-`compute_eta` is still the Pre-Spec Spike version; its stop allowance belongs to Issue #11.
+`compute_eta` follows DESIGN.md §6.1 and contract 4 (Issue #11, SPEC-B1 CL-B1-5): each segment's
+typical moving time gets the stop allowance of its category, and the safety margin coefficient is
+the one in the pace table's header, never a value of the caller's own.
 """
 from __future__ import annotations
 
@@ -332,34 +334,73 @@ def compare_methods(rows: list[dict], trip_ids: list[str]) -> dict[str, dict]:
     return out
 
 
-# --- ETA (Spike; Issue #11) -------------------------------------------------------
+# --- ETA (contract 4; Issue #11) --------------------------------------------------
+def _route_segments_of(route: dict, route_segments: list[dict]) -> list[dict]:
+    """The route's segments in order. They must be seg_index 0..n-1 exactly once, with n the route's
+    n_segments, and each must have one of the categories; otherwise an error, not a shorter ETA."""
+    segs = sorted((s for s in route_segments if s["route_id"] == route["route_id"]), key=lambda s: s["seg_index"])
+    if [s["seg_index"] for s in segs] != list(range(route["n_segments"])):
+        raise ValueError(f"route {route['route_id']} needs seg_index 0..{route['n_segments']}-1 exactly once, "
+                         f"found {[s['seg_index'] for s in segs]}")
+    for s in segs:
+        if s["seg_category"] not in CATEGORIES:
+            raise ValueError(f"route {route['route_id']} seg {s['seg_index']} has category {s['seg_category']!r}")
+    return segs
+
+
 def compute_eta(route: dict, route_segments: list[dict], checkpoints: list[dict], pace_header: dict,
-                pace_categories: list[dict], *, plan_id: str, departure_time: dt.datetime, margin_coeff: float,
-                breaks: list[dict], computed_at: dt.datetime) -> tuple[dict, list[dict]]:
-    """ETA for one departure on one route. If any segment's category has no pace the status is
-    `unknown` and no time is produced, not even a partial one."""
+                pace_categories: list[dict], *, plan_id: str, departure_time: dt.datetime, breaks: list[dict],
+                computed_at: dt.datetime, margin_coeff: float | None = None) -> tuple[dict, list[dict]]:
+    """ETA for one departure on one route (DESIGN.md §6.1, contract 4).
+
+    Per segment of category c: typ_seg_time_s = length / speed(c); stop_allow_s = stop_ratio(c) x
+    typ_seg_time_s. With RIDE the running sum of typ_seg_time_s + stop_allow_s and break_time_s the
+    breaks taken before the segment: eta_typ = departure + RIDE + break_time_s and eta_safe = eta_typ
+    + margin_coeff x RIDE. Breaks get no stop allowance and no margin. eta_safe is a conservative
+    estimate with a safety margin; it carries no coverage guarantee.
+
+    margin_coeff always comes from the pace table's header and is copied into the ETA header
+    (SPEC-B1 CL-B1-5). A caller may pass margin_coeff only as a check: a value that differs from the
+    header is an error and is not used. The pace table must conform to contract 3, so a missing
+    margin_coeff or stop_ratio is an error, never replaced by a default.
+
+    If any segment's category has no pace the status is `unknown` and no time is produced, not even
+    a partial one: typ_seg_time_s, stop_allow_s, eta_typ and eta_safe are null on every row.
+
+    Not checked here: whether the route catalog's category_scheme matches the pace table's
+    (RI-1 to RI-3, outside Issue #11)."""
     if departure_time.tzinfo is None:
         raise ValueError("departure_time must be timezone-aware")
-    segs = sorted((s for s in route_segments if s["route_id"] == route["route_id"]), key=lambda s: s["seg_index"])
+    violations = validate_pace_table(pace_header, pace_categories)
+    if violations:
+        raise ValueError(f"the pace table does not conform to contract 3, no ETA computed: {violations}")
+    coeff = pace_header["margin_coeff"]
+    if margin_coeff is not None and not (_is_number(margin_coeff) and margin_coeff == coeff):
+        raise ValueError(f"margin_coeff {margin_coeff!r} differs from the pace table's margin_coeff {coeff!r} "
+                         f"({pace_header['pace_version']}); the pace table's value is the only one used")
+    segs = _route_segments_of(route, route_segments)
     cps = [c for c in checkpoints if c["route_id"] == route["route_id"]]
     speed = {c["seg_category"]: c["speed_kmh"] for c in pace_categories}
-    missing = sorted({s["seg_category"] for s in segs if speed.get(s["seg_category"]) is None})
+    stop_ratio = {c["seg_category"]: c["stop_ratio"] for c in pace_categories}
+    missing = sorted({s["seg_category"] for s in segs if speed[s["seg_category"]] is None})
     break_times = expected_break_times(route["n_segments"], breaks, cps)
 
     header = {"plan_id": plan_id, "route_id": route["route_id"], "departure_time": _iso(departure_time),
               "status": "unknown" if missing else "ok",
               "unknown_reason": f"no pace for category {', '.join(missing)}" if missing else None,
-              "margin_coeff": margin_coeff, "breaks": breaks, "pace_version": pace_header["pace_version"],
+              "margin_coeff": coeff, "breaks": breaks, "pace_version": pace_header["pace_version"],
               "catalog_version": route["catalog_version"], "computed_at": _iso(computed_at)}
-    rows, cumulative = [], 0.0
+    rows, ride = [], 0.0
     for seg, break_time in zip(segs, break_times):
-        row = {"plan_id": plan_id, "seg_index": seg["seg_index"], "typ_seg_time_s": None,
+        row = {"plan_id": plan_id, "seg_index": seg["seg_index"], "typ_seg_time_s": None, "stop_allow_s": None,
                "break_time_s": break_time, "eta_typ": None, "eta_safe": None}
         if not missing:
-            typical = round(seg["length_m"] / (speed[seg["seg_category"]] / 3.6), 3)
-            cumulative += typical
-            arrival = departure_time + dt.timedelta(seconds=cumulative + break_time)
-            row.update(typ_seg_time_s=typical, eta_typ=_iso(arrival),
-                       eta_safe=_iso(arrival + dt.timedelta(seconds=margin_coeff * cumulative)))
+            category = seg["seg_category"]
+            typical = round(seg["length_m"] / (speed[category] / 3.6), 3)
+            allowance = round(stop_ratio[category] * typical, 3)
+            ride += typical + allowance
+            arrival = departure_time + dt.timedelta(seconds=ride + break_time)
+            row.update(typ_seg_time_s=typical, stop_allow_s=allowance, eta_typ=_iso(arrival),
+                       eta_safe=_iso(arrival + dt.timedelta(seconds=coeff * ride)))
         rows.append(row)
     return header, rows

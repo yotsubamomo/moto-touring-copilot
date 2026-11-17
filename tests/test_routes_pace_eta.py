@@ -160,8 +160,6 @@ def test_eta_reproduces_the_mock_fixture(data):
     assert header == data["eta_headers"][0]
 
 
-@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
-                                       "compute_eta does not write stop_allow_s yet")
 def test_eta_reproduces_the_mock_fixture__v03_contract(data):
     header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
     assert rows == [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
@@ -174,8 +172,6 @@ def test_eta_is_unknown_when_a_category_has_no_pace(data):
     data["eta_headers"], data["eta_segments"] = [header], rows
 
 
-@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
-                                       "compute_eta does not write stop_allow_s yet")
 def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
     header, rows = eta_for(data, "R02", "P-MOCK-2", [])
     data["eta_headers"], data["eta_segments"] = [header], rows
@@ -183,8 +179,6 @@ def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
                                data["pace_header"], data["pace_categories"]) == []
 
 
-@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
-                                       "compute_eta does not write stop_allow_s yet")
 def test_eta_output_passes_the_contract_with_and_without_breaks(data):
     for plan_id, breaks in (("P-A", []), ("P-B", [{"after_checkpoint_id": "R01-CP04", "duration_s": 900.0}])):
         header, rows = eta_for(data, "R01", plan_id, breaks)
