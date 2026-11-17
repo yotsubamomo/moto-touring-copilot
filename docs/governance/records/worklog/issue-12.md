@@ -176,7 +176,7 @@
 | UI0-1 六個區塊可在瀏覽器操作，每個狀態有合成情境 | **PASS（R1-F1 修正後）** | E-2 第 1～19 列；AppTest 23 個情境。追問的六種題目都有情境（缺起點、行程型態、休息對應不到：情境 5；進入端、休息長度、方向：6a；行程型態＋方向同一輪：6b）。R1-F1（單向＋「不安排這段休息」沒有取消休息）在 `619268a` 修正，第 10.1 節 |
 | UI0-2 元件在 1.67.0 可用；做不到的列出替代 | **PASS（有替代與限制，見下表）** | 實際安裝 `streamlit==1.67.0`，Issue 對照表的元件全部使用並實際渲染 |
 | UI0-3 固定文字逐字相同 | **PASS** | E-4 |
-| UI0-4 追問一輪；行程型態與方向同一輪；方向只在來回需要回答 | **PASS（R1-F1 修正後）** | AppTest（5、6a、6b）；E-2 第 8 列（鍵盤）；第 10.1 節的 regression 測試與第 10.2 節 K9（瀏覽器、只用鍵盤） |
+| UI0-4 追問一輪；行程型態與方向同一輪；方向只在來回需要回答 | **PASS（R1-F1 修正後）** | AppTest（5、6a、6b）；E-2 第 8 列（鍵盤）；第 10.1 節的 regression 測試與第 10.2 節 K12（瀏覽器、只用鍵盤；R2-N1 更正，原誤寫為 K9） |
 | UI0-5 期限名稱隨行程型態切換；值是否保留照實記錄 | **PASS：值會保留**，採用隨行程型態改變的標籤，不需要退路 | AppTest（16:45 在切換前後保留）；E-2 第 11 列（瀏覽器中 17:00 與 16:45 都在切換後保留）。條件：widget 有固定的 key（D-12-3）。行程型態未選時用固定標籤「期限」（D-12-6） |
 | UI0-6 375 像素沒有整頁的水平溢出 | **PASS** | E-2：23 個情境（含追問回覆後、欄位錯誤後的狀態）、兩個分頁、Profile／公路與地標／全部候選展開時，`scrollWidth` 都是 375，沒有未裁切的溢出；寬表格在自己的容器內捲動 |
 | UI0-7 所有操作都可以只用鍵盤完成 | **待 R2 判定。依 `decision-20261118-issue12-ui07.md`，#12 範圍內沒有 BLOCKED 或 FAIL 的部分**（該 record 第 3、4.3 節）。已取代的判定：(1) R1 前「大部分 PASS；一項 NOT VERIFIED」；(2) correction 時「未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS」 | 以操作為單位（DA record 第 3.1 節）。只用鍵盤完成的操作紀錄：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出多選且限 `.gpx` 的選檔請求（K3）、移除檔案（K5）、選檔之後按「更新 Profile」（K6）、行程描述的輸入、公路與地標 expander、行程型態、日期（K10，年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander（第 10.2 節、第 6 節 E-2）。**K9**（日曆彈窗內鍵盤焦點進不去）：不是 UI0-7 的 FAIL，記為元件的限制（UI0-2 限制 7），日期這項操作由 K10 完成（DA record 第 3.2 節）。**K3-B**（在作業系統的原生檔案對話框中只用鍵盤多選 GPX）：不在 #12 的 UI0-7 範圍內，**範圍外，NOT VERIFIED**；#12 範圍內的上傳操作由 K3、K5、K6 涵蓋（DA record 第 4.2 節）。沒有任何人驗證過作業系統對話框中可只用鍵盤多選，本 worklog 不作此宣稱 |
@@ -272,7 +272,7 @@ C-1～C-3 不影響本 Ticket 的 AC 結果（Skeleton 沒有自行決定語義�
   - `test_round_trip_reply_with_no_rest_cancels_the_rest`；`test_round_trip_reply_uses_the_chosen_direction`（去程、回程）；`test_known_round_trip_direction_no_rest_cancels_the_rest`（6a）。
   - 既有的「單向不必回答方向」「來回時方向必答」測試保留不變。
 - **測試確實能抓到缺陷**：只把 `app/ui0_mock_app.py` 還原成 `6a278b4` 的版本（`git stash push app/ui0_mock_app.py`）時，`tests/test_ui0_skeleton.py` 的結果是 `1 failed, 54 passed`，失敗的是 `test_one_way_reply_with_no_rest_cancels_the_rest`；修正後 `55 passed`。
-- **瀏覽器**：第 10.2 節 K9 以只用鍵盤的方式重做 6b 的單向＋取消，結果與測試相同。
+- **瀏覽器**：第 10.2 節 K12 以只用鍵盤的方式重做 6b 的單向＋取消，結果與測試相同（R2-N1 更正，原誤寫為 K9）。
 
 ### 10.2 R1-F2：只用鍵盤的瀏覽器操作紀錄
 
@@ -360,3 +360,66 @@ agentId `acf4b1c528124a22e`（`agentType` `gov-executor`，同第 2 節的派工
 - 更新的位置：檔首「狀態」列；第 7 節 UI0-7、UI0-10 列與 UI0-2 的限制 7（新增）；第 9.1 節；第 10.2 節 K3、K9 列的判定；第 10.3 節的 K3-B、K9-F 列與末段；第 10.5 節。每一處都引用該 record，原先的判定以「已取代」標明保留。
 - 沒有修改 `app/`、`tests/`、`.streamlit/`、`pyproject.toml`；沒有重做瀏覽器操作；受審的實作 subject 仍是 `619268a`。
 - 本節不宣告 UI0-7 PASS，也不宣告 R1-F2 RESOLVED；由 R2 判定。
+
+## 11. Cycle 1 R2 之後的結尾紀錄（record-only）
+
+本節由 Executor（同一 worklog identity，agentId `acf4b1c528124a22e`，Orchestrator 以 SendMessage 續派）依 Orchestrator 的派工寫入。只修改本 worklog；`app/`、`tests/`、`.streamlit/`、`pyproject.toml`、`docs/ui/`、`prototype/` 都沒有變更。本節**不**宣告 Ticket closure、SPEC-UI0 的 SIA 或 phase acceptance、acceptor 的 UI Delta Review 或 release；Ticket closure 由 Orchestrator 依 orch-default §7 判定。
+
+### 11.1 R2 的結果
+
+- Record：`docs/governance/records/audit/issue-12-c1-r2.md`（Codex `primary_reviewer`，cycle 1 R2，attempt 2；commit `badebc1`；本次讀到的 SHA-256 `f81c482d7dc711889e844439f8cf95c845b5c8a9a8caee0b0ce17897899ede34`）。**`Verdict: PASS`。**
+- **R1-F1：RESOLVED**（單向回覆＋「不安排這段休息」取消那一筆休息；`619268a` 的修正與 regression 測試）。
+- **R1-F2：RESOLVED**（依 `decision-20261118-issue12-ui07.md` 的 clarification；K3-B 維持 #12 範圍外的 NOT VERIFIED，K9 維持元件限制、原因未確定）。
+- **R2-N1**（Low／non-blocking，owner #12 Executor）：worklog 第 7 節 UI0-4 列與第 10.1 節的瀏覽器說明把取消休息的鍵盤操作誤指為 K9，實際是 K12。**已在本次更正**：兩處都改為 K12，並註明「R2-N1 更正，原誤寫為 K9」；第 10.2 節的 K9、K12 操作紀錄本身沒有改動。
+- R2 attempt 1 因 Codex usage limit 失敗，沒有 record 或 verdict（`ca91406` 的 run record 紀錄）；attempt 2 的 binding 證據由 Orchestrator 記在 run record（`eac676b`）。R2 record 的 NV-R2-3（dispatcher 的 binding 核對）由 Orchestrator 處理，不是本 worklog 能完成的事。
+
+### 11.2 Q-1、Q-1b 的 disposition
+
+- 依據：Design Authority 的 `docs/governance/records/decisions/decision-20261118-issue12-q1.md`（commit `6b9f611`；SHA-256 `19172c4f6d9744c6d581d6b1f76b7369a59f7970b3783d3b156cddbdbcc61c7a`）。
+- **Q-1（「資料快照」標籤）**：Issue #12 第 4 節只要求代表路線快照的情形顯示該標籤（Snapshot Mode，或一般模式下重用 30 天內的快照），不要求所有 engine 模擬情境都顯示。現行實作（表單的 Snapshot Mode 為真時顯示）與證據滿足 #12，**不需要 targeted correction 或補充 evidence**。
+- **Q-1b（「示範路線」來源標籤）**：#12 沒有要求在 Skeleton 中呈現示範路線的來源標籤或為它建立情境（CR-01 之後的 Trip Planner 沒有能得到示範路線的輸入）。對 #12 **沒有要求**。示範路線在 Streamlit 中是否、如何出現是**規格缺口**，歸之後正式整合的 `app/` Spec（owner：該 Spec 的 Design Authority）；若要讓騎士在介面上選用示範路線，牽涉 CR-B1，需要 acceptor。
+
+### 11.3 最終的受審 subject
+
+- **最後的實作 commit：`619268ad2732b4cdd04593ff20ebe35374a7710c`（`619268a`）**。它之後沒有任何修改 `app/`、`tests/`、`.streamlit/`、`pyproject.toml` 的 commit。
+- **R2 的受審 subject：`ca91406187a8c5877ae8d23b6f8fd09749d1e40f`（`ca91406`）**。`git diff --name-only 619268a ca91406` 只含 `docs/governance/records/**`（DA record `decision-20261118-issue12-ui07.md`、run record、本 worklog）；`ca91406..6b9f611` 也只含 record 路徑（R2 record、Q-1 DA record、run record）。依 Bindings 第 7 節與 orch-default §7 P7，這些 record-only delta 不改變受審 subject 的 identity。本節的 commit 同樣是 record-only。
+
+### 11.4 Gate：pytest（本節的最終 HEAD）
+
+在主 checkout 執行 `.venv/Scripts/python.exe -m pytest -q`。工作目錄是 `6b9f611` 加上本 worklog 的修改（只有本檔；`git diff -- app tests .streamlit pyproject.toml` 沒有輸出），程式與測試和本節 commit 完全相同：
+
+```text
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 35%]
+........................................................................ [ 47%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 94%]
+...................................                                      [100%]
+611 passed in 23.96s
+```
+
+與第 10.4 節（`619268a`）相同：611 passed，沒有 skip、xfail。
+
+### 11.5 仍在追蹤的事項與 owner
+
+| ID | 內容 | Owner／required authority |
+| --- | --- | --- |
+| NV-R2-1 | R2 reviewer 沒有瀏覽器，沒有親自重跑 UI0-6 的 375 像素量測或 UI0-7 的實體鍵盤流程；R2 評估的是本 worklog 的逐步紀錄 | acceptor：依 CL-UI0-4 在 UI Delta Review 實際檢視（本 run 之外） |
+| NV-R2-2 | K3-B 的 OS 原生檔案對話框中只用鍵盤多選沒有人驗證；K9 彈窗焦點問題的原因（元件或工具）未確定；本 worktree 沒有原始的瀏覽器 transcript、截圖或 scratchpad scripts | acceptor（UI Delta Review）；需要補原始 evidence 時 owner 是 #12 Executor；之後的逐元件要求由 Design Authority 依 DELTA 11.2 處理 |
+| NV-R2-3 | R2 attempt 2 的 binding、存取與 record 寫入的完整核對 | dispatcher／Orchestrator（run record；不是 #12 的 implementation finding） |
+| NV-R2-4 | 真實騎乘資料、真實 GPX 的保存與隱私裁切、框架 spool 的生命週期、正式 API 與後端行為：本票排除，沒有執行，也沒有私有資料授權 | acceptor（RB-7 的資料授權與之後的實際驗證）；保存與整合的語義由 Design Authority |
+| C-4 | root `.streamlit/config.toml`（D-12-2）；R1 判定為契約內的 HOW，沒有 scope finding | #12 Executor 維護既有紀錄（無待辦） |
+| C-5～C-7 | Issue 沒有寫定的畫面文字與未選行程型態時的期限標籤（C-5）；模擬結果不隨表單改變（C-6）；`st.dataframe` 內建的「Download as CSV」（C-7） | acceptor 的 UI Delta Review（tracked；不代表已接受為產品行為） |
+| C-8 | 另加的情境 15（無可行解）；R1 判定在範圍內，沒有 scope finding | #12 Executor 維護既有紀錄（無待辦） |
+| K3-B | 作業系統的原生檔案對話框中只用鍵盤多選 GPX：#12 範圍外，NOT VERIFIED（`decision-20261118-issue12-ui07.md` 第 4.2 節） | acceptor 可在 UI Delta Review 檢視（CL-UI0-4 末句）；不是 #12 結案的條件 |
+| K9（資訊） | `st.date_input` 的日曆彈窗在本環境中鍵盤焦點進不去，沒有困住焦點；日期可只用鍵盤以年／月／日欄修改（K10）；UI0-2 限制 7 | acceptor 可在 UI Delta Review 提出；正式整合是否加入逐元件要求，屬 DELTA 11.2「驗收清單定稿時確認」的事項（Design Authority；改變 P-11 的語義時經 acceptor） |
+| Q-1b 規格缺口 | 示範路線在 Streamlit 中是否、如何出現，以及路線確認區塊的「示範路線」標籤 | 之後正式整合的 `app/` Spec 的 Design Authority；要讓騎士選用示範路線時牽涉 CR-B1，需要 acceptor（`decision-20261118-issue12-q1.md` 第 7 節） |
+
+C-1～C-3 依 `decision-20261118-issue12-ui0.md` 對 #12 沒有要求，相關的整合條件由之後的整合 Spec 處理（該 record 第 2.4、4.4 節）。
+
+### 11.6 Binding
+
+本節由 agentId `acf4b1c528124a22e`（`gov-executor`，有效 mapping `claude-opus-5-5`／`high`）寫入；沒有派工任何 subagent。本節 commit 前的自我掃描：全部 assistant 訊息 (`claude-opus-5-5`, `high`) 369 則，集合只有一個元素。這是自我觀測，Orchestrator 採用前須自行核對。
