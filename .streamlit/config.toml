@@ -1,0 +1,13 @@
+# Streamlit settings for `streamlit run` from the repository root.
+# - No usage statistics are sent to Streamlit.
+# - The server listens on this computer only and does not open a browser by itself.
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "viewer"
+
+[server]
+headless = true
+address = "localhost"

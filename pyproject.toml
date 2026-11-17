@@ -12,6 +12,8 @@ dependencies = ["jsonschema>=4.18"]
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 llm = ["anthropic>=2.8"]
+# UI-0 mock-data skeleton (app/). tests/test_ui0_skeleton.py needs it too.
+ui = ["streamlit==1.67.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
