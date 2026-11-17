@@ -15,6 +15,7 @@
 | 獨立核對 | 以 scratchpad 的一次性 AppTest script（只載入 `app/ui0_mock_app.py`，合成情境，沒有修改任何追蹤中的檔案）規劃後檢查路線確認區塊的 badge：s08、s13、s15（engine，一般模式）只有灰色「路線引擎」，沒有「資料快照」；s14（engine，Snapshot Mode）有灰色「路線引擎」與藍色「資料快照」；s08 開啟 Snapshot Mode 後規劃有「資料快照」；s14 關閉 Snapshot Mode 後規劃沒有；s10（目標 GPX）開啟 Snapshot Mode 時路線確認區塊只有「目標 GPX」，頁首有 Snapshot Mode 標籤。s09 在預設表單下因出發油量未填而停在欄位錯誤（情境本身的設計），未進入路線確認區塊 |
 | **結論摘要** | Issue #12 第 4 節「路線引擎的路線帶『資料快照』的標籤」**只要求代表路線快照的情形顯示該標籤**（路線來自已保存的路線快照：Snapshot Mode；或一般模式下重用 30 天內的快照），**不要求所有 engine 模擬情境都顯示**。現行實作與證據**滿足 #12**，**不需要 targeted correction，也不需要補充 evidence**。不改變 accepted 語義；在 OC-1 boundary 內；**不需要 acceptor**；沒有 capability escalation |
 | **追加裁決摘要（第 7 節，Q-1b）** | 同一句的「示範路線」是路線來源標籤的取值之一，但 #12 **沒有要求**在 Skeleton 中呈現示範路線的來源標籤或為它建立情境：CR-01 之後的 Trip Planner 沒有任何輸入能得到示範路線（CR-B1 沒有路線下拉選單；SPEC-001 7.11 第 3 項的取得順序只有目標 GPX、Snapshot Mode 與一般模式），Issue 的情境清單也沒有這一項。現行實作與證據**滿足 #12**，不需要 targeted correction 或補充 evidence。示範路線在 Streamlit 中是否、如何出現是**規格缺口**，歸之後正式整合的 `app/` Spec（Design Authority）；若要在介面上讓騎士選用示範路線，牽涉 CR-B1，需要 **acceptor**。不改變 accepted 語義；在 OC-1 boundary 內；#12 不需要 acceptor；沒有 capability escalation |
+| **澄清（第 8 節，2026-11-18）** | 本 run 不採 fast path：SPEC-UI0 的 SIA 另外派工（`audit/spec-SPEC-UI0-c1-*`），phase acceptance 必須引用該 SIA 的 closure record。第 5 節「fast path，由 #12 R1 兼任」的描述以第 8 節為準；Q-1、Q-1b 的裁決不變 |
 
 ## 1. 問題
 
@@ -128,3 +129,12 @@ Issue #12 第 4 節同一句列出的第三種來源「示範路線」，在 #12
 - **#12**：Q-1b 有了 disposition，對 #12 沒有要求；Orchestrator 在 P6 可以和 Q-1 一起引用本 record。
 - **SPEC-UI0 的 SIA 與 phase acceptance**：同第 5 節；本 record 不代替已 closure 的 SIA record。
 - **之後正式整合的 `app/` Spec**：第 7.4 節的規格缺口。
+
+## 8. 澄清（2026-11-18）：本 run 的 SPEC-UI0 SIA 是另外派工的
+
+本節依 SPEC-UI0 SIA R1 record `docs/governance/records/audit/spec-SPEC-UI0-c1-r1.md` 的 SIA-R1-N1（Low／non-blocking，owner 為本 record 的 Design Authority）加入。第 1–7 節的原文與裁決（Q-1、Q-1b）都不變；本節只更正其中對 SIA 形式的描述。
+
+- **要更正的描述。** 第 5 節表格第二列寫「SPEC-UI0 的 SIA（fast path，由 #12 R1 兼任）」；第 7.5 節的「同第 5 節」沿用了這個描述。這和本 run 的實際做法不符。
+- **本 run 的實際做法（已核對）。** acceptor 對本 run 的指示第 4 項是「Ticket 的 R1 不兼作 SIA，SIA 一律另外派工」。所以本 run 對 SPEC-UI0 **不採 fast path**：#12 的 R1、R2 是一般的 Ticket audit；SPEC-UI0 的 Spec Integration Audit 另外派工，record 是 `docs/governance/records/audit/spec-SPEC-UI0-c1-*`（R1 是 `spec-SPEC-UI0-c1-r1.md`，`Verdict: BLOCKING`；之後還有 R2）。依據：run record `run-20261117-oc1-run2.md` 第 1 節（第 29 行）、事件 46、事件 55 與 P9 列。`derivation-spec-ui0.md` 第 6 節的 fast path 是 Bindings 第 5 節的可選做法（治理 §4.7「MAY」）；本 run 依 acceptor 的指示不採用，derivation record 本身不改。
+- **對 phase acceptance 的意思。** SPEC-UI0 的 Design Authority phase acceptance **必須引用另外派工的 SIA（`spec-SPEC-UI0-c1-*`）中已 closure 的 record**，不得引用 #12 的 Ticket audit record（`issue-12-c1-r1.md`、`issue-12-c1-r2.md`）作為 SIA closure。第 5、7.5 節「本 record 不代替已 closure 的 SIA record」的意思不變。
+- **對本 record 結論的影響。** 沒有。Q-1、Q-1b 的 disposition 仍適用於 #12 的 P6，也可以由 SPEC-UI0 的 SIA 引用；本節不改變 accepted 語義，不需要 acceptor。
