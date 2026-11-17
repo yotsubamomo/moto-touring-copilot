@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #9（BATCH-1 B1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | Cycle 2：rework `49f1d80`（第 11 節）→ cycle 2 R1 BLOCKING（C2-R1-F1）→ targeted correction `5f9a35e`（第 12 節），待 cycle 2 R2。FA ruling `ruling-20261117-issue9-c1` 授權 cycle 2；DA 以 CL-B1-11 補上要求。Cycle 1：R1 BLOCKING（R1-F1）→ correction `6f97561`（第 10 節）→ R2 BLOCKING（R2-F1）→ Alternate UNRESOLVED → FA。Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節）。C-9-1、C-9-2 經 Design Authority 裁決（CL-B1-9、CL-B1-10），同一 worklog identity 續派完成 CL-B1-10 的測試與 CL-B1-9 的 E-1（第 9 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）；CL-B1-10 的測試 commit **`b4d1f84eca1b4f80bd0265c81369384d62b055e0`**（`b4d1f84`，父 commit 是 DA record 的 `e165907`）。**R1 受審的程式與測試 subject 是 `b4d1f84`（R1 worktree HEAD `f0b5be9`）**；cycle 1 修正 commit **`6f975619a2e4b6303064955237c254de19f81da5`**（`6f97561`，第 10 節），是 cycle 1 R2 的程式與測試 subject；cycle 2 rework commit **`49f1d80ed1c67c09488353faf1d2b1ac479ea3cd`**（`49f1d80`，第 11 節），是 cycle 2 R1 的程式與測試 subject；cycle 2 correction commit **`5f9a35e9d743fb68e0f59c04dba3f780c2ae1151`**（`5f9a35e`，第 12 節），是 cycle 2 R2 的程式與測試 subject；本 worklog 在其後的 record-only commit 更新（`docs/governance/records/**`，Bindings 第 7 節） |
+| 狀態 | **Audit 已走完：cycle 2 R2 PASS（`issue-9-c2-r2.md`，受審 subject `7f2fee6`），沒有未解 blocking finding；仍有 open 的 tracked follow-ups（第 13 節）。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：Cycle 2：rework `49f1d80`（第 11 節）→ cycle 2 R1 BLOCKING（C2-R1-F1）→ targeted correction `5f9a35e`（第 12 節）→ cycle 2 R2 PASS。FA ruling `ruling-20261117-issue9-c1` 授權 cycle 2；DA 以 CL-B1-11 補上要求。Cycle 1：R1 BLOCKING（R1-F1）→ correction `6f97561`（第 10 節）→ R2 BLOCKING（R2-F1）→ Alternate UNRESOLVED → FA。Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節）。C-9-1、C-9-2 經 Design Authority 裁決（CL-B1-9、CL-B1-10），同一 worklog identity 續派完成 CL-B1-10 的測試與 CL-B1-9 的 E-1（第 9 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）；CL-B1-10 的測試 commit **`b4d1f84eca1b4f80bd0265c81369384d62b055e0`**（`b4d1f84`，父 commit 是 DA record 的 `e165907`）。**R1 受審的程式與測試 subject 是 `b4d1f84`（R1 worktree HEAD `f0b5be9`）**；cycle 1 修正 commit **`6f975619a2e4b6303064955237c254de19f81da5`**（`6f97561`，第 10 節），是 cycle 1 R2 的程式與測試 subject；cycle 2 rework commit **`49f1d80ed1c67c09488353faf1d2b1ac479ea3cd`**（`49f1d80`，第 11 節），是 cycle 2 R1 的程式與測試 subject；cycle 2 correction commit **`5f9a35e9d743fb68e0f59c04dba3f780c2ae1151`**（`5f9a35e`，第 12 節），是 cycle 2 R2 的程式與測試 subject；**最終受審 subject 是 `7f2fee643a9a58e09e3222e861d7a9058e2a8753`（`7f2fee6`，cycle 2 R2 worktree HEAD），其程式與測試等於實作最後 commit `5f9a35e`（`git diff 5f9a35e 7f2fee6 -- src tests` 為空）**；本 worklog 在其後的 record-only commit 更新（`docs/governance/records/**`，Bindings 第 7 節） |
 | 日期 | 2026-11-17 |
 
 ## 1. Contract reference
@@ -162,7 +162,7 @@ exit=0
 
 ## 7. Audit status
 
-Formal：本 Ticket 的 independent audit **required**（治理 §4.1；Bindings 第 5 節），尚未開始。依 Bindings 第 3.7 節由 Orchestrator 派工；R1 須依高風險類別 record 第 5 節核對 H-2、H-3、H-4。本 worklog 的 self-verification 不是 audit。
+Formal：本 Ticket 的 independent audit **required**（治理 §4.1；Bindings 第 5 節）。實際進度與結果見第 13 節（cycle 2 R2 PASS）。本 worklog 的 self-verification 不是 audit；下列 audit 結論以各 audit record 與 FA ruling 為準，本 worklog 只引用。
 
 ## 8. Remaining work 與 concerns
 
@@ -871,3 +871,51 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 | C-9-3、C-9-4 | 不變 | acceptor（RB-7）；AB-12 |
 | R-9-1 | Cycle 2 R2 closure review（subject `5f9a35e`） | Orchestrator |
 | R-9-2 | S-3～S-6 由 #10、#11 恢復 | #10、#11 |
+
+## 13. Audit 結果與 open follow-ups（cycle 2 R2 之後）
+
+本節只更新紀錄；`src/`、`tests/` 在本次沒有修改。以下各 audit 的結論以 record 原文為準。
+
+### 13.1 Audit 歷程
+
+| Cycle | 步驟 | Record | 受審 subject | 結果 |
+| --- | --- | --- | --- | --- |
+| 1 | R1（Codex，`primary_reviewer`） | `docs/governance/records/audit/issue-9-c1-r1.md` | `f0b5be9`（程式與測試 `b4d1f84`） | **BLOCKING**：R1-F1（High／blocking）；R1-F2（Low／non-blocking） |
+| 1 | Targeted correction | 第 10 節 | `6f97561` | — |
+| 1 | R2（Codex） | `issue-9-c1-r2.md` | `09d150f`（程式與測試 `6f97561`） | **BLOCKING**：R2-F1（R1-F1 同一 root cause 的殘餘）；R1-F2 resolved |
+| 1 | Alternate Review | `issue-9-c1-alt.md` | `09d150f` | **UNRESOLVED (R2-F1)**；連結與內容重複為 routing signal（required authority = Design Authority） |
+| 1 | Final Adjudication | `docs/governance/records/decisions/ruling-20261117-issue9-c1.md` | `09d150f` | R2-F1（含 R1-F1 殘餘）：targeted rework，**授權 cycle 2**（自 R1 起）；Q-DA-1 route 至 Design Authority |
+| — | DA decision（Q-DA-1） | `docs/governance/records/decisions/decision-20261118-issue9-qda1.md`（CL-B1-11） | — | 「不開啟」的範圍、pace 那一邊的連結檢查、L-1～L-6；殘餘歸 G-ING |
+| 2 | Rework | 第 11 節 | `49f1d80` | — |
+| 2 | R1（Codex） | `issue-9-c2-r1.md` | `4b69201`（程式與測試 `49f1d80`） | **BLOCKING**：C2-R1-F1（Medium／blocking） |
+| 2 | Targeted correction | 第 12 節 | `5f9a35e` | — |
+| 2 | R2（Codex） | `issue-9-c2-r2.md` | **`7f2fee6`**（程式與測試 `5f9a35e`） | **PASS**：C2-R1-F1 RESOLVED；沒有未解 blocking finding；新增 C2-R2-N1（Low／non-blocking） |
+
+最終受審 subject：`7f2fee643a9a58e09e3222e861d7a9058e2a8753`；實作的最後 commit：`5f9a35e9d743fb68e0f59c04dba3f780c2ae1151`。最終的 E-1 證據是第 12.4 節（`320 passed, 4 xfailed`，依 CL-B1-8、CL-B1-9；不是全數通過），R2 record 另行在 `7f2fee6` 執行並記錄。
+
+R2 PASS 不等於 Ticket closure、SPEC-B1 的 Spec Integration Audit、phase acceptance 或 release；各 audit 的 binding 核對（例如 R2 record NV-4 所指 run record 事件 17 的回填）由 Orchestrator 處理。
+
+### 13.2 Open follow-ups
+
+| # | 項目 | 現況 | Owner／required authority |
+| --- | --- | --- | --- |
+| C2-R2-N1 | `source_key` 的 docstring 仍引用已不存在的 `pace_entry_problem`（應為 `pace_name_problem`）。只是文字引用，行為正確 | Open。依 R2 record 的 disposition，由 #9 Executor 在獲授權的後續變更中修正；本次依派工指示**沒有**修改程式 | #9 Executor（需後續授權的變更）；Orchestrator 追蹤 |
+| C-9-3 | 以真實行程清單與真實 GPX 重建時的契約符合性、真實保留行程／被排除行程的實際隔離 | NOT VERIFIED（Issue #9 排除真實重建；R2 record NV-1） | acceptor（RB-7） |
+| C-9-4 | 文件：重建指令需要先有行程清單；`DESIGN.md` §12 如實寫出 CL-B1-11 第 4 項的殘餘與其歸屬，不寫成已能辨識內容重複 | Open | AB-12 的文件工作 |
+| C-9-6 | 清單內部矛盾時整份清單拒絕，而不是只略過衝突項目 | 記錄；cycle 1 Alternate 與 cycle 2 的 Reviewer 都沒有對它提出 finding | 無（記錄）；有疑義時 Design Authority |
+| C-9-7 | 找不到或不在列表中的被選中 `pace` 項目，整次重建拒絕（原為報告註記） | 記錄；cycle 2 R2 沒有提出 finding | 無（記錄）；有疑義時 Design Authority |
+| C-9-8 | 對 `pace` 項目以 `GetShortPathNameW` 取得短檔名（CL-B1-11 第 1.3 項允許） | 記錄 | 無（記錄） |
+| C-9-9 | 未被選中的 `pace` 項目缺檔或不在列表中，也使選其他行程的重建拒絕 | 記錄；cycle 2 R2 已實際確認，判定為 FA 允許的 fail-closed 做法，沒有需 DA 裁決的 ambiguity | 無（記錄） |
+| CL-B1-11 第 4 項殘餘 | 內容相同、名稱不同的複本；非 `pace` 項目本身是指向 `pace` 檔的符號連結；其他不同目錄項目承載同一趟行程而 `pace` 項目自身看不出來的情形。#9 不處理（R2 record NV-3） | 歸 G-ING（之後的 Profile 管理與內容去重複 Spec）；SIA 不得記為已涵蓋 | Orchestrator 追蹤 G-ING |
+| CL-B1-11 §7 A-1 | 在凍結前取得保留行程或被排除行程檔案的 metadata 或內容（含 G-ING 跨角色去重複所需的雜湊或識別資訊） | Open；#9 不需要，不受影響 | acceptor（RB-7；G-ING (2)） |
+| CL-B1-11 §7 A-2 | 真實資料夾與清單中是否已有跨角色的 hard link、符號連結或內容相同的檔案 | NOT VERIFIED | acceptor（RB-7） |
+| FA NV-2 | 真實 GPX 資料夾所在磁碟區是否產生 8.3 短檔名、真實檔名是否有短檔名別名（只影響實際暴露程度） | NOT VERIFIED | acceptor（RB-7） |
+| NR-1（R2 record） | 真實符號連結的 CLI 觀測：建立時 `winerror 1314`，NOT RUN；L-2 以不依賴特權的測試表現 | 記錄 | 無須為 #9 另取權限 |
+| R-9-2 | S-3（#10）、S-4～S-6（#11）的 strict xfail 恢復 | Open | #10、#11 |
+| R-9-3 | Ticket closure 判定；SPEC-B1 Spec Integration Audit（SB1-AC5 依 CL-B1-11 第 6 項） | Open | Orchestrator |
+
+已關閉（不再 open）：C-9-1（CL-B1-9）、C-9-2（CL-B1-10）、C-9-5b（由 CL-B1-11 取代）、R1-F1／R2-F1（cycle 2 解決）、R1-F2（cycle 1 R2 resolved）、C2-R1-F1（cycle 2 R2 RESOLVED）。
+
+### 13.3 Binding
+
+本次更新由同一 Executor（agentId `a6f915a1860417bc9`）進行，只修改本 worklog。Binding 的派工者核對依 Bindings 第 3.6 節由 Orchestrator 記入 run record。
