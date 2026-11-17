@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minimal Operational Governance v2.1 — 架構地圖（繁體中文版 · 2026-10-01）</title>
+<meta name="description" content="Minimal Operational Governance v2.1（Adopted／Frozen 2026-10-01）的 non-normative 視覺化；authoritative source 為 Markdown 本體。Reusable package v2.1：Reference Model Profile default v2.4、Implementation Profile impl-default v2、Reference Orchestrator Contract orch-default v2.1，皆從屬於治理、由 Project Bindings 選用。核心：human approves the outcome contract once → authorized Agents autonomously design, decompose, implement, review, correct and complete within that boundary；Outcome Contract 與 derived contracts；六個治理角色；deterministic routing；Spec Integration Audit；mandatory durable worklog；v2.1 區分 root role session 與被派工的 assignment。">
+<meta name="generator" content="derived 2026-10-02 from frozen Minimal v2.1, Model Profile default v2.4, impl-default v2, orch-default v2.1; non-authoritative">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --ink: #1A2230;
+    --muted: #5C6879;
+    --line: #D9DFE8;
+    --edge: #7A8598;
+    --authority: #3D5AC8;      /* Design Authority */
+    --authority-soft: #E9EDFB;
+    --exec: #0F7A69;           /* Executor */
+    --exec-soft: #E1F1ED;
+    --audit: #A8690C;          /* Independent Reviewer */
+    --audit-soft: #F7EDD9;
+    --adjud: #A8356B;          /* Final Adjudicator */
+    --adjud-soft: #FAE7EF;
+    --control: #66718A;        /* Orchestrator / control plane */
+    --control-soft: #ECEFF4;
+    --operator: #1A2230;       /* 人類 acceptor / operator */
+    --operator-soft: #F1F3F7;
+    --harness: #7A4FB5;        /* Model Mapping Profile / Runtime */
+    --harness-soft: #EFE8F9;
+    --danger: #B23E3C;         /* blocking */
+    --danger-soft: #F8E7E6;
+    --ok: #2E7D46;             /* closure / 完成 */
+    --ok-soft: #E3F1E7;
+    --code-bg: #EEF1F6;
+    --shadow: 0 1px 2px rgba(20,30,50,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #11151C; --surface: #1A2029; --ink: #E7EBF2; --muted: #98A2B3; --line: #2C3542; --edge: #8B96AA;
+      --authority: #8FA3F0; --authority-soft: #242D4C;
+      --exec: #4CC5AE; --exec-soft: #12332E;
+      --audit: #E0A44E; --audit-soft: #3A2C14;
+      --adjud: #EC8FB8; --adjud-soft: #3C1A2B;
+      --control: #9AA6BE; --control-soft: #232936;
+      --operator: #E7EBF2; --operator-soft: #222833;
+      --harness: #B69AE6; --harness-soft: #2B2140;
+      --danger: #E48583; --danger-soft: #3D1F1E;
+      --ok: #6FCE8F; --ok-soft: #16301F;
+      --code-bg: #232A36; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #11151C; --surface: #1A2029; --ink: #E7EBF2; --muted: #98A2B3; --line: #2C3542; --edge: #8B96AA;
+    --authority: #8FA3F0; --authority-soft: #242D4C;
+    --exec: #4CC5AE; --exec-soft: #12332E;
+    --audit: #E0A44E; --audit-soft: #3A2C14;
+    --adjud: #EC8FB8; --adjud-soft: #3C1A2B;
+    --control: #9AA6BE; --control-soft: #232936;
+    --operator: #E7EBF2; --operator-soft: #222833;
+    --harness: #B69AE6; --harness-soft: #2B2140;
+    --danger: #E48583; --danger-soft: #3D1F1E;
+    --ok: #6FCE8F; --ok-soft: #16301F;
+    --code-bg: #232A36; --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'IBM Plex Sans', 'Noto Sans TC', 'Segoe UI', 'Microsoft JhengHei', system-ui, sans-serif;
+    line-height: 1.6; margin: 0; padding: 0 24px 80px; font-size: 15px;
+  }
+  main { max-width: 1160px; margin: 0 auto; }
+  code, .mono {
+    font-family: 'IBM Plex Mono', Consolas, 'Noto Sans TC', 'Courier New', monospace; font-size: 0.86em;
+    background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 4px;
+    overflow-wrap: anywhere; word-break: break-word;
+  }
+  a { color: var(--authority); }
+  :focus-visible { outline: 2px solid var(--authority); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+  /* ---- header ---- */
+  header.page { padding: 48px 0 8px; border-bottom: 1px solid var(--line); margin-bottom: 28px; position: relative; }
+  .eyebrow { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--authority); margin: 0 0 10px; }
+  h1 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 700; letter-spacing: -0.01em; margin: 0 0 8px; text-wrap: balance; }
+  .subtitle { font-size: 17px; color: var(--ink); margin: 0 0 8px; font-weight: 500; }
+  .lede { color: var(--muted); max-width: 78ch; margin: 0 0 18px; font-size: 14.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 20px; }
+  .chip { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); text-decoration: none; }
+  .chip.hot { border-color: var(--authority); color: var(--authority); }
+  .chip.hz { border-color: var(--harness); color: var(--harness); }
+  .chip.ex { border-color: var(--exec); color: var(--exec); }
+  .chip.ctl { border-color: var(--control); color: var(--control); }
+  .chip.au { border-color: var(--audit); color: var(--audit); }
+  .chip.ok { border-color: var(--ok); color: var(--ok); }
+  a.chip:hover { border-color: var(--authority); color: var(--authority); }
+  .theme-btn {
+    position: absolute; right: 0; top: 48px; font: 500 12px 'IBM Plex Mono', 'Noto Sans TC', monospace;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+    border-radius: 999px; padding: 4px 12px; cursor: pointer;
+  }
+  .theme-btn:hover { border-color: var(--authority); color: var(--authority); }
+  @media (max-width: 640px) { .theme-btn { position: static; margin-bottom: 12px; } }
+  .nonnorm { border: 1.5px dashed var(--audit); background: var(--audit-soft); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--ink); margin: 0 0 16px; }
+  .nonnorm b { color: var(--audit); }
+
+  /* ---- hero band ---- */
+  .hero { border: 1.5px solid var(--authority); background: var(--authority-soft); border-radius: 12px; padding: 16px 20px; margin: 0 0 14px; box-shadow: var(--shadow); }
+  .hero .hl { font-size: clamp(15px, 2vw, 19px); font-weight: 700; letter-spacing: -0.005em; margin: 0 0 6px; color: var(--ink); }
+  .hero .hd { font-size: 13.5px; color: var(--muted); margin: 0; max-width: 92ch; }
+  .hero .hd b { color: var(--ink); font-weight: 500; }
+
+  /* ---- layer strip ---- */
+  .layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 0 0 8px; }
+  .layer { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .layer .ln { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+  .layer .lt { font-weight: 600; font-size: 14.5px; margin: 2px 0 4px; }
+  .layer .ld { font-size: 12.5px; color: var(--muted); }
+  .layer.L-gov { border-top: 3px solid var(--authority); } .layer.L-gov .ln { color: var(--authority); }
+  .layer.L-ct { border-top: 3px solid var(--operator); } .layer.L-ct .ln { color: var(--operator); }
+  .layer.L-ex { border-top: 3px solid var(--exec); } .layer.L-ex .ln { color: var(--exec); }
+  .layer.L-ref { border-top: 3px solid var(--harness); } .layer.L-ref .ln { color: var(--harness); }
+  .layer.L-rt { border-top: 3px solid var(--ok); } .layer.L-rt .ln { color: var(--ok); }
+
+  /* ---- section headings ---- */
+  h2 { font-size: 20px; font-weight: 600; margin: 52px 0 6px; letter-spacing: -0.005em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+  h2 .num { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: .06em; }
+  h2 .sec { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; }
+  h3.sh { font-size: 15px; font-weight: 600; margin: 26px 0 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+  h3.sh .sec { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11.5px; font-weight: 500; color: var(--muted); letter-spacing: .06em; }
+  .badge { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid; font-weight: 500; }
+  .badge.gov { color: var(--authority); border-color: var(--authority); }
+  .badge.ct { color: var(--operator); border-color: var(--operator); }
+  .badge.ex { color: var(--exec); border-color: var(--exec); }
+  .badge.au { color: var(--audit); border-color: var(--audit); }
+  .badge.hz { color: var(--harness); border-color: var(--harness); }
+  .badge.rec { color: var(--ok); border-color: var(--ok); }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 86ch; }
+
+  /* ---- figures / SVG ---- */
+  figure { margin: 0 0 12px; }
+  .canvas { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 10px 10px; overflow-x: auto; box-shadow: var(--shadow); }
+  .canvas svg { display: block; min-width: 940px; width: 100%; height: auto; }
+  figcaption { font-size: 13px; color: var(--muted); padding: 10px 6px 0; max-width: 100ch; }
+  svg text { font-family: 'IBM Plex Sans', 'Noto Sans TC', sans-serif; fill: var(--ink); }
+  svg .t  { font-size: 14px; font-weight: 600; }
+  svg .t2 { font-size: 12.5px; font-weight: 600; }
+  svg .s  { font-size: 11px; fill: var(--muted); }
+  svg .l  { font-size: 11px; fill: var(--muted); }
+  svg .lm { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; fill: var(--muted); letter-spacing: .06em; }
+  svg .lD { font-size: 11px; fill: var(--danger); }
+  svg .lA { font-size: 11px; fill: var(--authority); }
+  svg .lO { font-size: 11px; fill: var(--ok); }
+  svg .lH { font-size: 11px; fill: var(--harness); }
+  svg .e     { stroke: var(--edge); stroke-width: 1.6; fill: none; }
+  svg .e-ctl { stroke: var(--control); stroke-width: 1.5; fill: none; stroke-dasharray: 3 4; }
+  svg .e-au  { stroke: var(--authority); stroke-width: 1.6; fill: none; stroke-dasharray: 7 5; }
+  svg .e-dg  { stroke: var(--danger); stroke-width: 1.6; fill: none; }
+  svg .e-ok  { stroke: var(--ok); stroke-width: 1.6; fill: none; }
+  svg .e-op  { stroke: var(--operator); stroke-width: 1.5; fill: none; stroke-dasharray: 6 5; }
+  svg .mk     { fill: var(--edge); }
+  svg .mk-ctl { fill: var(--control); }
+  svg .mk-au  { fill: var(--authority); }
+  svg .mk-dg  { fill: var(--danger); }
+  svg .mk-ok  { fill: var(--ok); }
+  svg .mk-op  { fill: var(--operator); }
+  svg .n-auth { fill: var(--authority-soft); stroke: var(--authority); stroke-width: 1.5; }
+  svg .n-exec { fill: var(--exec-soft);      stroke: var(--exec);      stroke-width: 1.5; }
+  svg .n-aud  { fill: var(--audit-soft);     stroke: var(--audit);     stroke-width: 1.5; }
+  svg .n-adj  { fill: var(--adjud-soft);     stroke: var(--adjud);     stroke-width: 1.5; }
+  svg .n-ctl  { fill: var(--control-soft);   stroke: var(--control);   stroke-width: 1.5; stroke-dasharray: 5 4; }
+  svg .n-op   { fill: var(--operator-soft);  stroke: var(--operator);  stroke-width: 1.6; }
+  svg .n-ok   { fill: var(--ok-soft);        stroke: var(--ok);        stroke-width: 1.5; }
+  svg .n-dg   { fill: var(--danger-soft);    stroke: var(--danger);    stroke-width: 1.5; }
+  svg .n-hz   { fill: var(--harness-soft);   stroke: var(--harness);   stroke-width: 1.5; }
+  svg .n-pane { fill: none; stroke: var(--line); stroke-width: 1.4; }
+  svg .n-plain{ fill: var(--surface); stroke: var(--line); stroke-width: 1.3; }
+  svg .n-dash { fill: var(--surface); stroke: var(--audit); stroke-width: 1.4; stroke-dasharray: 5 4; }
+
+  /* ---- cards & panels ---- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .panel h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .panel h3 .rl { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; color: var(--muted); font-weight: 500; }
+  .panel ul, .panel ol { margin: 0; padding-left: 20px; font-size: 13.5px; }
+  .panel li { margin-bottom: 6px; }
+  .panel li:last-child { margin-bottom: 0; }
+  .panel .note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; }
+  .panel p.body { font-size: 13.5px; margin: 0; }
+  .panel.tone-auth { border-top: 3px solid var(--authority); }
+  .panel.tone-exec { border-top: 3px solid var(--exec); }
+  .panel.tone-aud  { border-top: 3px solid var(--audit); }
+  .panel.tone-adj  { border-top: 3px solid var(--adjud); }
+  .panel.tone-ctl  { border-top: 3px solid var(--control); }
+  .panel.tone-op   { border-top: 3px solid var(--operator); }
+  .panel.tone-hz   { border-top: 3px solid var(--harness); }
+  .panel.tone-dg   { border-top: 3px solid var(--danger); }
+  .panel.tone-ok   { border-top: 3px solid var(--ok); }
+  .role-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .rd-auth { background: var(--authority); } .rd-exec { background: var(--exec); } .rd-aud { background: var(--audit); }
+  .rd-adj { background: var(--adjud); } .rd-ctl { background: var(--control); } .rd-op { background: var(--operator); } .rd-hz { background: var(--harness); }
+  .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 13px; }
+  .kv dt { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11.5px; color: var(--muted); }
+  .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  @media (max-width: 720px) {
+    .kv { grid-template-columns: 1fr; gap: 2px; }
+    .kv dt { margin-top: 10px; }
+  }
+  .may { color: var(--ok); font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11px; letter-spacing: .06em; }
+  .mustnot { color: var(--danger); font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11px; letter-spacing: .06em; }
+  .must { color: var(--authority); font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 11px; letter-spacing: .06em; }
+  /* ---- value-state markers (Model Profile §1) ---- */
+  .pb {
+    display: inline-block; font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px;
+    font-weight: 500; letter-spacing: .07em; padding: 1px 8px; border-radius: 5px;
+    border: 1.5px solid var(--harness); color: var(--harness); background: var(--harness-soft); white-space: nowrap;
+  }
+  .na { display: inline-block; font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); white-space: nowrap; }
+  .tbd { display: inline-block; font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; font-weight: 500; letter-spacing: .08em; padding: 1px 8px; border-radius: 999px; border: 1px dashed var(--audit); color: var(--audit); background: var(--audit-soft); white-space: nowrap; }
+  .val { display: inline-block; font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 10.5px; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft); white-space: nowrap; }
+  .state-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 14px; margin: 0 0 10px; font-size: 13px; }
+  /* ---- reference profile table ---- */
+  table.tbl.prof-tbl { min-width: 900px; }
+  table.tbl.prof-tbl td:first-child { white-space: nowrap; }
+  table.tbl.prof-tbl code { font-size: 11px; }
+  .idcell { font-weight: 600; font-size: 12.5px; display: block; margin-top: 3px; white-space: normal; }
+  .profhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0 0 4px; }
+  .profhead .pid { font-family: 'IBM Plex Mono', 'Noto Sans TC', monospace; font-size: 12px; color: var(--harness); border: 1px solid var(--harness); border-radius: 999px; padding: 2px 9px; }
+  .auth-list { list-style: none; padding: 0; margin: 0; font-size: 13.5px; }
+  .auth-list li { margin-bottom: 6px; padding-left: 18px; position: relative; }
+  .auth-list li::before { content: "▸"; position: absolute; left: 0; color: var(--ok); }
+  .auth-list.no li::before { content: "✕"; color: var(--danger); font-size: 11px; top: 1px; }
+
+  /* ---- CSS flows ---- */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 0 0 10px; }
+  .flow .step { flex: 1 1 180px; min-width: 160px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
+  .flow .step .st { font-weight: 600; font-size: 13.5px; }
+  .flow .step .sd { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .flow .arrow { align-self: center; color: var(--edge); font-size: 18px; flex: none; padding: 0 2px; }
+  .flow .step.s-auth { border-color: var(--authority); background: var(--authority-soft); }
+  .flow .step.s-exec { border-color: var(--exec); background: var(--exec-soft); }
+  .flow .step.s-aud  { border-color: var(--audit); background: var(--audit-soft); }
+  .flow .step.s-ctl  { border-color: var(--control); background: var(--control-soft); border-style: dashed; }
+  .flow .step.s-op   { border-color: var(--operator); background: var(--operator-soft); }
+  .flow .step.s-ok   { border-color: var(--ok); background: var(--ok-soft); }
+  .flow .step.s-dg   { border-color: var(--danger); background: var(--danger-soft); }
+  .flow .step.s-hz   { border-color: var(--harness); background: var(--harness-soft); }
+  .flow .step.s-adj  { border-color: var(--adjud); background: var(--adjud-soft); }
+
+  /* ---- numbered checklist ---- */
+  .checklist { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; }
+  .checklist li { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 10px 40px; position: relative; font-size: 13.5px; box-shadow: var(--shadow); }
+  .checklist li::before { content: attr(data-n); position: absolute; left: 12px; top: 10px; width: 20px; height: 20px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok); font: 500 11px 'IBM Plex Mono', 'Noto Sans TC', monospace; display: grid; place-items: center; }
+  .checklist li b { font-weight: 600; }
+  .checklist.au li::before { background: var(--authority-soft); color: var(--authority); border-color: var(--authority); }
+  .checklist.op li::before { background: var(--operator-soft); color: var(--operator); border-color: var(--operator); }
+
+  /* ---- stacked layers ---- */
+  .stack { display: grid; gap: 6px; max-width: 900px; }
+  .stack .lyr { border-radius: 10px; padding: 14px 16px; border: 1.5px solid; background: var(--surface); box-shadow: var(--shadow); }
+  .stack .lyr .lh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; font-weight: 600; font-size: 14.5px; }
+  .stack .lyr .lh .tag { font: 500 10.5px 'IBM Plex Mono', 'Noto Sans TC', monospace; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+  .stack .lyr .lb { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stack .lyr.gov { border-color: var(--authority); } .stack .lyr.gov .tag { color: var(--authority); border-color: var(--authority); }
+  .stack .lyr.prof { border-color: var(--harness); background: var(--harness-soft); } .stack .lyr.prof .tag { color: var(--harness); border-color: var(--harness); }
+  .stack .lyr.run { border-color: var(--ok); } .stack .lyr.run .tag { color: var(--ok); border-color: var(--ok); }
+  .stack .down { text-align: center; color: var(--edge); font-size: 20px; line-height: 1; }
+  .stack .down small { display: block; font: 500 11px 'IBM Plex Mono', 'Noto Sans TC', monospace; color: var(--muted); }
+
+  /* ---- tables ---- */
+  table.tbl { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  table.tbl th, table.tbl td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.tbl th { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--code-bg); }
+  table.tbl tr:last-child td { border-bottom: 0; }
+  table.tbl td.keep { color: var(--ok); }
+  table.tbl td.push { color: var(--harness); }
+  .tblwrap { overflow-x: auto; }
+  @media (max-width: 640px) {
+    .flow .arrow { flex: 1 0 100%; text-align: center; padding: 0; line-height: 1; }
+    .flow .arrow::before { content: "↓"; }
+    .flow .arrow span { display: none; }
+  }
+  @media (max-width: 460px) {
+    body { padding: 0 14px 64px; }
+    .grid, .grid-2, .grid-3, .layers, .checklist { grid-template-columns: 1fr; }
+    .panel { padding: 14px 15px; }
+    .hero { padding: 14px 15px; }
+  }
+
+  /* ---- callouts ---- */
+  .callout { border-left: 4px solid var(--authority); background: var(--surface); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 13.5px; margin: 10px 0 0; box-shadow: var(--shadow); }
+  .callout.dg { border-left-color: var(--danger); }
+  .callout.hz { border-left-color: var(--harness); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.op { border-left-color: var(--operator); }
+  .callout.au { border-left-color: var(--audit); }
+  .callout b { font-weight: 600; }
+  .quote { border: 1.5px solid var(--authority); background: var(--authority-soft); border-radius: 10px; padding: 12px 18px; margin: 12px 0; font-size: 15px; font-weight: 600; text-align: center; box-shadow: var(--shadow); }
+  .quote.dg { border-color: var(--danger); background: var(--danger-soft); }
+  footer.src { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 18px; font-size: 13px; color: var(--muted); }
+  footer.src .kv { margin-top: 8px; }
+  footer.src code { font-size: 11.5px; }
+</style>
+</head>
+<body>
+<main>
+<header class="page">
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="切換色彩主題">主題：系統</button>
+  <p class="eyebrow">Minimal Operational Governance v2.1 · Adopted / Frozen 2026-10-01 · non-normative map</p>
+  <h1>Minimal Operational Governance v2.1 — 架構地圖</h1>
+  <p class="subtitle">Outcome Contract · derived contracts · Lightweight／Formal 雙 lane · 六個治理角色 · deterministic routing · Spec Integration Audit · root role session（繁體中文版 · 2026-10-01）</p>
+  <p class="lede">本頁把 Governance v2.1 畫成一張可一次讀完的治理地圖。v2 line 自 v2.0 起的核心只有一件事：人類 acceptor <b>一次</b>接受並授權 <b>Outcome Contract</b>（goal、scope、constraints、acceptance boundary），之後的 Spec／Ticket derivation、實作、審查、修正到完成都在該邊界內由具相應 authority 的 Agents 自主完成；§4.7 為 v2.0 新增的獨立 audit instance——<b>Spec Integration Audit</b>；Spec review 與獨立 implementation authorization 改為 §5.2 的 opt-in reserved boundary。六角色的組成、§2.3 四項 independence properties、R1／R2／一次 Alternate／Final Adjudication、disposition 邊界、worklog 與 §1.5 三步 recovery 都沿用 v1.0（§2.1 的 Design Authority 列依 Appendix B.1 N-1 新增 derivation 與 boundary determination）。<b>v2.1（2026-10-01）只改一處語義</b>：§2.2 把實際 assignment 分成<b>被派工的 assignment</b>與 <b>root role session</b>（Orchestrator、Lightweight direct execution 中擔任 Executor 的 session），§5.1 隨之補兩處；其餘條文與 v2.0 相同（第 04、10 節）。治理術語保留英文原文。</p>
+  <div class="nonnorm"><b>本頁是 derived、non-normative 的 visualization／navigation aid</b>，由四份凍結的 Markdown（Minimal v2.1 與 orch-default v2.1 凍結於 2026-10-01；Model Profile default v2.4 凍結於 2026-10-02；impl-default v2 凍結於 2026-09-22）產生，不是第二份治理來源，也不新增任何規則、角色、lane、audit round、approval layer 或 gate。與 Markdown 不一致時，一律以 Markdown 為準（檔案與 md5 見頁尾「追溯」）。</div>
+  <div class="chips">
+    <span class="chip hot">Minimal Operational Governance v2.1 · Adopted / Frozen 2026-10-01</span>
+    <span class="chip ok">Outcome Contract：人類接受一次；derived contracts 由 Design Authority 產生</span>
+    <span class="chip au">Spec Integration Audit（§4.7）· 每份 Spec MUST</span>
+    <span class="chip ctl">v2.1 · root role session 與被派工的 assignment 分開核對（§2.2）</span>
+    <span class="chip hz">Reference Model Profile · default v2.4（全部 identifier 有預設值，無 TBD；Codex 只作 primary_reviewer）</span>
+    <span class="chip hz">Implementation Profile · impl-default v2</span>
+    <span class="chip ctl">Reference Orchestrator Contract · orch-default v2.1（Formal lane）</span>
+  </div>
+  <nav class="chips" aria-label="章節">
+    <a class="chip" href="#s1">1 核心 operating model</a><a class="chip" href="#s2">2 Outcome Contract 與雙 lane</a><a class="chip" href="#s3">3 Authority map 與 routing</a><a class="chip" href="#s4">4 Model mapping 與 Profile v2.4</a><a class="chip ctl" href="#rootrole">↳ Root role session</a><a class="chip hz" href="#profile">↳ default v2.4 表</a><a class="chip" href="#s5">5 Independent audit</a><a class="chip au" href="#sia">↳ Spec Integration Audit</a><a class="chip" href="#s6">6 Worklog</a><a class="chip" href="#s7">7 Boundary 與 operator</a><a class="chip" href="#s8">8 治理／實作邊界</a><a class="chip hz" href="#s9">9 Reusable package v2.1</a><a class="chip ok" href="#s10">10 v1.0 → v2.0 → v2.1 與採用紀錄</a><a class="chip" href="#trace">追溯</a>
+  </nav>
+</header>
+
+<!-- ============ hero ============ -->
+<div class="hero">
+  <p class="hl">Human approves the outcome contract once; authorized Agents autonomously design, decompose, implement, review, correct and complete within that boundary.</p>
+  <p class="hd">人類 acceptor 一次接受並授權 Outcome Contract（§1.2）。之後正常的 <b>Spec／Ticket derivation、implementation、technical clarification／question routing、verification、review／independent audit、findings、rework／re-verification、Alternate Review／Final Adjudication、Spec Integration Audit 及 phase progression／completion</b>，MUST 由具有相應 authority 的 AI Agents 自主執行、裁決、留下 durable records 並繼續。Operator interaction 是 §1.5 的 exceptional boundary，不是正常 workflow gate。</p>
+</div>
+
+<!-- ============ layer strip ============ -->
+<div class="layers" aria-label="分層">
+  <div class="layer L-gov"><div class="ln">治理層 · governance</div><div class="lt">authority · roles · routing · audit semantics</div><div class="ld">§1、§2、§4、§5。跨專案穩定；只能經本治理的版本變更並記錄依據與授權。v2.1 已 frozen，之後的變更以新版本承載（§5.3）。</div></div>
+  <div class="layer L-ct"><div class="ln">契約層 · outcome contract</div><div class="lt">Outcome Contract ＋ derived contracts</div><div class="ld">§1.2、§3.1。人類 acceptor 一次接受並授權 Outcome Contract；Formal 下 Spec／Tickets 是 Design Authority 在其內產生的 derived contracts，附 derivation record，不需逐份核准。</div></div>
+  <div class="layer L-ex"><div class="ln">執行層 · execution</div><div class="lt">Lightweight／Formal · worklog · Spec Integration Audit · completion</div><div class="ld">§3.3–§3.8、§4.7。兩條 lane，不設第三條；每次執行留下 durable worklog；Formal 每份 Spec 另有 Spec Integration Audit。</div></div>
+  <div class="layer L-ref"><div class="ln">參考層 · reusable package v2.1</div><div class="lt">Model Profile v2.4 · Implementation Profile v2 · Orchestrator Contract v2.1</div><div class="ld">從屬於治理的 mapping／HOW references，由 Project Bindings 依 §5.1 選用；不改變 authority（第 09 節）。</div></div>
+  <div class="layer L-rt"><div class="ln">Runtime–Harness 層 · project-specific runtime</div><div class="lt">definitions loading · state · schema · Git · dispatch mechanism</div><div class="ld">§5.4 全部下放。治理不規定 state machine、validator、檔名、trailer 或 rollover 演算法。</div></div>
+</div>
+
+<!-- ============ 1. operating model ============ -->
+<h2 id="s1"><span class="num">01</span>核心 operating model<span class="badge gov">governance</span><span class="sec">§1.1 · §1.2 · §1.4 · §1.5</span></h2>
+<p class="sub">人類的固定職責是一次接受並授權 Outcome Contract，以及 §1.5 四項 boundary 內的決定；其餘保留給人的動作<b>由 Project Bindings 明確枚舉</b>（§5.2，採 opt-in）。契約成立之後，判斷不是停止條件，而是 routing 條件——需要別的 authority 時派工給該 authority，取得可追溯裁決後繼續，直到自然完成。</p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 530" role="img" aria-label="核心 operating model：人類 acceptor 一次接受並授權 Outcome Contract，內容為 goal、scope、constraints 與 acceptance boundary，授權涵蓋規劃、分解、實作、審查、修正至完成。AI Agents 在該邊界內自主完成 Spec 與 Ticket derivation、implementation、clarification routing、verification、independent audit、findings 與 rework、Alternate Review 與 Final Adjudication、Spec Integration Audit、phase progression；到達自然完成。只有 §1.5 的四項 boundary 才回到人類：Outcome Contract 的接受與授權本身；需要 re-authorization 的 boundary 變更，含 Design Authority 無法確立在 boundary 內而 fail-closed 的路徑；Project Bindings 依 §5.2 明確列舉的 reserved boundaries；必要外部權限、能力、資源或證據無法由授權內取得且無合法替代。停止只影響該路徑。">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="a1o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-op" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <text class="lm" x="170" y="24" text-anchor="middle">HUMAN APPROVES ONCE</text>
+      <text class="lm" x="550" y="24" text-anchor="middle">AI-AUTONOMOUS EXECUTION WITHIN THE BOUNDARY</text>
+      <text class="lm" x="930" y="24" text-anchor="middle">NATURAL COMPLETION</text>
+
+      <!-- Human -->
+      <rect class="n-op" x="30" y="44" width="280" height="176" rx="9"/>
+      <text class="t" x="170" y="72" text-anchor="middle">人類 acceptor</text>
+      <text class="s" x="170" y="92" text-anchor="middle">operator 或其明確指定的人類代理</text>
+      <text class="s" x="48" y="118">· 一次接受並授權 Outcome Contract：</text>
+      <text class="s" x="48" y="136">　goal · scope · constraints · acceptance boundary</text>
+      <text class="s" x="48" y="156">· 授權明示涵蓋規劃、分解、實作、審查、</text>
+      <text class="s" x="48" y="174">　修正至完成（§3.1 第 4 項）</text>
+      <text class="s" x="48" y="194">· boundary re-authorization（§1.2）</text>
+      <text class="s" x="48" y="212">· Bindings 依 §5.2 保留的 reserved boundaries</text>
+
+      <path class="e" d="M310 110 L366 110" marker-end="url(#a1)"/>
+
+      <!-- AI -->
+      <rect class="n-auth" x="370" y="44" width="360" height="352" rx="9"/>
+      <text class="t" x="550" y="70" text-anchor="middle">AI Agents 依 authority 在 boundary 內自主執行</text>
+      <rect class="n-plain" x="384" y="84" width="332" height="26" rx="6"/><text class="s" x="396" y="101">Spec／Ticket derivation（Design Authority · derivation record）</text>
+      <rect class="n-plain" x="384" y="114" width="332" height="26" rx="6"/><text class="s" x="396" y="131">implementation（Executor 選擇 HOW）</text>
+      <rect class="n-plain" x="384" y="144" width="332" height="26" rx="6"/><text class="s" x="396" y="161">technical clarification · question routing</text>
+      <rect class="n-plain" x="384" y="174" width="332" height="26" rx="6"/><text class="s" x="396" y="191">self-verification · applicable gates</text>
+      <rect class="n-plain" x="384" y="204" width="332" height="26" rx="6"/><text class="s" x="396" y="221">review · independent audit · findings</text>
+      <rect class="n-plain" x="384" y="234" width="332" height="26" rx="6"/><text class="s" x="396" y="251">rework · re-verification</text>
+      <rect class="n-plain" x="384" y="264" width="332" height="26" rx="6"/><text class="s" x="396" y="281">Alternate Review · Final Adjudication</text>
+      <rect class="n-plain" x="384" y="294" width="332" height="26" rx="6"/><text class="s" x="396" y="311">Spec Integration Audit（§4.7，每份 Spec）</text>
+      <rect class="n-plain" x="384" y="324" width="332" height="26" rx="6"/><text class="s" x="396" y="341">Design Authority phase acceptance</text>
+      <rect class="n-plain" x="384" y="354" width="332" height="26" rx="6"/><text class="s" x="396" y="371">phase progression · completion reporting</text>
+
+      <path class="e" d="M730 110 L786 110" marker-end="url(#a1)"/>
+
+      <!-- Completion -->
+      <rect class="n-ok" x="790" y="44" width="280" height="194" rx="9"/>
+      <text class="t" x="930" y="72" text-anchor="middle">自然完成</text>
+      <text class="s" x="808" y="98">· 授權工作全部完成</text>
+      <text class="s" x="808" y="118">· 或剩餘工作皆受 §1.5 真正 boundary 阻擋</text>
+      <text class="s" x="808" y="138">· durable worklog ＋ audit records</text>
+      <text class="s" x="808" y="158">· 含每份 Spec 的 §4.7 audit 與 phase acceptance</text>
+      <text class="s" x="808" y="178">· run completion · work item completion ·</text>
+      <text class="s" x="808" y="196">　phase acceptance · release authorization</text>
+      <text class="s" x="808" y="214">　MUST 分別陳述，不得互相冒充（§3.8）</text>
+
+      <!-- exception -->
+      <path class="e-op" d="M550 396 L550 420" marker-end="url(#a1o)"/>
+      <text class="l" x="562" y="412">僅限 §1.5 四項</text>
+      <rect class="n-op" x="370" y="420" width="360" height="100" rx="9"/>
+      <text class="t2" x="550" y="440" text-anchor="middle">Legitimate boundaries（§1.5 · 唯一權威清單）</text>
+      <text class="s" x="384" y="458">① Outcome Contract 的接受與授權本身</text>
+      <text class="s" x="384" y="474">② 需 re-authorization 的 boundary 變更（含 DA fail-closed 的路徑）</text>
+      <text class="s" x="384" y="490">③ Project Bindings 依 §5.2 明確列舉的 reserved boundaries</text>
+      <text class="s" x="384" y="506">④ 必要外部權限／能力／資源／證據無法取得，且無合法替代</text>
+
+      <path class="e-op" d="M370 470 L200 470 L200 224" marker-end="url(#a1o)"/>
+      <text class="l" x="285" y="462" text-anchor="middle">只停止受影響路徑</text>
+    </svg>
+  </div>
+  <figcaption>圖 1 · 契約成立後，AI 側的每一格都是 Agents 自己完成並留下紀錄的工作，不是等待人工核可的關卡；<b>Spec／Ticket derivation 與 Spec Integration Audit</b> 是 v2.0 新進入這一側的兩格。回到人類的虛線只有 §1.5 的<b>四項</b>——這是 non-delegable acts 的唯一權威清單，§3.4、§5.2 引用之而不另行定義。其中 ③ 採 opt-in：Spec review 與獨立的 implementation authorization <b>預設不保留</b>（§5.2）。停止只影響該路徑；無關且不會預判該決定的工作 SHOULD 繼續。</figcaption>
+</figure>
+
+<h3 class="sh">五項共同 invariants（§1.1 為索引；完整規範以所引條文為唯一 authoritative definition）<span class="sec">§1.1</span></h3>
+<div class="grid-3">
+  <div class="panel tone-ctl"><h3><span class="role-dot rd-ctl"></span>1 · Autonomous orchestration</h3><p class="body">→ §1.4、§1.5、§3.8。Orchestrator 啟動後，work item 完成、phase boundary、replacement、findings、裁決、rollover 本身 MUST NOT 成為等待 operator 的理由；只有 §1.5 四項 boundary 才可停止受影響路徑；run 在授權工作完成或剩餘工作皆受真正 boundary 阻擋時才可結束。</p></div>
+  <div class="panel tone-hz"><h3><span class="role-dot rd-hz"></span>2 · Explicit roles and verifiable bindings</h3><p class="body">→ §2.1–§2.3。每個實際使用的 Agent／Subagent MUST 有明確 definition（responsibility、authority、prohibited authority、independence requirement）；每個可 dispatch identifier MUST 有明確 mapping；每個實際 assignment MUST 可驗證。核對的內容依 §2.2 分兩種（第 04 節）。</p></div>
+  <div class="panel tone-aud"><h3><span class="role-dot rd-aud"></span>3 · Independent audit integrity</h3><p class="body">→ §2.3、§4.1–§4.7。所有正式 audit MUST 遵守 §2.3 四項 properties；一旦被要求或選擇，均適用同一套 R1／R2／一次 Alternate／Final Adjudication 流程，不另設 lightweight review；Spec Integration Audit 適用同一套規則。</p></div>
+  <div class="panel tone-auth"><h3><span class="role-dot rd-auth"></span>4 · Agent-autonomous decisions</h3><p class="body">→ §1.3、§2.4。角色權責以 §2.1 表為唯一權威定義；substantive decision owner 與 routing 依 §2.4；Orchestrator MUST 依表派工，MUST NOT 判斷設計語義、finding severity 或 evidence sufficiency。</p></div>
+  <div class="panel tone-exec"><h3><span class="role-dot rd-exec"></span>5 · Mandatory durable worklog</h3><p class="body">→ §3.7。每個已執行 work item MUST 有足以支援 traceability、handoff 與 recovery 的 durable worklog；§3.7 是唯一規範定義（第 06 節）。</p></div>
+  <div class="panel tone-op"><h3><span class="role-dot rd-op"></span>三種不同權限</h3><p class="body"><b>接受工作要求</b>、<b>授權執行</b>、<b>確認設計語義</b>是三種權限。前兩者屬人類 acceptor（或其已記錄的 standing authorization），後者屬 Design Authority。任一角色遇到另一種權限的問題只能 route，不能代行（§1.2）。在已接受的 Outcome Contract 內產生 derived contract 是設計行為，<b>不是接受或授權行為</b>（§5.2）。</p></div>
+</div>
+
+<div class="quote">Need for judgement is not a stop condition. It is a routing condition.</div>
+
+<div class="grid-2">
+  <div class="panel tone-ctl">
+    <h3>正常模式<span class="rl">§1.4</span></h3>
+    <div class="flow" style="margin:0">
+      <div class="step"><div class="st">problem</div></div>
+      <div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">identify required authority</div></div>
+      <div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">dispatch responsible Agent</div></div>
+      <div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">traceable decision or ruling</div></div>
+      <div class="arrow"><span>→</span></div>
+      <div class="step s-ok"><div class="st">continue authorized execution</div></div>
+    </div>
+    <p class="note">Lightweight direct execution 不要求先啟動完整 Orchestrator run；仍 MUST 遵守 authority routing，需要其他 authority 時透過配置的派工機制或交由 Orchestrator routing。涉及 independent review／adjudication 的派工 MUST 遵守 §2.3。</p>
+  </div>
+  <div class="panel tone-dg">
+    <h3>以下本身 MUST NOT 成為等待 operator 的理由<span class="rl">§1.4</span></h3>
+    <ul class="auth-list no">
+      <li>Work item／Ticket 完成或 phase boundary</li>
+      <li>需要新的 Executor／Reviewer session 或 agent replacement</li>
+      <li>Findings、implementation rework 或 audit escalation</li>
+      <li>Design Authority decision、Final Adjudication 或 phase adjudication</li>
+      <li>Context／session rollover</li>
+      <li>Promotion 所需的授權內設計與規劃工作</li>
+    </ul>
+    <p class="note">Run-to-completion 不授權弱化 gate、捏造 evidence、隱性縮減 scope，或跨越保留權限（§1.5）。</p>
+  </div>
+</div>
+
+<!-- ============ 2. outcome contract + lanes ============ -->
+<h2 id="s2"><span class="num">02</span>Outcome Contract、derived contracts 與雙 lane<span class="badge ct">contract</span><span class="sec">§1.2 · §3.1 – §3.6 · §5.3</span></h2>
+<p class="sub">第一級 abstraction 仍是 Accepted Work Contract；契約的成立依據是 §3.1 的七項 properties，不是文件形式。v2.0 把由人類 acceptor 接受並授權的 Work Contract 命名為 <b>Outcome Contract</b>：Lightweight 下就是被接受的 prompt、brief 或 Jira item；Formal 下 Spec 與 Tickets 是 Design Authority 在 Outcome Contract 內產生的 <b>derived contracts</b>，其接受與授權來自 Outcome Contract，不來自 Design Authority，也不需 acceptor 逐份核准。</p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 948" role="img" aria-label="Work request 經可選的 Grill 成為人類 acceptor 一次接受並授權的 Outcome Contract。Lightweight 下 Outcome Contract 就是被接受的 prompt、brief 或 Jira item，直接執行、自我驗證、依 §4.1 決定是否 independent audit、維護 worklog 後結案。Formal 下 Design Authority 在 Outcome Contract 內 derive Spec，附 derivation record，內容為依據、boundary determination、該 Spec 所分配的 acceptance boundary 部分與受影響工作；再 derive Tickets；啟動 Orchestrator run-to-completion；每張 Ticket 實作、self-verification、gates 與強制 independent audit；一份 Spec 的全部 Tickets 結案後執行 Spec Integration Audit；再由 Design Authority phase acceptance；繼續至 run completion。Lightweight 遇到 ambiguity 交 Design Authority 依 §3.6 評估，預設產出 decision record 後留在 Lightweight，語義必須被設計或需要多 execution units 時才 promote 進 Formal；promote 後的 Spec 是原 Outcome Contract 內的 derived contract。">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="b1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-au" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <!-- top row -->
+      <rect class="n-plain" x="40" y="24" width="200" height="56" rx="8"/>
+      <text class="t2" x="140" y="48" text-anchor="middle">Work request</text>
+      <text class="s" x="140" y="67" text-anchor="middle">prompt · brief · Jira · 需求</text>
+
+      <path class="e" d="M240 52 L296 52" marker-end="url(#b1)"/>
+
+      <rect class="n-ctl" x="300" y="18" width="240" height="76" rx="8"/>
+      <text class="t2" x="420" y="42" text-anchor="middle">Grill（可選，§3.2）</text>
+      <text class="s" x="420" y="61" text-anchor="middle">釐清契約的 methodology（HOW）</text>
+      <text class="s" x="420" y="79" text-anchor="middle">不創造 authority；方法見 Appendix A.4</text>
+
+      <path class="e" d="M540 52 L596 52" marker-end="url(#b1)"/>
+
+      <rect class="n-op" x="600" y="12" width="460" height="88" rx="8"/>
+      <text class="t" x="830" y="38" text-anchor="middle">Outcome Contract — 人類 acceptor 一次接受＋授權</text>
+      <text class="s" x="830" y="58" text-anchor="middle">goal · scope · constraints · acceptance boundary（§1.2）</text>
+      <text class="s" x="830" y="76" text-anchor="middle">授權明示涵蓋規劃、分解、實作、審查、修正至完成，或明示 §5.2 保留（§3.1 第 4 項）</text>
+      <text class="s" x="830" y="93" text-anchor="middle">七項 properties · acceptance boundary MUST 可觀察（§3.1 第 3 項）</text>
+
+      <!-- bypass -->
+      <path class="e" d="M140 80 L140 122 L620 122 L620 104" marker-end="url(#b1)"/>
+      <text class="l" x="360" y="138" text-anchor="middle">契約已足夠時，不必 Grill</text>
+
+      <!-- split -->
+      <path class="e" d="M830 100 L830 156 L285 156 L285 182" marker-end="url(#b1)"/>
+      <path class="e" d="M830 156 L830 182" marker-end="url(#b1)"/>
+
+      <!-- Lightweight lane -->
+      <rect class="n-pane" x="40" y="186" width="490" height="400" rx="10"/>
+      <rect class="n-exec" x="40" y="186" width="490" height="34" rx="10"/>
+      <text class="t2" x="60" y="209">Lightweight</text>
+      <text class="lm" x="510" y="208" text-anchor="end">DIRECT EXECUTION</text>
+      <text class="s" x="60" y="240">Outcome Contract ＝ 被接受的 prompt／brief／Jira item（§1.2）</text>
+      <text class="s" x="60" y="258">eligibility：Executor 不需對 properties 1–4 作任何假設（§3.3）</text>
+
+      <rect class="n-plain" x="64" y="272" width="442" height="42" rx="7"/>
+      <text class="t2" x="80" y="289">Direct execution</text>
+      <text class="s" x="80" y="306">不要求產生 Spec／Tickets，可不啟動 Orchestrator</text>
+      <path class="e" d="M285 314 L285 328" marker-end="url(#b1)"/>
+
+      <rect class="n-plain" x="64" y="328" width="442" height="42" rx="7"/>
+      <text class="t2" x="80" y="345">Self-verification ＋ applicable gates</text>
+      <text class="s" x="80" y="362">正常與失敗行為、變更引入的實質風險（§3.5）</text>
+      <path class="e" d="M285 370 L285 384" marker-end="url(#b1)"/>
+
+      <rect class="n-dash" x="64" y="384" width="442" height="42" rx="7"/>
+      <text class="t2" x="80" y="401">Independent audit — required／elected 時</text>
+      <text class="s" x="80" y="418">依 contract、assurance policy、使用者要求或裁決（§4.1）</text>
+      <path class="e" d="M285 426 L285 440" marker-end="url(#b1)"/>
+
+      <rect class="n-plain" x="64" y="440" width="442" height="42" rx="7"/>
+      <text class="t2" x="80" y="457">Durable worklog</text>
+      <text class="s" x="80" y="474">與 Formal 相同的最低內容要求（§3.7）</text>
+      <path class="e" d="M285 482 L285 496" marker-end="url(#b1)"/>
+
+      <rect class="n-ok" x="64" y="496" width="442" height="70" rx="7"/>
+      <text class="t2" x="80" y="515">Close</text>
+      <text class="s" x="80" y="532">未要求 audit 時如實標示「完成且依 policy 未要求</text>
+      <text class="s" x="80" y="547">independent audit」，不得標為 audit PASS（§4.1）；</text>
+      <text class="s" x="80" y="561">Lightweight 無 Spec，§4.7 不適用</text>
+
+      <!-- Formal lane -->
+      <rect class="n-pane" x="570" y="186" width="490" height="574" rx="10"/>
+      <rect class="n-auth" x="570" y="186" width="490" height="34" rx="10"/>
+      <text class="t2" x="590" y="209">Formal ／ SDD</text>
+      <text class="lm" x="1040" y="208" text-anchor="end">SPEC + TICKETS + ORCHESTRATOR</text>
+      <text class="s" x="590" y="240">一律完整。即使只有一張 Ticket，也不另設</text>
+      <text class="s" x="590" y="258">Formal-lite 或第三條 lane（§3.4）</text>
+
+      <rect class="n-auth" x="594" y="272" width="442" height="60" rx="7"/>
+      <text class="t2" x="610" y="289">Design Authority：Spec derivation（或引用有效 Spec）</text>
+      <text class="s" x="610" y="306">derivation record：依據 · boundary determination ·</text>
+      <text class="s" x="610" y="322">該 Spec 所分配的 acceptance boundary 部分 · 受影響工作（§1.2）</text>
+      <path class="e" d="M815 332 L815 346" marker-end="url(#b1)"/>
+
+      <rect class="n-auth" x="594" y="346" width="442" height="42" rx="7"/>
+      <text class="t2" x="610" y="363">Design Authority：Ticket derivation</text>
+      <text class="s" x="610" y="380">引用或衍生自 Spec 的 verification contract，不得重定義（§3.4）</text>
+      <path class="e" d="M815 388 L815 402" marker-end="url(#b1)"/>
+
+      <rect class="n-ctl" x="594" y="402" width="442" height="42" rx="7"/>
+      <text class="t2" x="610" y="419">Orchestrator run-to-completion</text>
+      <text class="s" x="610" y="436">dispatch · routing · gates · recovery · continuation</text>
+      <path class="e" d="M815 444 L815 458" marker-end="url(#b1)"/>
+
+      <rect class="n-plain" x="594" y="458" width="442" height="42" rx="7"/>
+      <text class="t2" x="610" y="475">[per Ticket] Implementation ＋ self-verification ＋ gates</text>
+      <text class="s" x="610" y="492">Executor 自主選擇 HOW；維護 worklog</text>
+      <path class="e" d="M815 500 L815 514" marker-end="url(#b1)"/>
+
+      <rect class="n-aud" x="594" y="514" width="442" height="42" rx="7"/>
+      <text class="t2" x="610" y="531">[per Ticket] Mandatory independent audit</text>
+      <text class="s" x="610" y="548">R1／R2／一次 Alternate／Final Adjudication（§4）→ Close／Rework／Route</text>
+      <path class="e" d="M815 556 L815 570" marker-end="url(#b1)"/>
+
+      <rect class="n-aud" x="594" y="570" width="442" height="58" rx="7"/>
+      <text class="t2" x="610" y="588">[per Spec] Spec Integration Audit（§4.7）</text>
+      <text class="s" x="610" y="605">全部 Tickets 結案後、phase acceptance 前；獨立 audit instance，</text>
+      <text class="s" x="610" y="620">不是 R3；DA／Orchestrator／Bindings 均不得豁免</text>
+      <path class="e" d="M815 628 L815 642" marker-end="url(#b1)"/>
+
+      <rect class="n-ok" x="594" y="642" width="442" height="72" rx="7"/>
+      <text class="t2" x="610" y="661">Design Authority phase acceptance · Close</text>
+      <text class="s" x="610" y="678">跨 Ticket invariants、整合行為、累積 evidence、未結 follow-up；</text>
+      <text class="s" x="610" y="693">phase acceptance MUST 引用已 closure 的 §4.7 record（§3.8）；</text>
+      <text class="s" x="610" y="708">繼續至 run completion</text>
+      <text class="l" x="815" y="742" text-anchor="middle">Spec review 與獨立 implementation authorization 預設不保留（§5.2 opt-in）</text>
+
+      <!-- DA assessment -->
+      <path class="e-au" d="M285 590 L285 790 L296 790" marker-end="url(#b1a)"/>
+      <rect class="n-auth" x="300" y="774" width="500" height="162" rx="9"/>
+      <text class="t2" x="550" y="798" text-anchor="middle">Design Authority 評估（§3.6）</text>
+      <text class="s" x="314" y="822">A · 不改變任何 accepted 語義 → decision record，留在 Lightweight（預設結果）</text>
+      <text class="s" x="314" y="842">B · 語義必須被設計 → Spec，進入 Formal，任一情況即成立：</text>
+      <text class="s" x="314" y="858">　無 accepted baseline 可錨定、且其他工作將依賴它；</text>
+      <text class="s" x="314" y="874">　會改變 accepted 語義（同時是 §5.3 contract change）；parent 將必要選擇留待下游決定</text>
+      <text class="s" x="314" y="894">C · 多 execution units／dependencies／跨 session 協調 → 完整 Formal</text>
+      <text class="s" x="314" y="912">Reviewer 與 Final Adjudicator 不得 promote（§3.6）</text>
+      <text class="s" x="314" y="928">promote 後的 Spec 是原 Outcome Contract 內的 derived contract</text>
+
+      <path class="e-au" d="M300 830 L200 830 L200 590" marker-end="url(#b1a)"/>
+      <text class="lA" x="194" y="740" text-anchor="end">留在 Lightweight</text>
+      <text class="lA" x="194" y="756" text-anchor="end">decision record</text>
+
+      <path class="e-au" d="M800 830 L940 830 L940 764" marker-end="url(#b1a)"/>
+      <text class="lA" x="874" y="848" text-anchor="middle">promote → Formal</text>
+    </svg>
+  </div>
+  <figcaption>圖 2 · 兩條 lane，不設第三條。Lightweight 的 audit 步驟以虛線表示「依 §4.1 判定是否執行」；Formal 的 Ticket audit 與 Spec Integration Audit 都是強制。與 v1.0 相比，Formal 的前兩格從「人類 accept Spec、authorize implementation」改為 <b>Design Authority derive</b>（附 derivation record），最後多了一格 <b>Spec Integration Audit</b>。B、C 是進入同一條 Formal lane 的不同理由（§3.4 明文不設 Formal-lite 或第三條 lane）。</figcaption>
+</figure>
+
+<h3 class="sh">Work Contract 的七項 properties<span class="sec">§3.1</span></h3>
+<ol class="checklist au">
+  <li data-n="1"><b>Intent and outcome</b> — 要解決什麼問題，預期產出或行為為何。</li>
+  <li data-n="2"><b>Scope and boundaries</b> — 可變更範圍、重要 non-scope 與適用限制。</li>
+  <li data-n="3"><b>Acceptance and verification</b> — 對每條需要 verification 的 AC，定義或引用可觀察的 PASS／FAIL 語義與充分證據要求。<b>對 Outcome Contract，acceptance boundary MUST 可觀察到足以判定每份 derived Spec 的 AC 是否涵蓋其 derivation record 所分配的部分，以及全部 derived Specs 合起來是否涵蓋它</b>；Spec 的具體 AC 由 Design Authority 在該 boundary 內 derive。Tickets、Executors 與下游 Skills MUST NOT 自行重新定義。</li>
+  <li data-n="4"><b>Authority and authorization</b> — 誰接受此要求、允許哪些執行與決定。<b>對 Outcome Contract，授權 MUST 明示涵蓋規劃、分解、實作、審查、修正至完成，或明示依 §5.2 保留的動作。</b></li>
+  <li data-n="5"><b>Relevant context</b> — 必要依賴、適用既有契約與已知風險。</li>
+  <li data-n="6"><b>Assurance path</b> — 採用何種 lane，以及依 §4.1 確定的 audit 與其他 gate 要求。</li>
+  <li data-n="7"><b>Stable reference</b> — 可識別、可持久追溯的 accepted 內容或版本。</li>
+</ol>
+<div class="callout"><b>這七項可以由短 prompt、既有 accepted decisions 與專案預設共同滿足</b>，不要求每項各設欄位，也不要求新增文件。未明示的例行 implementation detail 由 Executor 決定；但契約 properties 的缺口<b>不得以 implementation choice 名義補齊</b>。</div>
+
+<div class="grid-2" style="margin-top:14px">
+  <div class="panel tone-op">
+    <h3><span class="role-dot rd-op"></span>accepted 語義 vs accepted contract<span class="rl">§1.2</span></h3>
+    <ul>
+      <li><b>accepted 語義</b>專指 acceptor 接受的 Outcome Contract 之 intent、scope、constraints 與 acceptance semantics；derived contract 的內容是 Design Authority 的設計，其變更依 §5.3 區分。</li>
+      <li><b>accepted Work Contract／accepted contract</b> 涵蓋 Outcome Contract 及其有效 derived contracts；finding、gate 與 completion 所對照的契約條款包含 derived contract 的 AC、invariant 與 gate。</li>
+      <li>每份 derived contract MUST 可追溯至其 Outcome Contract 條款，並附 Design Authority 的 <b>derivation record</b>（依據、boundary determination、該 Spec 所分配的 Outcome Contract acceptance boundary 部分、受影響工作）。</li>
+    </ul>
+    <p class="note">Agents MUST NOT 自行發起 Outcome Contract；derived contracts 依 §1.2 在已接受的 Outcome Contract 內產生，不屬自行發起。Follow-up、deferred disposition 與 non-blocking finding 的後續事項，在 acceptor 接受並授權前只是 tracked items。</p>
+  </div>
+  <div class="panel tone-exec">
+    <h3><span class="role-dot rd-exec"></span>Lightweight eligibility 的 routing conditions<span class="rl">§3.3</span></h3>
+    <p class="body" style="margin-bottom:8px">成立條件是 Executor 能在<b>不對 properties 1–4 作出任何假設</b>的前提下完成工作。第一個必須作出的此類假設即為 routing condition：</p>
+    <ul>
+      <li><b>語義缺口</b>（scope 邊界、acceptance 判準、intent 解讀）→ MUST route 至 Design Authority，依 §3.6 處理。</li>
+      <li><b>接受／授權缺口</b>（是否真的要做、property 4 未明）→ MUST route 至 acceptor；在 Orchestrator run 內是 §1.5 boundary，只停止受影響路徑。</li>
+      <li><b>boundary 缺口</b>（是否允許動到某範圍、所提變更是否仍在 Outcome Contract 內）→ 依 §1.2 先 route 至 Design Authority 作 boundary determination；DA 無法確立時 fail-closed 至 acceptor。</li>
+    </ul>
+    <p class="note"><b>Lane eligibility 依預期的整體結果判定，不依本次增量判定。</b>累積 scope 與 remaining work MUST 可由 worklog 追溯。</p>
+  </div>
+</div>
+<div class="callout dg"><b>Contract change 只有兩類（§5.3，唯一規範定義；§3.3、§3.4、§3.6 引用之）：</b>① <b>改變 accepted 語義</b>（Outcome Contract 的 intent、scope、constraints 與 acceptance semantics），或改變其他工作所依賴的設計基線 → contract change：route Design Authority 判定性質與影響，走該 Outcome Contract 原本的 acceptor，必要接受與授權成立前不執行依賴變更後語義的 implementation；② <b>不改變 accepted 語義的 derived contract 設計、修訂與 clarification</b> → 由 Design Authority 以 derivation／decision record 決定並處理對進行中工作、dependencies 與既有 evidence 的影響，<b>不觸發 acceptor 核准</b>。不設第三類「additive」：新增了 Outcome Contract 未涵蓋的 requirement、AC 或 scope 即屬第 1 類。</div>
+<div class="callout ok"><b>行政作業慣例 ≠ 設計基線（IR-1 已併入 §3.3、§3.6-B）：</b>通知、進度同步、結果摘要、文件維護等行政作業慣例，若不改變產品行為、驗收標準、完成條件、角色權限、安全控制與必要 assurance，不屬 §3.6-B 第 1 項的設計基線；其新增或調整是 §5.1 Bindings 內容的變更，依 §5.3 留下版本、依據與授權，<b>不依承載檔名觸發任何 lane 或 audit</b>。</div>
+<div class="callout"><b>Promotion 的 continuity（§3.6）：</b>保存原 contract、worklog、產物、verification 與 findings；記錄理由及有權決定；將已完成與未完成內容對應至 Formal Spec／Tickets；由相應 authority 確認既有 evidence 的可用範圍；<b>保留未解 findings，不藉換 lane、換 ID 或建新 Ticket 清空 audit history</b>。Promote 後的 Spec 是原 Outcome Contract 內的 derived contract；超出原 boundary 者依 §1.2 re-authorization。</div>
+
+<!-- ============ 3. authority map ============ -->
+<h2 id="s3"><span class="num">03</span>Authority map 與 routing<span class="badge gov">governance</span><span class="sec">§1.3 · §2.1 · §2.4</span></h2>
+<p class="sub">六個治理角色；各角色的 responsibility、authority 與 prohibited authority <b>以 §2.1 角色表為唯一權威定義</b>，substantive decision owner 與 routing 以 §2.4 為準（§1.3 於 v2.0 改為索引）。Model replacement、lane selection 或 promotion MUST NOT 改變角色權限。六角色必須可被配置及使用，<b>不代表每項工作都要呼叫六角色</b>。</p>
+
+<div class="grid-3">
+  <div class="panel tone-auth">
+    <h3><span class="role-dot rd-auth"></span>Design Authority<span class="rl">design_authority</span></h3>
+    <ul class="auth-list">
+      <li>釐清 Work Contract 語義、判斷設計語義</li>
+      <li>lane eligibility／promotion 判斷</li>
+      <li><b>在 Outcome Contract 內 derive Formal Spec／Tickets 並作 boundary determination</b>（§1.2）</li>
+      <li>規劃、phase acceptance</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 豁免必要 audit；不得代行 acceptor 的接受與授權，或明確保留的 operator 核准；<b>不得在無法確立 boundary 時自行放行</b>。</p>
+    <p class="note"><b>Independence：</b>依原始 contract、證據與有效授權判斷，不將 Executor／Reviewer 結論當作既定設計。</p>
+  </div>
+
+  <div class="panel tone-exec">
+    <h3><span class="role-dot rd-exec"></span>Executor<span class="rl">executor</span></h3>
+    <ul class="auth-list">
+      <li>執行 accepted work、自主選擇 HOW</li>
+      <li>self-verification、targeted correction</li>
+      <li>維護 worklog</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 自行改 requirement／AC／invariant、豁免 gate，或裁決自己的 review dispute。</p>
+    <p class="note"><b>Independence：</b>正式 review context MUST 與執行 context 獨立。<b>同一執行 context 不得轉名成 Reviewer。</b></p>
+  </div>
+
+  <div class="panel tone-aud">
+    <h3><span class="role-dot rd-aud"></span>Primary Independent Reviewer<span class="rl">primary_reviewer</span></h3>
+    <ul class="auth-list">
+      <li>執行 R1／R2</li>
+      <li>自主判定 findings、blocking、evidence 與 closure</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 修改 implementation、tests、contract 或 gates；不得作 design decision；<b>不得 promote</b>。</p>
+    <p class="note"><b>Independence：</b>R1 使用獨立於 Executor 的 context；R2 MAY 延續自己的 R1 context，但 MUST 重讀修正後證據。</p>
+  </div>
+
+  <div class="panel tone-aud">
+    <h3><span class="role-dot rd-aud"></span>Alternate Independent Reviewer<span class="rl">alternate_reviewer</span></h3>
+    <ul class="auth-list">
+      <li>獨立評估 R2 後剩餘 blocking 與爭議</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 修改受審物、重新設計或自行作 Final Adjudication。</p>
+    <p class="note"><b>Independence：</b>MUST 使用 fresh context，不繼承 Executor 或 Primary Reviewer 的對話；可讀其正式 records 與 evidence。</p>
+  </div>
+
+  <div class="panel tone-adj">
+    <h3><span class="role-dot rd-adj"></span>Final Adjudicator<span class="rl">final_adjudicator</span></h3>
+    <ul class="auth-list">
+      <li>裁決 review dispute、合法 disposition</li>
+      <li>targeted rework、cycle reset</li>
+      <li>authority routing 爭議</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 虛報 gate PASS、覆寫原 review，或取得 Design Authority／acceptor／operator 保留權限。</p>
+    <p class="note"><b>Independence：</b>MUST 使用獨立裁決 context，依契約、原始 findings 與證據判斷。</p>
+  </div>
+
+  <div class="panel tone-ctl">
+    <h3><span class="role-dot rd-ctl"></span>Orchestrator<span class="rl">orchestrator</span></h3>
+    <ul class="auth-list">
+      <li>管理 state、dependencies、dispatch、routing</li>
+      <li>gates、continuation、recovery</li>
+      <li>completion reporting</li>
+    </ul>
+    <p class="note"><span class="mustnot">不得</span> 實作產品變更、決定設計語義、降級 finding 或裁決 evidence sufficiency。控制面操作不在此限。</p>
+    <p class="note"><b>Independence：</b>維持 control-plane context；implementation 與 review 由相應角色執行。</p>
+  </div>
+</div>
+<div class="callout"><b>Design Authority 與 Final Adjudicator MAY 使用同一 model，但所行使的 authority MUST 可區別</b>（§2.1）。Design Authority 的 contract-sufficiency authority 依 §1.2、§2.1；<b>不得因此取得接受或授權權限</b>（§2.4）。</div>
+
+<h3 class="sh">Routing responsibility — 決定者<span class="sec">§2.4</span></h3>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>問題</th><th>決定者</th></tr></thead>
+    <tbody>
+      <tr><td>契約內 HOW、一般實作選擇</td><td><b>Executor</b></td></tr>
+      <tr><td>Findings、blocking、review evidence sufficiency</td><td><b>Reviewer</b></td></tr>
+      <tr><td>Contract 語義是否足夠、material ambiguity、設計與 promotion 判斷、<b>derived contract 的 derivation 與 boundary determination</b></td><td><b>Design Authority</b></td></tr>
+      <tr><td><b>Outcome Contract 的接受、執行授權、boundary re-authorization</b>、authority／authorization 缺口</td><td><b>Acceptor</b>（Project Bindings 宣告；預設為 operator 或其人類代理）</td></tr>
+      <tr><td>Review dispute、合法 accepted disposition、authority routing 爭議</td><td><b>Final Adjudicator</b></td></tr>
+      <tr><td>依既定條件派工、推進、啟動 promotion 流程</td><td><b>Orchestrator</b></td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="margin-top:10px">Lane policy 提供預設分類，但不得取代 §3.3 的 contract-assumption boundary。需要補充契約語義或判斷適用性時 MUST route 至 Design Authority；需要補充接受或授權時 MUST route 至 acceptor。</p>
+
+<h3 class="sh">Orchestrator 的五種 deterministic cases<span class="sec">§2.4</span></h3>
+<p class="sub">Executor 或 Reviewer 提出問題時 <b>SHOULD</b> 指明所需 authority 與理由。Orchestrator MUST 依下表決定派工並記錄所適用的情況；在任何情況下 MUST NOT 判斷設計語義、finding severity 或 evidence sufficiency，MUST NOT 重新分類 finding，也 MUST NOT 默默覆寫任一來源。</p>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:52%">情況</th><th>Orchestrator 動作</th></tr></thead>
+    <tbody>
+      <tr><td>已指明 authority，且與本節規則一致</td><td class="keep">直接派工</td></tr>
+      <tr><td>未指明，但依事件的來源與種類本節規則能唯一決定</td><td class="keep">直接派工，記錄所用規則</td></tr>
+      <tr><td>已指明，但與本節規則衝突</td><td>屬 routing 爭議：交 Final Adjudicator 釐清 routing</td></tr>
+      <tr><td>Authority 真正模糊：兩個角色主張不同 authority，或被派工角色以非其 authority 為由退回</td><td>交 Final Adjudicator 釐清 routing</td></tr>
+      <tr><td>屬契約語義或 sufficiency 的分類，無法以規則機械判定</td><td>Route 至 Design Authority（<b>DA-first</b>）；Design Authority 把接受／授權缺口再 route 至 acceptor，不因此取得該權限</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="callout dg"><b>缺少 routing label 本身不是爭議，不觸發 Final Adjudication。</b>Final Adjudicator 釐清 routing 時<b>不因此取得該問題的實質決定權</b>（§2.4）。Implementation Profile v2 §2／§4 與 Orchestrator Contract v2.1 §5 只引用本表，不另定義。</div>
+<div class="callout ok"><b>Strong contract, loose execution。</b>契約須清楚，實作方法由 Executor 自主選擇（§1.3）。</div>
+
+<!-- ============ 4. agent / subagent + model mapping ============ -->
+<h2 id="s4"><span class="num">04</span>Agent／Subagent definitions 與 Model Mapping<span class="badge hz">binding</span><span class="sec">§2.1 · §2.2 · §2.3 · §5.1</span></h2>
+<p class="sub">Definition 定義穩定權責，<b>不以模型名稱定義權限</b>；model assignment 由版本化的 Reference Model Profile 提供預設；專案 pin 該 Profile 並記錄 overrides；實際 assignment 都必須可由可觀察證據核對，<b>核對的內容依它是被派工的 assignment 還是 root role session 而不同</b>（§2.2，見下方「實際 assignment 分兩種」）。Reference Model Profile <code>default</code> <code>v2.4</code> <b>對每個可 dispatch identifier 都給了具體預設值與 deterministic replacement policy</b>——沒有 TBD，也不再有 initialization 時的 model 選擇詢問；使用者只在需要 override 時透過 Project Bindings 介入。</p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 640" role="img" aria-label="四層結構：第一層是穩定的 Agent 與 Subagent definitions，只定義權責、不含模型名稱；第二層是版本化的 Reference Model Profile default v2.4，所有 identifier 有具體預設值與 deterministic replacement policy，沒有 TBD，harness 相關的 binding verification 證據位置標為 PROJECT_BINDING；第三層是 Project Bindings，pin 住 Profile ID 與 version、記錄 explicit overrides 或 none、填入 PROJECT_BINDING 項；第四層是可驗證的 Runtime Assignment：被派工的 assignment 綁定至宣告的 definition、model 與 effort／mode；root role session（Orchestrator 與 direct-execution Executor）依四項 MUST 核對，不要求由 definition instantiate；兩者都必須以可觀察證據核對。下方四張卡是正式 independent review 與 adjudication 的四項 independence properties；不同 model 本身不構成 independent review。">
+      <defs>
+        <marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="c1d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-dg" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <!-- L1 · definitions -->
+      <rect class="n-auth" x="250" y="28" width="600" height="100" rx="9"/>
+      <text class="t" x="550" y="54" text-anchor="middle">Stable Agent / Subagent Definitions</text>
+      <text class="s" x="550" y="76" text-anchor="middle">responsibility／intended use · authority · prohibited authority</text>
+      <text class="s" x="550" y="96" text-anchor="middle">context／independence requirement · 六個治理角色 ＋ 所有 reusable Subagents</text>
+      <text class="s" x="550" y="116" text-anchor="middle">Model 名稱不出現在 definition；authority 不由 model 決定（§2.1）</text>
+      <text class="lm" x="264" y="48">LAYER 1 · 穩定</text>
+
+      <path class="e" d="M550 128 L550 158" marker-end="url(#c1)"/>
+      <text class="l" x="562" y="148">identifier</text>
+
+      <!-- L2 · reference profile -->
+      <rect class="n-hz" x="250" y="158" width="600" height="104" rx="9"/>
+      <text class="t" x="550" y="184" text-anchor="middle">Reference Model Profile — default v2.4（Adopted／Frozen 2026-10-02）</text>
+      <text class="s" x="550" y="206" text-anchor="middle">Profile ID `default` · Version `v2.4` · 全部 identifier 有具體預設值與 deterministic replacement policy</text>
+      <text class="s" x="550" y="226" text-anchor="middle">identifier · model · model id／resolution · effort／mode · replacement policy · binding verification</text>
+      <text class="s" x="550" y="248" text-anchor="middle">本版無 TBD；harness 專屬的證據位置為 PROJECT_BINDING；initialization 不詢問 model 選擇</text>
+      <text class="lm" x="264" y="178">LAYER 2 · 參考預設</text>
+
+      <path class="e" d="M550 262 L550 292" marker-end="url(#c1)"/>
+      <text class="l" x="562" y="282">adopt · pin</text>
+
+      <!-- L3 · project bindings -->
+      <rect class="n-op" x="250" y="292" width="600" height="104" rx="9"/>
+      <text class="t" x="550" y="318" text-anchor="middle">Project Bindings</text>
+      <text class="s" x="550" y="340" text-anchor="middle">pin Profile ID ＋ version：`default` `v2.4` ＋ overrides（無則 `none`）</text>
+      <text class="s" x="550" y="360" text-anchor="middle">填入 PROJECT_BINDING 項（例如非 Claude Code harness 的 binding verification 證據位置）</text>
+      <text class="s" x="550" y="382" text-anchor="middle">Profile 後續版本不自動影響既有專案（§5.3）；resolution：Bindings override → Profile default → fallback</text>
+      <text class="lm" x="264" y="312">LAYER 3 · 專案 pin</text>
+
+      <path class="e" d="M550 396 L550 426" marker-end="url(#c1)"/>
+      <text class="l" x="562" y="416">verify</text>
+
+      <!-- L4 · runtime -->
+      <rect class="n-ok" x="250" y="426" width="600" height="104" rx="9"/>
+      <text class="t" x="550" y="452" text-anchor="middle">Verifiable Runtime Assignment</text>
+      <text class="s" x="550" y="474" text-anchor="middle">被派工的 assignment：綁定至宣告的 definition、model 及適用 effort／mode（§2.2）</text>
+      <text class="s" x="550" y="494" text-anchor="middle">Root role session（Orchestrator · direct-execution Executor）：四項 MUST</text>
+      <text class="s" x="550" y="516" text-anchor="middle">兩者皆須可由可觀察執行證據核對；設定存在 ≠ 已符合；prompt 自稱不構成 binding 證據</text>
+      <text class="lm" x="264" y="446">LAYER 4 · 可驗證</text>
+
+      <!-- to independence -->
+      <path class="e-dg" d="M550 530 L550 556" marker-end="url(#c1d)"/>
+      <text class="lD" x="550" y="574" text-anchor="middle">verifiable binding 只是四項之一 —— different model ≠ independent review（§2.2、§2.3）</text>
+
+      <!-- four properties -->
+      <rect class="n-aud" x="24" y="586" width="254" height="48" rx="8"/>
+      <text class="t2" x="38" y="606">1 · Independent context</text>
+      <text class="s" x="38" y="624">R1·Alternate·FA 用 fresh context</text>
+
+      <rect class="n-aud" x="294" y="586" width="254" height="48" rx="8"/>
+      <text class="t2" x="308" y="606">2 · Verifiable binding</text>
+      <text class="s" x="308" y="624">依 §2.2 綁定且有證據可核對</text>
+
+      <rect class="n-aud" x="564" y="586" width="254" height="48" rx="8"/>
+      <text class="t2" x="578" y="606">3 · Autonomous access</text>
+      <text class="s" x="578" y="624">不受限於 Executor 挑選的輸入</text>
+
+      <rect class="n-aud" x="834" y="586" width="242" height="48" rx="8"/>
+      <text class="t2" x="848" y="606">4 · Self-written record</text>
+      <text class="s" x="848" y="624">Executor 不得代寫、改寫、篩選</text>
+    </svg>
+  </div>
+  <figcaption>圖 3 · Profile 只提供 model assignment，<b>不授予任何 authority</b>：角色權責一律以 §2.1 為準。四項 independence properties MUST 同時成立才算正式 independent review／adjudication。v2.0 把「Executor 與 Reviewer 是否使用不同 model」明確定位為 <b>Profile／Bindings 的 assurance policy 預設</b>，不是 §2.3 的 independence property（§2.2）。v2.1 把第 4 層分成兩種核對：被派工的 assignment，以及 root role session（見下方）。</figcaption>
+</figure>
+
+<div class="grid-3" style="margin-top:12px">
+  <div class="panel tone-hz">
+    <h3><span class="role-dot rd-hz"></span>Reference Profile<span class="rl">default v2.4</span></h3>
+    <ul class="auth-list">
+      <li>新專案的參考預設；所有可 dispatch identifier 皆有可解析的預設值與 deterministic replacement policy</li>
+      <li>版本化：<code>default</code> ＋ <code>v2.4</code>；<code>v2.3</code>／<code>v2.2</code>／<code>v2.1</code>／<code>v2</code>／<code>v1</code> 保留為 frozen baseline，已 pin 者不自動改用</li>
+      <li>只提供 model assignment，<b>不授予 authority</b></li>
+    </ul>
+    <p class="note"><b>模型名稱與 IDs 是設定依據，不代表已完成當前平台的可用性或 binding 驗證。</b></p>
+  </div>
+  <div class="panel tone-op">
+    <h3><span class="role-dot rd-op"></span>Project Binding<span class="rl">§5.1 · §5.3</span></h3>
+    <ul class="auth-list">
+      <li>pin <b>Profile ID ＋ version</b>；記錄 <b>explicit overrides</b>，無則明記 <code>none</code></li>
+      <li>填入 <span class="pb">PROJECT_BINDING</span> 項（依本質只能由專案提供，例如特定 harness 的 binding verification 證據位置）</li>
+      <li>指定 mapping 變更 authority</li>
+    </ul>
+    <p class="note"><b>Profile 後續版本不自動影響既有專案</b>；採用新版本時 MUST 明確處理進行中 assignments、audit 與 evidence coverage。</p>
+  </div>
+  <div class="panel tone-ok">
+    <h3><span class="role-dot rd-ctl"></span>Runtime Assignment<span class="rl">§2.2</span></h3>
+    <ul class="auth-list">
+      <li>實際 assignment <b>仍必須逐次驗證</b>；證據可由 worklog／audit records 引用</li>
+      <li>無法核對或不符的 binding MUST 修復或依授權替代；<b>不得冒充符合要求的 execution、review、adjudication 或 orchestration</b></li>
+    </ul>
+    <p class="note">因不可用採取 replacement 時，MUST 引用<b>當次嘗試</b>的錯誤或當下可用性檢查證據；不得只憑記憶或先前 session／run 的不可用狀態跳過指定 Agent／model。</p>
+  </div>
+</div>
+
+<h3 class="sh" id="rootrole">實際 assignment 分兩種（v2.1）<span class="sec">§2.2 · §5.1 · orch-default v2.1 §2 · §3 · §8 · §11</span></h3>
+<p class="sub">v2.0 把每個實際 assignment（包括 Orchestrator 自身）寫成同一句：綁定至宣告的 definition、model 及適用 effort／mode。v2.1 把它分成兩種，<b>核對的內容不同</b>。被派工的 assignment 的要求不變；root role session 不要求由 definition instantiate，model／effort 的核對照舊。</p>
+<div class="grid-2">
+  <div class="panel tone-hz">
+    <h3><span class="role-dot rd-hz"></span>被派工的 assignment<span class="rl">§2.2</span></h3>
+    <ul class="auth-list">
+      <li>治理 Agent 與 reusable Subagent，不論由 operator、Orchestrator、direct-execution session 或 Harness 機制派工</li>
+      <li>MUST 透過可驗證機制綁定至宣告的 <b>definition、model 及適用 effort／mode</b></li>
+      <li>Root role session 派出的每個治理 Agent 與 reusable Subagent 都屬此類</li>
+      <li>兩種 root role session 以外、直接擔任治理角色的 session 也屬此類</li>
+    </ul>
+    <p class="note">要求與 v2.0 相同。</p>
+  </div>
+  <div class="panel tone-ctl">
+    <h3><span class="role-dot rd-ctl"></span>Root role session<span class="rl">§2.2</span></h3>
+    <ul class="auth-list">
+      <li>直接擔任治理角色、不是被派工產生的 session</li>
+      <li>本治理<b>只承認兩種</b>：Orchestrator；Lightweight direct execution 中擔任 Executor 的 session</li>
+      <li>如何建立（由 definition instantiate、一般 session 經 activation，或其他機制）屬 <b>Runtime／Harness HOW</b>；由 definition instantiate 不是必要條件</li>
+      <li>Project Bindings MAY 指定所採機制及其證據</li>
+    </ul>
+    <p class="note">MUST 具備下表四項。</p>
+  </div>
+</div>
+<div class="tblwrap" style="margin-top:12px">
+  <table class="tbl">
+    <thead><tr><th style="width:20%">Root role session MUST 具備</th><th style="width:40%">Orchestrator</th><th>Direct-execution Executor</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 · Activation basis</b><br>MUST 有可持久引用的紀錄</td><td>由 acceptor／operator 指定（designation），或由同一 run 中已啟動的 Orchestrator 依 rollover 交接的 successor 繼承該 designation 與 run identity。<b>Orchestrator 不得自行假定。</b></td><td>已成立的 Outcome Contract 接受與執行授權（§1.2、§3.5），並依其 assurance path 以 Lightweight lane 執行（§3.1 第 6 項、§3.3）。</td></tr>
+      <tr><td><b>2 · Model／effort runtime verification</b></td><td>實際的 model／version 與適用 effort／mode 等於 <code>orchestrator</code> 的有效 mapping，並可由 Runtime／Harness 證據核對。<b>本項核對成立前不得派工。</b></td><td>實際的 model／version 與適用 effort／mode 等於 <code>executor</code> 的有效 mapping，並可由 Runtime／Harness 證據核對。</td></tr>
+      <tr><td><b>3 · Role-definition grounding</b></td><td colspan="2">以該角色的 definition（§2.1）與適用契約為行事依據；re-ground 或 successor 接手時重新取得。</td></tr>
+      <tr><td><b>4 · Work identity and records</b></td><td>Run identity（未啟動 run 時，為其 routing／派工所服務的 work item identity）與授權紀錄（§3.4、§5.1）。</td><td>Work item identity、§3.7 的 worklog 及其他適用的治理紀錄。</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="callout dg"><b>第 3 項不證明第 2 項：</b>讀取或載入 definition 不構成 model／effort 的核對。Prompt 中自稱角色、model 或「已綁定」不構成 binding 證據；僅有設定存在也不等於實際 assignment 已符合（§2.2）。</div>
+<div class="callout op"><b>Designation 不是自稱：</b>Designation 與 Outcome Contract 的接受／授權是 acceptor／operator 的 authority 行為。Designation 不構成 Outcome Contract 的接受或授權；兩者決定哪個 session 擔任該角色，不證明其 model／effort，也不授予 §2.1 以外的權限（§2.2）。</div>
+<div class="callout"><b>orch-default v2.1 的對應：</b>§2 Orchestrator 是 root role session，它派出的每個角色仍是被派工的 assignment；§3 designation MUST 有可持久引用的紀錄，對自身 model／effort 的核對 MUST 先於第一次 dispatch，不符時依 Minimal §2.2 修復或替代；§8 checkpoint 重讀 role definition，rollover successor 以同一 run identity 與 designation bootstrap，重新 grounding 並核對自身 model／effort；§11 設定方式（session 啟動參數、session 設定、由 definition instantiate 等）屬 Harness HOW。</div>
+
+<h3 class="sh" id="profile">Current Reference Profile — default v2.4<span class="sec">references/model-profiles/default-v2.4.md</span></h3>
+<div class="profhead">
+  <span class="pid">Profile ID · default</span><span class="pid">Version · v2.4</span>
+  <span class="chip hz" style="font-size:11px">Adopted／Frozen 2026-09-29 · 新專案參考預設，非已驗證 Runtime configuration</span>
+</div>
+<p class="sub">值只有四種狀態，<b>語義不同、不得互相代換</b>；本版無 TBD，v1 的 USER_SELECTION_REQUIRED 已移除（<code>primary_reviewer</code> 有預設值，initialization 不再詢問任何 model 選擇）。角色定義與權限一律以 §2.1 為準，本表只提供 model assignment（operator S-1 決定，2026-09-22；v2.1／v2.2 於 2026-09-23 將 Opus 5 改為 Opus 5.5、<code>primary_reviewer</code> effort 升為 <code>xhigh</code>；<b>v2.3 於 2026-09-29</b>：所有 Opus 4.8 預設改為 Opus 5.5（Opus 4.8 保留於 fallback）、<code>primary_reviewer</code> 改為 <b>Codex-preferred</b>（Opus 5.5 為 Claude fallback）、replacement chain 重排、§4 diversity 語義改寫；effort 全部不變；<b>v2.4 於 2026-10-02</b>：<code>primary_reviewer</code> fallback 單一化為 Claude path Opus 5.5 → Opus 4.8 → Fable 5.1（皆 <code>xhigh</code>），Codex 只作 <code>primary_reviewer</code> 的 preferred／effective mapping、自 R-EX／R-AR 列移除；其他五個 identifier 的 model、effort 不變）。</p>
+<div class="state-legend"><span class="val">具體值</span><span style="font-size:12.5px;color:var(--muted)">本 Profile 的預設；直接採用，Bindings MAY override 並記錄理由。</span></div>
+<div class="state-legend"><span class="pb">PROJECT_BINDING</span><span style="font-size:12.5px;color:var(--muted)">依本質只能由專案提供。<b>不是問題、不是缺漏。</b>Bindings 在對應執行／activation／audit 前填入；Claude Code harness 於 §5 有預設機制。</span></div>
+<div class="state-legend"><span class="na">N/A</span><span style="font-size:12.5px;color:var(--muted)">該平台／角色不適用；明記不適用即可。</span></div>
+<div class="state-legend" style="border-style:dashed;border-color:var(--audit)"><span class="tbd">TBD</span><span style="font-size:12.5px;color:var(--muted)">沒有足以指定該值的依據。<b>本版無 TBD。</b>日後出現時依 Minimal §2.2 不構成有效設定。</span></div>
+<div class="tblwrap">
+  <table class="tbl prof-tbl">
+    <thead><tr><th style="width:17%">Role · identifier</th><th style="width:9%">Model</th><th style="width:24%">Model id／resolution policy</th><th style="width:26%">Effort／mode</th><th style="width:12%">Replacement</th><th>Binding verification</th></tr></thead>
+    <tbody>
+      <tr><td><code>design_authority</code><span class="idcell">Design Authority</span></td><td>Fable 5.1</td><td><code>claude-fable-5-1</code>；當次解析結果須驗證</td><td><code>xhigh</code>；design decision／clarification／derivation／phase acceptance</td><td>R-DA（§3）</td><td>§5</td></tr>
+      <tr><td><code>executor</code><span class="idcell">Executor</span></td><td>Opus 5.5</td><td><code>claude-opus-5-5</code>；不依 parent model 隱性解析</td><td><code>high</code>；implementation＋self-verification</td><td>R-EX（§3）</td><td>§5</td></tr>
+      <tr><td><code>primary_reviewer</code><span class="idcell">Primary Independent Reviewer</span></td><td><b>Codex</b>（preferred／effective mapping，只在本 identifier）；Claude path 首項 Opus 5.5</td><td>Codex：model／version ＝ <span class="pb">PROJECT_BINDING</span>（Bindings 依 §6 授權並完成 binding qualification 後即為有效 mapping；未授權、明確禁用或無法 qualify 時，有效 mapping 即為 Claude path 首項 Opus 5.5；當次不可用時依 R-PR 沿 Claude path 替代）。Opus 5.5：<code>claude-opus-5-5</code>；不依 parent model 隱性解析</td><td>Codex：effort／mode ＝ <span class="pb">PROJECT_BINDING</span>；Claude path 全程 <code>xhigh</code>。independent review-only：R1／R2、Spec Integration Audit（§4.7）</td><td>R-PR（§3）：單一 Claude path Opus 5.5／<code>xhigh</code> → Opus 4.8／<code>xhigh</code> → Fable 5.1／<code>xhigh</code>；Codex 不在 fallback 列</td><td>Codex：<span class="pb">PROJECT_BINDING</span>（§5）；Opus 5.5：§5</td></tr>
+      <tr><td><code>alternate_reviewer</code><span class="idcell">Alternate Independent Reviewer</span></td><td>Fable 5.1</td><td><code>claude-fable-5-1</code></td><td><code>xhigh</code>；fresh independent review-only；exactly one Alternate</td><td>R-AR（§3）</td><td>§5</td></tr>
+      <tr><td><code>final_adjudicator</code><span class="idcell">Final Adjudicator</span></td><td>Fable 5.1</td><td><code>claude-fable-5-1</code></td><td><code>xhigh</code>；independent adjudication</td><td>R-FA（§3）</td><td>§5</td></tr>
+      <tr><td><code>orchestrator</code><span class="idcell">Orchestrator</span></td><td>Opus 5.5</td><td><code>claude-opus-5-5</code>；不依 parent model 隱性解析</td><td><code>high</code>；control plane／routing／run-to-completion</td><td>R-OR（§3）</td><td>§5</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="margin-top:8px">Design Authority、Alternate Independent Reviewer 與 Final Adjudicator 使用同一 model；所行使的 authority MUST 可區別（§2.1），且各自使用獨立 context（§2.3）。<code>primary_reviewer</code> 採 <b>Codex-preferred resolution</b>（§6）：Bindings 授權 Codex 且當次可用時即為 Codex；Codex 未授權、明確禁用、無法完成 binding qualification，或當次不可用時，才進入 R-PR 的單一 Claude path（Opus 5.5／<code>xhigh</code> → Opus 4.8／<code>xhigh</code> → Fable 5.1／<code>xhigh</code>）；前三種是 resolution（有效 mapping ＝ Opus 5.5），第四種是 substitution。Codex 不出現在任何 identifier 的 fallback 列。Bindings 未授權 Codex 的專案，Executor、Primary Reviewer 與 Orchestrator 同為 Opus 5.5：independence 由 §2.3 四項 properties 成立，與 model 是否相同無關；Orchestrator 不因同 model 取得任何其他 authority。Effort 值是預設且與 v2.2 相同，Bindings MAY 以 explicit override 調整並記錄理由；Orchestrator 自身 effort 依 orch-default §11 於 activation 設定並記錄。<b>Opus 4.8 自 v2.3 起不再是任何 identifier 的預設 model</b>，保留於 §3 各列作為 conservative fallback。</p>
+
+<h3 class="sh">Deterministic replacement policies<span class="sec">default v2.4 §3</span></h3>
+<div class="panel tone-hz" style="margin-bottom:12px">
+  <h3>共同規則（Minimal §2.2、§2.3）</h3>
+  <ol>
+    <li><b>觸發依據：</b>當次 dispatch 的錯誤，或當下的可用性檢查證據；不得憑記憶或先前 session／run 的不可用狀態跳過指定 model。dispatch 錯誤包括 harness／API 回傳的 <b>classifier refusal</b>（<code>stop_reason: refusal</code>）：記錄 category 後依 fallback 列替代。Overload／rate-limit（529／429）在 Bindings 宣告的 bounded retry 用盡後構成當次可用性證據（未宣告時即構成）。</li>
+    <li><b>順序：</b>先依 Project Bindings override 的 fallback 列，再依本節 fallback 列，逐項嘗試第一個可用者；不跳序、不猜。</li>
+    <li><b>每次替代 MUST：</b>維持 §2.3 四項 properties（review／adjudication 角色的 fresh context 不因替代而繼承任何既有對話）；不新增 audit round；不改變 authority；在 worklog／run record 記錄 substitution（原 mapping、替代 mapping、證據引用）；替代使 §4 定義的任一 diversity 關係（含 Bindings 宣告者）不再成立時，另標 <code>diversity_lost</code>。各列與 §4 的列舉以其他 identifier 維持有效預設 mapping、且 Bindings 未另行宣告關係為前提；多個 identifier 同時替代或宣告關係失效時，依 §4 定義以該 cycle 的實際 mapping 判定。§6 條件 1–3 使 <code>primary_reviewer</code> 解析為 Opus 5.5 是 resolution，不是 substitution。</li>
+    <li><b>Fallback 列耗盡：</b>該路徑進入 Minimal §1.5 recovery；三步完成後仍 unsafe／indeterminate 才停止該路徑。</li>
+    <li><b>替代不重新觸發任何初始化詢問。</b></li>
+  </ol>
+</div>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:14%">Policy</th><th style="width:30%">Fallback 列（依序）</th><th>附加規則</th></tr></thead>
+    <tbody>
+      <tr><td><b>R-DA</b> <code>design_authority</code></td><td>Opus 5.5／<code>xhigh</code> → Opus 4.8／<code>xhigh</code></td><td>合格替代者以 Design Authority 身分派工即行使 Design Authority 權限；其有效 decision <b>即為 DA decision</b>（authority 屬角色，不屬 model；§1.3、§2.2），不需 preferred／default DA model 事後確認；preferred model 恢復可用本身不重開、不使先前 decision 失效。日後任何變更依 §5.3 一般規則，以角色權限與新證據為依據，依變更實際性質適用第 1 或第 2 類，不以 model 身分為依據。替代 DA 不得修改 norm，不擴張為 Final Adjudication 權限。</td></tr>
+      <tr><td><b>R-EX</b> <code>executor</code></td><td>Opus 4.8／<code>high</code> → Fable 5.1／<code>high</code></td><td>接手 Executor 沿同一 worklog identity（impl-default §10）。替代為 Opus 4.8 不改變 §4 兩條恆有關係；替代為 Fable 5.1 時 Executor 與 Alternate 同 model，記錄 <code>diversity_lost</code>。Codex 不列入（§6）。</td></tr>
+      <tr><td><b>R-PR</b> <code>primary_reviewer</code></td><td><b>單一 Claude path</b>：Opus 5.5／<code>xhigh</code> → Opus 4.8／<code>xhigh</code> → Fable 5.1／<code>xhigh</code><br>§6 條件 1–3（resolution）：有效 mapping ＝ 首項 Opus 5.5，其後沿本列替代；條件 4（substitution）：自第一個可用者起。Codex 不在本列</td><td><b>Codex 為有效 Primary 時</b>：只有當次 dispatch 錯誤、可用性證據，或當次無法取得 §5 宣告的 binding 證據才進入 Claude path；Codex 被任一 Anthropic model 替代時記錄 <code>diversity_lost</code>（§4 第 3 條）。<b>Opus 5.5 為有效 Primary 時</b>：替代為 Opus 4.8 不記。替代為 Fable 5.1 時，該 cycle 的 Alternate 依 R-AR 列替代，<code>diversity_lost</code> 依 Alternate 結果判定（Opus 4.8 不記，Opus 5.5 記）。R1 由替代 reviewer 執行而 R2 時 Codex 可用者，<b>R2 回到 Codex</b>，fresh context 並重讀 R1 record；其他情況 R2 由同一替代 reviewer 延續 R1 context。R1／R2 之間發生替代者，R2 MUST 為 fresh context。</td></tr>
+      <tr><td><b>R-AR</b> <code>alternate_reviewer</code></td><td>Opus 4.8／<code>xhigh</code> → Opus 5.5／<code>xhigh</code></td><td>仍 exactly one Alternate；不因替代重跑 R1／R2。替代為 Opus 4.8 不記 <code>diversity_lost</code>；替代為 Opus 5.5 時與 Executor 同 model，記錄 <code>diversity_lost</code>。Codex 不列入（§6）。</td></tr>
+      <tr><td><b>R-FA</b> <code>final_adjudicator</code></td><td>Opus 5.5／<code>xhigh</code> → Opus 4.8／<code>xhigh</code></td><td>替代 FA 的 ruling 即為有效 ruling（authority 屬角色，不屬 model；§2.2）；不採 provisional。</td></tr>
+      <tr><td><b>R-OR</b> <code>orchestrator</code></td><td>Opus 4.8／<code>high</code> → Fable 5.1／<code>high</code></td><td>Successor 以同一 run identity 從權威紀錄 bootstrap（orch-default §8）；替代於 run record 記錄。</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="grid-3" style="margin-top:12px">
+  <div class="panel tone-aud">
+    <h3><span class="role-dot rd-aud"></span>Assurance defaults<span class="rl">default v2.4 §4</span></h3>
+    <ul>
+      <li><b>Intended diversity</b>：兩條恆有——Alternate ≠ Executor、Alternate ≠ Primary（Fable 5.1 vs Opus 5.5，tier diversity）；一條條件性——Primary ≠ Executor 且跨 vendor（family diversity），<b>只在 Codex 為有效 Primary 時成立</b>。未授權 Codex 時 Executor＝Primary＝Opus 5.5 是預設，不是異常。三條都是 assurance 偏好，<b>不是 §2.3 的 independence 定義</b>；同 model 的 fresh-context review 仍是合法 independent review。</li>
+      <li><code>diversity_lost</code> ＝ 某次 replacement 使上述任一關係（或 Bindings 宣告的關係）不再成立；只在該情況記錄，記入 audit record 的 independence 說明。§6 條件 1–3 的 resolution 不記。Bindings MAY 宣告高風險類別要求恢復 diversity（含 family diversity）後再 audit——是 assurance policy 宣告，不是新 audit round。</li>
+      <li>Tier diversity（同 vendor 不同 tier）與 family diversity（跨 vendor，僅 Codex）都不是 independence。Reviewer-tier diversity 不是要求；預設以 Fable 5.1 擔任 Alternate 只是偏好。</li>
+    </ul>
+  </div>
+  <div class="panel tone-ok">
+    <h3><span class="role-dot rd-ctl"></span>Binding verification<span class="rl">default v2.4 §5 · §2.2 · §2.3 · §5.1</span></h3>
+    <ul>
+      <li><b>Claude Code harness 預設機制（SHOULD）：</b>角色 definition 檔綁定完整 model id 與 effort；每次 dispatch 以 harness 記錄的 <code>message.model</code> 與 <code>effort</code> 對照 definition；結果引用於 worklog／audit record；不設會覆寫角色綁定的全域 subagent model override。</li>
+      <li><b>Agent tool dispatch 形態</b>同時套用 frontmatter <code>model</code> 與 <code>effort</code>；<b><code>claude --agent</code> 主 session 形態不套用 <code>effort</code></b>，MUST 帶 <code>--effort</code>，缺少即為 binding mismatch。Definition 變更對進行中 session 不可見，驗證在新 process 進行。</li>
+      <li><b>Codex（preferred primary_reviewer）：</b><span class="pb">PROJECT_BINDING</span>——Bindings MUST 宣告呼叫機制、model／version／effort、每次 dispatch 的 binding 證據與位置、如何滿足 §2.3 四項 properties、live 可用性證據來源、audit record 引用方式、substitution 記錄位置；未齊即「無法完成 qualification」，解析為 Opus 5.5。</li>
+      <li><b>其他 harness：</b><span class="pb">PROJECT_BINDING</span>。</li>
+      <li>Prompt 自稱、設定存在、model 名稱相同，皆不構成 binding 證據；<b>不同 model 不自動構成 independent review</b>。</li>
+    </ul>
+    <p class="note">既有證據為 <code>claude-opus-4-8</code>／<code>claude-opus-5</code>／<code>claude-fable-5-1</code> 與 reviewer 的 <code>claude-opus-5-5</code>；<code>claude-opus-5-5</code> 作為 executor／orchestrator 的 binding 證據由採用專案提供。</p>
+    <p class="note"><b>Root role session：</b>核對 model／effort 的方式與證據位置由 Bindings 列明（Minimal v2.1 §5.1）。由 definition instantiate（例如 <code>claude --agent</code> 主 session 形態）是可用機制之一，不是必要條件（Minimal v2.1 §2.2）。</p>
+  </div>
+  <div class="panel tone-ctl">
+    <h3><span class="role-dot rd-ctl"></span>Codex 與 reusable Subagents<span class="rl">default v2.4 §6 · §7</span></h3>
+    <ul>
+      <li><b>Codex（OpenAI）是 <code>primary_reviewer</code> 的 preferred model：</b>Bindings 授權且當次可用時 MUST 使用 Codex（fresh context）。只有 (1) 未授權、(2) operator／專案明確禁用、(3) 無法完成 binding qualification、(4) 當次不可用，才進入 Claude path；1–3 是 resolution（不記 substitution），4 是 substitution（記錄且記 <code>diversity_lost</code>）。Codex 恢復可用不重開已完成輪次，自下一次 dispatch（含進行中 cycle 的 R2）起回到 Codex。Codex 只作 <code>primary_reviewer</code> 的 preferred／effective mapping：不列入任何 identifier 的預設或 fallback 列，Profile 也不提供其他角色的 Codex override 語義（Bindings 若自行以 Codex override 其他角色，其 diversity 影響由 Bindings 宣告）。</li>
+      <li>Codex 不因是不同 provider 而自動構成 independence；仍須滿足 §2.3。</li>
+      <li><b>Reusable subagents：</b>同 v1，本版不新增推測性 rows；日後採用時依 §2.1–§2.2 列明 identifier 與 mapping。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-top:14px">
+  <div class="panel tone-dg">
+    <h3><span class="role-dot rd-aud"></span>一律屬 self-verification，不得記錄為正式 audit<span class="rl">§2.3</span></h3>
+    <ul class="auth-list no">
+      <li>Executor session 內繼承其 context 的 sub-agent review，<b>包括 code-review 類 Skill 產生者</b></li>
+      <li>對通用 agent 的 ad-hoc「請審查」指令，未經 §2.2 綁定</li>
+      <li>由 Executor 轉述或整理的 review 結論</li>
+    </ul>
+  </div>
+  <div class="panel tone-aud">
+    <h3><span class="role-dot rd-aud"></span>合法 independent dispatch 的來源<span class="rl">§2.3</span></h3>
+    <p class="body">滿足四項 properties 的派工來源可以是 operator、Orchestrator，或 <b>Project Bindings 宣告的可驗證 Harness 機制</b>；由 direct execution session 透過該機制發起的派工亦屬合法，Bindings MUST 明示該機制如何滿足四項。Harness 無法提供時，Lightweight 的正式 audit MUST 由 operator 或 Orchestrator 派工——這是 Bindings 層的一次宣告，<b>不是每項工作的個別決定，也不新增 approval stage</b>。</p>
+  </div>
+</div>
+
+<!-- ============ 5. audit flow ============ -->
+<h2 id="s5"><span class="num">05</span>Independent audit flow<span class="badge au">audit</span><span class="sec">§4.1 – §4.7</span></h2>
+<p class="sub">只有一套正式 audit semantics。差別只在「是否觸發」，不在品質：Formal 每個 work item 必須執行，<b>每份 Spec 另 MUST 執行 Spec Integration Audit</b>；Lightweight 依 accepted contract、Project assurance policy、使用者要求或有權裁決決定。<b>不另設 lightweight review，不增加 R3／R4。</b></p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 580" role="img" aria-label="Audit flow：Executor self-verification 之後進入 R1 完整獨立稽核。無 blocking 即 audit closure；有 blocking 則 targeted correction 後進入 R2 closure review。R2 無未解 blocking 即 closure；仍有 blocking 則派出恰好一次 Alternate Review。Alternate 無未解 blocking 即 closure，否則進入 Final Adjudication。Final Adjudication 可要求 targeted rework 並自 R1 開始新的 bounded cycle，或把 design 與 requirement issue 交 Design Authority。真正的 design issue 隨時可直接 route，不必耗盡 R1 與 R2。Spec Integration Audit 是同一套流程的另一個獨立 instance。">
+      <defs>
+        <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d1o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-ok" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d1d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-dg" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="d1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-au" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <!-- Design Authority side -->
+      <rect class="n-auth" x="40" y="240" width="260" height="84" rx="9"/>
+      <text class="t2" x="170" y="264" text-anchor="middle">Design Authority</text>
+      <text class="s" x="54" y="286">contract／design issue</text>
+      <text class="s" x="54" y="304">隨時直接 route，</text>
+      <text class="s" x="54" y="318">不必耗盡 R1／R2（§4.5）</text>
+
+      <!-- main column -->
+      <rect class="n-exec" x="380" y="20" width="340" height="48" rx="8"/>
+      <text class="t2" x="550" y="40" text-anchor="middle">Executor self-verification（§3.5）</text>
+      <text class="s" x="550" y="58" text-anchor="middle">正常／失敗行為 ＋ 變更引入的實質風險</text>
+      <path class="e" d="M550 68 L550 96" marker-end="url(#d1)"/>
+
+      <rect class="n-aud" x="380" y="96" width="340" height="56" rx="8"/>
+      <text class="t2" x="550" y="118" text-anchor="middle">R1 — full independent audit</text>
+      <text class="s" x="550" y="138" text-anchor="middle">accepted work scope · invariants · 變更風險 · evidence</text>
+
+      <path class="e-ok" d="M720 124 L826 124" marker-end="url(#d1o)"/>
+      <text class="lO" x="773" y="116" text-anchor="middle">no blocking</text>
+      <rect class="n-ok" x="830" y="104" width="230" height="40" rx="8"/>
+      <text class="t2" x="945" y="129" text-anchor="middle">audit closure</text>
+
+      <path class="e-au" d="M380 140 L330 140 L330 262 L304 262" marker-end="url(#d1a)"/>
+      <text class="lA" x="334" y="132" text-anchor="end">design issue</text>
+
+      <path class="e-dg" d="M550 152 L550 192" marker-end="url(#d1d)"/>
+      <text class="lD" x="562" y="176">blocking</text>
+
+      <rect class="n-dg" x="380" y="192" width="340" height="56" rx="8"/>
+      <text class="t2" x="550" y="214" text-anchor="middle">Targeted correction</text>
+      <text class="s" x="550" y="234" text-anchor="middle">聚焦 blocking；不夾帶 scope expansion 或重新設計</text>
+      <path class="e" d="M550 248 L550 288" marker-end="url(#d1)"/>
+
+      <rect class="n-aud" x="380" y="288" width="340" height="56" rx="8"/>
+      <text class="t2" x="550" y="310" text-anchor="middle">R2 — closure review</text>
+      <text class="s" x="550" y="330" text-anchor="middle">修正是否真正解決 · 有無回歸 · 修正引發的缺陷</text>
+
+      <path class="e-ok" d="M720 316 L826 316" marker-end="url(#d1o)"/>
+      <text class="lO" x="773" y="308" text-anchor="middle">no blocking</text>
+      <rect class="n-ok" x="830" y="296" width="230" height="40" rx="8"/>
+      <text class="t2" x="945" y="321" text-anchor="middle">audit closure</text>
+
+      <path class="e-dg" d="M550 344 L550 384" marker-end="url(#d1d)"/>
+      <text class="lD" x="562" y="368">blocking remains</text>
+
+      <rect class="n-aud" x="380" y="384" width="340" height="56" rx="8"/>
+      <text class="t2" x="550" y="406" text-anchor="middle">exactly one Alternate Review</text>
+      <text class="s" x="550" y="426" text-anchor="middle">fresh independent context；不得增加 R3／R4</text>
+
+      <path class="e-ok" d="M720 412 L826 412" marker-end="url(#d1o)"/>
+      <text class="lO" x="773" y="404" text-anchor="middle">no blocking</text>
+      <rect class="n-ok" x="830" y="392" width="230" height="40" rx="8"/>
+      <text class="t2" x="945" y="417" text-anchor="middle">audit closure</text>
+
+      <path class="e-dg" d="M550 440 L550 480" marker-end="url(#d1d)"/>
+      <text class="lD" x="562" y="464">unresolved</text>
+
+      <rect class="n-adj" x="380" y="480" width="340" height="56" rx="8"/>
+      <text class="t2" x="550" y="502" text-anchor="middle">Final Adjudication（§4.5）</text>
+      <text class="s" x="550" y="522" text-anchor="middle">dismiss · targeted rework · deferred disposition</text>
+
+      <path class="e-dg" d="M550 536 L550 556 L340 556 L340 112 L376 112" marker-end="url(#d1d)"/>
+      <text class="lD" x="345" y="551">FA 授權的 material rework → 新 bounded cycle 一律自 R1 開始</text>
+
+      <path class="e-au" d="M380 524 L330 524 L330 300 L304 300" marker-end="url(#d1a)"/>
+      <text class="lA" x="326" y="540" text-anchor="end">design／requirement issue</text>
+
+      <text class="l" x="550" y="570" text-anchor="middle">Ticket audit 與 Spec Integration Audit（§4.7）都走這一套；後者是獨立 instance，自有 cycle，不是任何 Ticket audit 的 R3</text>
+    </svg>
+  </div>
+  <figcaption>圖 4 · 一個 cycle 最多是 R1 → targeted correction → R2 → 恰好一次 Alternate Review → Final Adjudication。Audit closure 不豁免 §3.8 的其他完成條件。R1 的「full」在 Lightweight 指完整工作範圍，<b>不要求建立 SDD artifacts</b>。</figcaption>
+</figure>
+
+<div class="grid-3">
+  <div class="panel tone-aud">
+    <h3>Audit applicability<span class="rl">§4.1</span></h3>
+    <ul>
+      <li><b>Formal／SDD：</b>每個 work item 的 independent audit MUST 執行；<b>每份 Spec 另 MUST 執行 §4.7 的 Spec Integration Audit</b>。</li>
+      <li><b>Lightweight：</b>依 accepted contract、Project assurance policy、使用者要求或有權裁決決定。</li>
+      <li>使用者明確要求 audit 時 MUST 執行；已宣告的必要 audit 不得由 Executor 或 Orchestrator 取消。</li>
+      <li>未配置或無法確認適用性時 MUST route 至 Design Authority，<b>不得靜默選擇不審查</b>。</li>
+    </ul>
+    <p class="note"><b>工作大小或缺少 Spec 不是免除 audit 的充分理由。</b>Audit applicability 與 SDD eligibility 是不同問題。</p>
+  </div>
+  <div class="panel tone-dg">
+    <h3>Findings 與 blocking<span class="rl">§4.2 · §4.3</span></h3>
+    <ul>
+      <li>每項 finding MUST 有可追溯識別、證據、severity 與 blocking 判定。</li>
+      <li>Blocking MUST 依 accepted contract 或宣告 operating scope 內的具體實質風險，<b>不得以個人偏好創造需求</b>。</li>
+      <li>預設 Critical／High 為 blocking；Medium 由 Reviewer 明確分類；Low 為 non-blocking。Non-blocking findings MUST 記錄 disposition；需後續處理者須有 owner，但不得延長當前 audit cycle。</li>
+      <li>Blocking status 或 review evidence 有爭議 → Final Adjudicator；爭議實質涉及設計語義 → 先交 Design Authority。</li>
+    </ul>
+    <p class="note">契約語義不足時，Reviewer 提出具體 ambiguity 並 route 至 Design Authority。<b>契約不足是 routing signal，不是對 implementation 的 blocking finding，也不觸發 promotion</b>（§4.2）。</p>
+  </div>
+  <div class="panel tone-adj">
+    <h3>Disposition 邊界<span class="rl">§4.5</span></h3>
+    <p class="body" style="margin-bottom:8px">Blocking finding 可被 deferred，僅限以下條件<b>同時</b>成立：</p>
+    <ol style="font-size:13.5px;padding-left:20px;margin:0">
+      <li>該 finding <b>不主張違反 accepted contract 條款</b>。主張契約違反者只能 dismiss（附推翻該主張的證據）、要求 rework，或作為 contract change 交 Design Authority 與 acceptor。</li>
+      <li>殘餘風險在宣告的 operating scope 與 assurance policy 之內，或風險條件在宣告 envelope 之外。</li>
+      <li>有 owner 與 tracked item；tracked item 在被接受前不是新工作（§1.2）。</li>
+      <li>Disposition 記錄理由，且不將任何 gate 標為 PASS。</li>
+    </ol>
+    <p class="note">Assurance policy 宣告為高風險類別的 blocking finding，deferral MUST 另有 Design Authority 的確認並記入 disposition；Final Adjudicator 不得單獨 defer。Final Adjudicator MUST NOT 虛報 gate PASS、以 disposition 隱性修改 requirement、覆寫原 Reviewer 結論、取得其他 authority 的保留權限，或只因需要判斷就要求 operator 介入。</p>
+  </div>
+</div>
+
+<div class="callout dg"><b>Cycle 起點與進展（§4.5）。</b>新的 bounded cycle 一律從 R1 開始，且只有兩個合法起點：Final Adjudicator 授權的 material rework（授權 MUST 指明相對於前一 cycle <b>受審 subject 有何實質改變</b>）；或 Design Authority 的 contract change 使受審 subject 或其契約失效。<b>Subject 與契約皆未改變時，不得開新 cycle</b>；改 lane、換 model 或重命名 work item 不構成 reset 理由。同一 root cause 的 blocking finding 在新 cycle 的 R2 之後仍未解時，不再視為 rework 可解的 implementation defect，MUST 交 Design Authority 或在 disposition 邊界內處置。本治理不設 cycle 總數上限；上述進展條件即為 bound。</div>
+
+<h3 class="sh" id="sia">Spec Integration Audit — v2.0 新增的 audit instance<span class="sec">§4.7 · §3.4 · §3.8 · §4.1 · §5.2</span></h3>
+<p class="sub">Formal 下，一份 Spec 的全部 implementation Tickets 結案後、Design Authority phase acceptance 前，MUST 對整合後的最終 subject 執行一次 independent <b>Spec Integration Audit</b>。它是獨立的 audit instance，subject 為整合結果，<b>不是任何 Ticket audit 的 R3</b>。</p>
+<div class="flow">
+  <div class="step s-ok"><div class="st">一份 Spec 的全部 Tickets 結案</div><div class="sd">orch-default §7 P1–P9 成立</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-aud"><div class="st">Spec Integration Audit</div><div class="sd">fresh context 的 primary_reviewer；subject ＝ 整合後最終 subject；自有 R1／R2／一次 Alternate／FA cycle</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-ok"><div class="st">Closure record</div><div class="sd">Reviewer closure，或 FA 對每條未解 blocking 的合法 disposition（P10）</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-auth"><div class="st">Design Authority phase acceptance</div><div class="sd">MUST 引用已 closure 的 §4.7 record，不得豁免或取代它（§3.8）</div></div>
+</div>
+<div class="grid-2">
+  <div class="panel tone-aud">
+    <h3>審查範圍 MUST 涵蓋</h3>
+    <ol>
+      <li>跨 Ticket invariants。</li>
+      <li><b>Spec-level AC coverage：</b>每條 Spec AC 有對應 evidence 與 PASS／FAIL 判定，且 Spec AC 整體涵蓋<b>其 derivation record 所分配的</b> Outcome Contract acceptance boundary 部分（§1.2、§3.1 第 3 項）。</li>
+      <li>整合行為。</li>
+      <li>最終 subject 的 verification／audit coverage（§3.8）。</li>
+      <li>Spec／Tickets 對 Outcome Contract 的 traceability 與 boundary 符合性（§1.2），含對所分配 boundary 部分的 traceability 完整。<b>Outcome Contract 或適用 phase 最終 closure 前，全部 derived Specs MUST 合起來涵蓋整個 acceptance boundary；同一 Outcome Contract 最後一份未結 Spec 的 Spec Integration Audit MUST 另核對全部 derived Specs 的分配合起來涵蓋整個 acceptance boundary。</b>分配缺口或造成歧義的重疊是 finding，屬設計事項者依 §2.4 route Design Authority；不因此新增 audit instance、round 或角色。</li>
+    </ol>
+  </div>
+  <div class="panel tone-adj">
+    <h3>規則與邊界</h3>
+    <ul>
+      <li>適用 §2.3 四項 properties，以及 §4.3–§4.6 同一套 findings、R1／R2／一次 Alternate／Final Adjudication 與 traceability 規則；<b>不新增 round</b>。</li>
+      <li>MUST NOT 重開已閉合的 Ticket finding，除非有新的 integration-level evidence；此時它是對整合 subject 的新 finding。</li>
+      <li>修正屬契約內 rework，依 §3.8 作審後驗證，不需新授權。揭露的設計缺陷依 §2.4 route Design Authority。</li>
+      <li><b>Boundary 疑義依 §1.2 處理：</b>本 audit 的 boundary 符合性 finding 在 Design Authority determination 後仍有爭議時，依 §1.2 視為 Design Authority 無法確立而 fail-closed（第 07 節）。</li>
+      <li><b>Design Authority、Orchestrator 與 Project Bindings 均不得豁免本 audit</b>（§2.1、§4.1、§5.2）。</li>
+      <li>Lightweight 無 Spec，不適用；assurance policy MAY 對特定類別要求等效的 outcome-level audit。</li>
+    </ul>
+  </div>
+</div>
+<div class="callout au"><b>單 Ticket fast path（§4.7）：</b>Spec 只有一張 Ticket 時，該 Ticket 的 independent audit record MAY 同時滿足本節，但僅限該 audit 實際審查了最終整合 subject、Outcome Contract boundary、所分配部分的 Spec-level AC coverage、整合行為、最終 evidence 與必要 traceability（含該 Spec 為同一 Outcome Contract 最後一份未結 Spec 時的全部 derived Specs 分配涵蓋核對），且其 record 明確如此記載。<b>MUST NOT 將既有 Ticket R1 record 事後重新標示為 Spec Integration Audit。</b>Bindings assurance policy 宣告採用 fast path 時，MUST 同時宣告上述範圍的核對方式；Orchestrator 只核對 record 是否明文逐項涵蓋，缺任一項即另派（impl-default v2 §6、orch-default v2.1 §6）。</div>
+<div class="callout"><b>Audit traceability（§4.6）：</b>audit records MUST 可識別 Work Contract 與受審版本／範圍、Reviewer role 與 binding 證據及 independence 四項 properties 的滿足方式、round／cycle、findings、verdict 與 closure evidence、後續 adjudication 與 disposition 及其 authority。正式 Reviewer 結論與後續裁決 MUST 保持可區別；<b>Executor 提供修正證據不等於自行確認 formal closure</b>。</div>
+
+<!-- ============ 6. worklog ============ -->
+<h2 id="s6"><span class="num">06</span>Mandatory durable worklog<span class="badge ex">execution</span><span class="sec">§3.7</span></h2>
+<p class="sub">粒度只有一個定義，避免退化成 event log 或工作流引擎。§3.7 於 v2.0、v2.1 皆未改；Implementation Profile v2 §9 只引用它，不再複述。</p>
+
+<div class="quote">Work item ＝ 一個 accepted Work Contract 的一次執行。<br><span style="font-weight:400;font-size:13.5px;color:var(--muted)">Formal 下以 Ticket 及其引用的 Spec 構成契約；Lightweight 下以被接受的 brief、prompt 或 Jira item 等構成契約。</span></div>
+
+<div class="grid-3">
+  <div class="panel tone-ok">
+    <h3>是同一個 work item</h3>
+    <ul class="auth-list">
+      <li>同一契約執行的<b>續接 session</b>更新同一 worklog identity，不因 session replacement／rollover 另開工作身分</li>
+      <li>由 Orchestrator 派工、由 direct execution session 執行、或由任何其他 session 接手，<b>義務相同</b></li>
+      <li>中斷、失敗、取消或無產物變更的執行，<b>同樣</b>要留下 worklog</li>
+    </ul>
+  </div>
+  <div class="panel tone-dg">
+    <h3>不是新的 work item</h3>
+    <ul class="auth-list no">
+      <li>Sub-agent action</li>
+      <li>Command</li>
+      <li>File edit</li>
+    </ul>
+    <p class="note">這些是 worklog <b>可引用的執行證據</b>，不各自成為 work item。</p>
+  </div>
+  <div class="panel tone-ctl">
+    <h3>不產生 worklog 義務</h3>
+    <ul class="auth-list no">
+      <li>純詢問</li>
+      <li>尚未成為 accepted execution 的探索</li>
+      <li>未被接受的請求</li>
+    </ul>
+    <p class="note">契約被接受<b>並進入執行</b>時，才產生 mandatory worklog 義務。</p>
+  </div>
+</div>
+
+<h3 class="sh">最低內容（兩條 lane 相同）<span class="sec">§3.7</span></h3>
+<ol class="checklist">
+  <li data-n="1"><b>Work performed</b> — 實際做了什麼，以及目前結果。</li>
+  <li data-n="2"><b>Contract reference</b> — Accepted Work Contract、適用版本及重要變更。</li>
+  <li data-n="3"><b>Executing role and binding reference</b> — 執行角色與實際 binding 證據引用；不要求複製 Harness 日誌。</li>
+  <li data-n="4"><b>Decisions and assumptions</b> — 重要實作決定、假設，以及需要 authority 的決定所引用的 ruling。</li>
+  <li data-n="5"><b>Artifacts</b> — 主要新增、修改或移除的產物及可識別版本。</li>
+  <li data-n="6"><b>Verification</b> — verification／test 方法、結果、限制及 evidence 引用。</li>
+  <li data-n="7"><b>Audit status</b> — required／elected／not required、其依據與實際進度；有 audit 時引用 records、findings 與 dispositions。</li>
+  <li data-n="8"><b>Remaining work</b> — 累積 scope、未完成事項、阻擋原因、負責者／authority 與下一步。</li>
+</ol>
+
+<div class="grid-2" style="margin-top:12px">
+  <div class="panel tone-exec">
+    <h3>更新時機與誠實性</h3>
+    <ul>
+      <li>MUST 在足以支援 handoff／recovery 的時間點更新，<b>不得只依賴成功結案後回憶補寫</b>。</li>
+      <li>中斷後補建的內容 MUST 區別<b>可驗證事實</b>與<b>未知事項</b>。</li>
+      <li>MUST 可由接手 session、Orchestrator 或 Reviewer 取得並理解。</li>
+      <li>MAY 以引用連結證據，無須複製完整 logs。</li>
+    </ul>
+  </div>
+  <div class="panel tone-dg">
+    <h3>Worklog 不能做的事</h3>
+    <ul class="auth-list no">
+      <li>不取代 Work Contract、Spec、Ticket、audit record 或原始 evidence</li>
+      <li>不創造 authority，不使未核准假設成為 accepted requirement</li>
+      <li>不把 Executor 的「已修正」變成 Reviewer closure</li>
+    </ul>
+    <p class="note"><b>§3.7 是 worklog 要求的唯一規範定義。</b>治理不指定檔名、schema、storage、更新工具，也不要求一個 worklog identity 必須對應一個實體檔案。</p>
+  </div>
+</div>
+
+<!-- ============ 7. boundary + operator ============ -->
+<h2 id="s7"><span class="num">07</span>Boundary 與 operator<span class="badge ct">boundary</span><span class="sec">§1.2 · §1.5 · §3.3 · §5.1 · §5.2</span></h2>
+<p class="sub">左邊是正常狀態，佔絕大多數；右邊是 §1.5 的四項 legitimate boundary，不是每個 phase 的核可關卡。v2.0 把 boundary 疑義的處理寫成確定的流程：<b>先 Design Authority 作 boundary determination，無法確立才 fail-closed 至 acceptor</b>；Project Bindings MUST 明確列舉其保留的 reserved boundaries，<b>不得由 Agent 臨時增加「保險起見問 operator」的 gate</b>。</p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 470" role="img" aria-label="左側是正常的 AI 自主循環：問題、辨識所需 authority 並派工、取得可追溯裁決、繼續授權執行，循環往復。右側是 §1.5 的四項 legitimate boundary：Outcome Contract 的接受與授權本身；需要 re-authorization 的 boundary 變更，含 Design Authority 無法確立在 boundary 內而 fail-closed 的路徑；Project Bindings 依 §5.2 明確列舉的 reserved boundaries；必要外部權限、能力、資源或證據無法由授權內取得且無合法替代。兩者之間只有一條細虛線，標示為例外。">
+      <defs>
+        <marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="e1o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-op" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <!-- normal loop -->
+      <rect class="n-pane" x="30" y="34" width="620" height="420" rx="10"/>
+      <rect class="n-ok" x="30" y="34" width="620" height="34" rx="10"/>
+      <text class="t2" x="50" y="57">正常：AI 自主循環（絕大多數）</text>
+      <text class="lm" x="630" y="56" text-anchor="end">NO OPERATOR GATE</text>
+
+      <rect class="n-plain" x="60" y="96" width="260" height="56" rx="8"/>
+      <text class="t2" x="190" y="120" text-anchor="middle">問題／需要判斷</text>
+      <text class="s" x="190" y="139" text-anchor="middle">ambiguity · boundary 疑義 · finding · dispute · rollover</text>
+
+      <rect class="n-ctl" x="370" y="96" width="260" height="56" rx="8"/>
+      <text class="t2" x="500" y="120" text-anchor="middle">identify authority ＋ dispatch</text>
+      <text class="s" x="500" y="139" text-anchor="middle">Orchestrator 依 §2.4 五情況查表，不作實質判斷</text>
+
+      <rect class="n-auth" x="370" y="206" width="260" height="56" rx="8"/>
+      <text class="t2" x="500" y="230" text-anchor="middle">traceable decision／ruling</text>
+      <text class="s" x="500" y="249" text-anchor="middle">由具該 authority 的 Agent 自主裁決</text>
+
+      <rect class="n-ok" x="60" y="206" width="260" height="56" rx="8"/>
+      <text class="t2" x="190" y="230" text-anchor="middle">continue authorized execution</text>
+      <text class="s" x="190" y="249" text-anchor="middle">留下 durable record，繼續推進</text>
+
+      <path class="e" d="M320 124 L366 124" marker-end="url(#e1)"/>
+      <path class="e" d="M500 152 L500 202" marker-end="url(#e1)"/>
+      <path class="e" d="M370 234 L324 234" marker-end="url(#e1)"/>
+      <path class="e" d="M190 206 L190 156" marker-end="url(#e1)"/>
+
+      <text class="s" x="56" y="306">MUST NOT 停下等 operator：work item／phase 完成 · 新的 Executor／Reviewer session ·</text>
+      <text class="s" x="56" y="326">agent replacement · findings／rework · audit escalation · Design Authority decision ·</text>
+      <text class="s" x="56" y="346">Final Adjudication · phase adjudication · context／session rollover · promotion 規劃（§1.4）</text>
+      <text class="l" x="56" y="374">Recovery：狀態、authority 或證據不可靠時先核對與恢復；只有在 (1) 從權威紀錄 re-ground、</text>
+      <text class="l" x="56" y="392">(2) 依 replacement policy 完成已授權替代或修復、(3) 適用 DA／FA routing 已裁決或確認無法裁決</text>
+      <text class="l" x="56" y="410">三項之後仍 unsafe／indeterminate，該路徑才可停止並轉交 operator（§1.5，不以次數或門檻計算）</text>
+      <text class="l" x="56" y="436">Spec review 與獨立 implementation authorization 預設不保留（§5.2 opt-in）；不是等待 operator 的理由</text>
+
+      <path class="e-op" d="M650 210 L696 210" marker-end="url(#e1o)"/>
+      <text class="l" x="673" y="232" text-anchor="middle">例外</text>
+
+      <!-- operator side -->
+      <rect class="n-pane" x="700" y="34" width="360" height="420" rx="10"/>
+      <rect class="n-op" x="700" y="34" width="360" height="34" rx="10"/>
+      <text class="t2" x="720" y="57">真正可請求 operator（§1.5 · 唯一權威清單）</text>
+      <text class="l" x="724" y="84">四項；§3.4、§5.2 引用之，不另行定義</text>
+
+      <rect class="n-op" x="724" y="94" width="312" height="62" rx="8"/>
+      <text class="t2" x="740" y="116">① Outcome Contract 的接受與授權本身</text>
+      <text class="s" x="740" y="136">§1.2；Agents MUST NOT 自行發起</text>
+      <text class="s" x="740" y="150">Outcome Contract</text>
+
+      <rect class="n-op" x="724" y="166" width="312" height="78" rx="8"/>
+      <text class="t2" x="740" y="188">② 需 re-authorization 的 boundary 變更</text>
+      <text class="s" x="740" y="208">超出 scope／constraints、改變 accepted 語義、</text>
+      <text class="s" x="740" y="224">或 DA 無法確立在 boundary 內而 fail-closed</text>
+      <text class="s" x="740" y="238">的路徑（§1.2）</text>
+
+      <rect class="n-op" x="724" y="254" width="312" height="78" rx="8"/>
+      <text class="t2" x="740" y="276">③ Bindings 明確列舉的 reserved boundaries</text>
+      <text class="s" x="740" y="296">§5.2 opt-in：Spec review、獨立 implementation</text>
+      <text class="s" x="740" y="312">authorization 預設不保留；merge／push／release</text>
+      <text class="s" x="740" y="326">是否授權由 Bindings 決定</text>
+
+      <rect class="n-op" x="724" y="342" width="312" height="62" rx="8"/>
+      <text class="t2" x="740" y="364">④ 無合法替代的 external boundary</text>
+      <text class="s" x="740" y="384">必要外部權限／能力／資源／證據無法由</text>
+      <text class="s" x="740" y="398">現有授權內的 Agent／工具取得</text>
+
+      <text class="l" x="724" y="428">停止紀錄 MUST 說明現況、缺少事項、已嘗試的 re-ground／</text>
+      <text class="l" x="724" y="444">replacement／routing 及結果、所需 authority 與下一步</text>
+    </svg>
+  </div>
+  <figcaption>圖 5 · 右側是 §1.5 的<b>四項</b>——自 v2.0 起的唯一 reserved-acts 清單。與 v1.0 的差別：Formal Spec acceptance 與 implementation authorization 不再是預設的人工核准；它們只有在 Bindings 依 §5.2 明確列舉時才成為 ③。停止只發生在受影響路徑，無關且不會預判該決定的工作 SHOULD 繼續。</figcaption>
+</figure>
+
+<h3 class="sh">Boundary determination — DA-first，無法確立才 fail-closed<span class="sec">§1.2 · §3.3 · §4.7 · orch-default v2.1 §5 · impl-default v2 §4</span></h3>
+<div class="flow">
+  <div class="step s-exec"><div class="st">Executor／Reviewer 的 boundary 疑義</div><div class="sd">是否允許動到某範圍、所提 derived contract 或變更是否仍在 Outcome Contract 內；Executor 以 <code>BLOCKED</code>＋required authority = Design Authority 提出，不直接指向 acceptor</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-auth"><div class="st">Design Authority boundary determination</div><div class="sd">MUST 以 derivation record 確立所提 derived contract 或變更是否仍在 Outcome Contract boundary 內</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-ok"><div class="st">確立在 boundary 內 → 繼續</div><div class="sd">DA 不因此取得接受或授權權限</div></div>
+</div>
+<div class="flow" style="margin-top:0">
+  <div class="step s-dg"><div class="st">DA 無法確立 → fail-closed</div><div class="sd">受影響路徑 MUST route 至 acceptor，只停止該路徑（§1.5 第 2 項）；其他路徑繼續</div></div>
+  <div class="arrow"><span>→</span></div>
+  <div class="step s-op"><div class="st">acceptor 的 boundary re-authorization</div><div class="sd">接受／授權缺口只有 acceptor 能補；DA 不得在無法確立 boundary 時自行放行（§2.1）</div></div>
+</div>
+<div class="callout dg"><b>Reviewer 的 boundary 符合性 finding（§1.2，含 §4.7 Spec Integration Audit）：</b>Design Authority MUST 先評估該 finding；DA 確立所涉 derived contract／變更在已接受的 Outcome Contract boundary 內，且 Reviewer 在其 record 中撤回或關閉該 finding 者，正常繼續。<b>DA 作出 determination 後該 boundary finding 仍有爭議者，該 boundary 對執行與 closure 而言視為未確立</b>：即屬 DA 無法確立，受影響路徑 fail-closed 至 acceptor。Final Adjudicator MAY 裁決相關 routing／process 爭議，但 <b>MUST NOT 代 acceptor dismiss 或裁決該 Outcome Contract boundary 問題本身</b>。本規則限於 boundary 爭議：boundary determination 仍屬 DA，Reviewer 仍只擁有 findings／blocking，FA 不因此取得實質 boundary authority，acceptor 保有 Outcome Contract scope／授權權限；它不使 Reviewer 取得覆寫 DA 其他設計決定的一般權限。</div>
+
+<div class="grid-2" style="margin-top:12px">
+  <div class="panel tone-op">
+    <h3><span class="role-dot rd-op"></span>Reserved boundaries 採 opt-in · Standing authorizations<span class="rl">§5.1 · §5.2</span></h3>
+    <ul>
+      <li>Project Bindings MUST 明確列舉其保留的 non-delegable 決定／動作（§1.5 第 3 項）。<b>Spec review 與獨立的 implementation authorization 預設不保留</b>：未列為 reserved boundary 時，由 Outcome Contract 的授權涵蓋；明確列舉時即為 §1.5 第 3 項的 boundary。Merge／push／release 是否授權由 Bindings 決定。</li>
+      <li>在已接受的 Outcome Contract 內產生 derived contract 是 Design Authority 的設計行為，<b>不是接受或授權行為</b>。</li>
+      <li><b>Standing authorizations：</b>acceptor MAY 在 Authority sources 中預先宣告某些類別的工作或動作視為已接受並授權；該宣告是 acceptor 的行為，範圍與撤銷方式 MUST 明確；Agent 不得推定未宣告的預授權。契約內必要的 rework／re-verification 不是新工作接受 gate（§1.2）。</li>
+    </ul>
+  </div>
+  <div class="panel tone-dg">
+    <h3>Bindings MUST NOT<span class="rl">§5.2</span></h3>
+    <ul class="auth-list no">
+      <li>取消 mandatory worklog</li>
+      <li>將 self-verification 冒充 independent audit</li>
+      <li>弱化 §2.3 四項 properties、context independence、已觸發 audit 的流程，<b>或豁免 §4.7 Spec Integration Audit</b></li>
+      <li>擴張 Executor／Reviewer／Orchestrator authority，或讓 Design Authority 取得接受／授權權限</li>
+      <li>讓 promotion 清除 findings 或授權限制</li>
+      <li>取消 autonomous routing 與 adjudication 後的 continuation</li>
+      <li>以 Lightweight 增量執行繞過整體工作的 contract-change 或 Formal 要求</li>
+    </ul>
+    <p class="note">需要 release 的專案 MUST 宣告 release authority、必要 gates 與 evidence；work item completion 不授予 release permission。</p>
+  </div>
+</div>
+
+<!-- ============ 8. governance vs implementation ============ -->
+<h2 id="s8"><span class="num">08</span>Governance 與 Implementation 邊界<span class="badge gov">governance</span><span class="sec">§5.1 · §5.3 · §5.4</span></h2>
+<p class="sub">治理保留 properties 與權責；HOW 一律下放。<b>不得為了採用治理而強制建立另一套 workflow engine，也不得只以文字宣稱尚未具備的 isolation、binding 或 recovery 能力。</b></p>
+
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:44%">Governance 保留（本治理定義）</th><th style="width:44%">下放 Runtime／Harness（本治理不規定）</th><th>條款</th></tr></thead>
+    <tbody>
+      <tr><td class="keep"><b>Authority</b> — 誰能接受、授權、derive、設計、審查、裁決、派工；boundary determination 屬 DA</td><td class="push">Agent loading、definition 檔名／目錄／frontmatter、spawn 方法</td><td>§1.2 · §2.1 · §2.4</td></tr>
+      <tr><td class="keep"><b>Contracts</b> — Outcome Contract 的七項 properties、derived contracts 與 derivation record、contract change 的兩類劃分</td><td class="push">Ticket lifecycle state machine、<code>gov_state</code> 或其他特定 validator</td><td>§1.2 · §3.1 · §5.3 · §5.4</td></tr>
+      <tr><td class="keep"><b>Roles／Subagents</b> — 穩定 definitions、prohibited authority、independence requirement</td><td class="push">Transcript parser、環境變數、invocation 形式</td><td>§2.1 · §5.4</td></tr>
+      <tr><td class="keep"><b>Model mapping properties</b> — identifier、model、version／resolution、effort／mode、replacement、verification</td><td class="push">Profile 檔案格式或 schema（不強制另建）、model-id parser</td><td>§2.2</td></tr>
+      <tr><td class="keep"><b>Audit semantics</b> — 四項 independence properties、R1／R2／Alternate／Final Adjudication、Spec Integration Audit、disposition 邊界、cycle 進展條件</td><td class="push">Audit filename、header schema、verdict／classification grammar</td><td>§2.3 · §4</td></tr>
+      <tr><td class="keep"><b>Worklog properties</b> — work item 粒度與八項最低內容</td><td class="push">Worklog／audit／timeline schema、layout、更新工具、檔案對應</td><td>§3.7 · §5.4</td></tr>
+      <tr><td class="keep"><b>Traceability／recovery</b> — 權威紀錄、evidence coverage、recovery 停止條件、Ticket→Spec→Outcome Contract 引用鏈</td><td class="push">Git branch／merge／commit trailer、context rollover、worker timeout、heartbeat、orphan reconciliation、恢復重試的次數或門檻</td><td>§1.5 · §3.8 · §5.4</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="callout ok">既有 tracker、文件、CI、Runtime 或簡單持久紀錄能滿足要求時 <b>MAY 直接使用</b>。若必要 property 已可由既有 tooling 檢查，Project Bindings <b>SHOULD</b> 引用並使用該 check——<b>此偏好不要求新增 validator、artifact、approval gate 或 workflow</b>（§5.4）。</div>
+
+<h3 class="sh">落地所需 bindings<span class="sec">§5.1</span></h3>
+<p class="sub">以下 bindings 與所需 definitions MUST 在 <b>Orchestrator activation 前</b>，以及 <b>Lightweight work item 第一次正式 audit 前</b>就緒且可驗證；不得啟動後才以 prompt 自述角色代替尚未成立的 bindings；root role session 的 activation basis 依 §2.2，不屬此處所稱的 prompt 自述。</p>
+<div class="grid-3">
+  <div class="panel tone-auth"><h3>Governance adoption</h3><p class="body">採用版本、權威位置與變更 authority。</p></div>
+  <div class="panel tone-op"><h3>Authority sources</h3><p class="body"><b>Outcome Contract acceptor</b>、執行授權來源、上位 contracts、operator／人類代理、standing authorizations，以及依 §5.2 保留的 reserved boundaries（<b>含是否保留 Spec review、獨立 implementation authorization、merge／push／release</b>）。</p></div>
+  <div class="panel tone-hz"><h3>Definitions ＋ Model Mapping Profile</h3><p class="body">六治理角色與所有實際使用的 reusable Subagent definitions；採用的 Profile、每個可 dispatch identifier 的有效 mapping 與驗證機制（預設 <code>default</code> <code>v2.4</code>，overrides 或 <code>none</code>，PROJECT_BINDING 項填入；<b>含 root role session 依 §2.2 核對 model／effort 的方式與證據位置</b>）；符合 §2.3 四項 properties 的 independent dispatch 機制及其滿足方式。</p></div>
+  <div class="panel tone-exec"><h3>Lane policy</h3><p class="body">預設分類、適用 Formal 要求及模糊情況的決定者；<b>不得取代 §3.3、§3.6</b>。</p></div>
+  <div class="panel tone-aud"><h3>Assurance policy</h3><p class="body">Lightweight audit 預設與觸發條件、高風險類別（§4.5 disposition 邊界引用）、適用 integration／release gates、<b>§4.7 單 Ticket fast path 是否採用及其核對方式</b>、<b>model diversity 預設</b>（§2.2）。</p></div>
+  <div class="panel tone-ctl"><h3>Skills and runtime</h3><p class="body">選用工作 Skills、direct-execution／orchestration 與 recovery 能力。</p></div>
+  <div class="panel tone-ok"><h3>Work records</h3><p class="body"><b>Outcome Contract、derived contracts 與 derivation records</b>、worklog、audit、decisions 與 evidence 的權威位置。</p></div>
+</div>
+<div class="callout"><b>Policy MUST 使 lane 與 assurance 決定可追溯。</b>Agent／Subagent mapping 與必要機制<b>不得只以 prompt 自述取代</b>。Design Authority MUST 決定專案適用的高風險分類及 assurance 要求；Orchestrator 依宣告與有權判定執行，<b>不得自行降級</b>。</div>
+
+<h3 class="sh">Precedence 與變更留痕<span class="sec">§5.3 · orch-default v2.1 §1</span></h3>
+<div class="flow">
+  <div class="step s-auth"><div class="st">本治理</div><div class="sd">authority 與必要 properties</div></div>
+  <div class="arrow"><span>▸</span></div>
+  <div class="step s-op"><div class="st">Project Bindings</div><div class="sd">在其範圍內具體化</div></div>
+  <div class="arrow"><span>▸</span></div>
+  <div class="step s-exec"><div class="st">Accepted Work Contract</div><div class="sd">Outcome Contract 及其 derived contracts 定義工作要求</div></div>
+  <div class="arrow"><span>▸</span></div>
+  <div class="step s-hz"><div class="st">Implementation Profile</div><div class="sd">HOW reference（orch-default v2.1 §1）</div></div>
+  <div class="arrow"><span>▸</span></div>
+  <div class="step s-hz"><div class="st">Orchestrator Contract</div><div class="sd">HOW reference（orch-default v2.1 §1）</div></div>
+  <div class="arrow"><span>▸</span></div>
+  <div class="step s-ctl"><div class="st">Skills／Runtime</div><div class="sd">不得修改上述權限與義務</div></div>
+</div>
+<p class="sub" style="margin-top:6px">前三者與 Skills／Runtime 依 Minimal §5.3；Implementation Profile 與 Orchestrator Contract 的位置依 orch-default v2.1 §1（Minimal ＞ Project Bindings ＞ Accepted Work Contract ＞ Implementation Profile ＞ 本 contract ＞ Runtime 工具）。</p>
+<div class="callout"><b>變更留痕：</b>governance、bindings（含 definitions／Model Mapping Profiles）與 accepted contracts 的變更 MUST 留下<b>版本、依據與授權</b>。新版本不自動適用既有工作；採用時 MUST 明確處理進行中 assignments、audit 與 evidence coverage。<b>Worklog 記下新假設，不等於 contract 已變更；代理寫入接受或核准紀錄，不等於取得該 authority。</b></div>
+
+<!-- ============ 9. reusable package v2.1 ============ -->
+<h2 id="s9"><span class="num">09</span>Reusable package v2.1 與 Project Bindings<span class="badge hz">reference</span><span class="sec">§2.2 · §5.1 · §5.3 · §5.4</span></h2>
+<p class="sub">可重用套件於 2026-09-22 與 Minimal v2.0 同步 Adopted／Frozen。其後 Model Profile 依序更新為 default v2.1、v2.2（2026-09-23）、<b>default v2.3</b>（2026-09-29）與 <b>default v2.4</b>（2026-10-02：<code>primary_reviewer</code> 單一 Claude path，Codex 只作 <code>primary_reviewer</code>）；Minimal 與 Orchestrator Contract 於 2026-10-01 更新為 <b>v2.1</b>。現行組合是 Minimal v2.1＋default v2.4＋impl-default v2＋orch-default v2.1。治理只有一份 authority；三份 reference artifacts 從屬於它：<b>Reference Model Profile v2.4</b> 提供具體的 role／model mapping defaults 與 deterministic replacement policies，<b>Implementation Profile v2</b> 提供可重用的 implementation HOW（含 Spec Integration Audit dispatch），<b>Reference Orchestrator Contract v2.1</b> 提供 Formal lane 的 control-plane HOW（含 Outcome Contract activation、五情況 routing、P10，以及 Orchestrator 作為 root role session 的 designation 與自身 model／effort 核對）。三者<b>都不修改 Minimal 的 authority 或 normative semantics</b>；本節只是導覽，不是規則。</p>
+
+<figure>
+  <div class="canvas">
+    <svg viewBox="0 0 1100 570" role="img" aria-label="Reusable package v2.1 架構：最上層是唯一的 authority，Minimal Operational Governance v2.1，Adopted 與 Frozen 2026-10-01。往下是 Project Bindings，依 §5.1 選用並 pin 三份從屬的 reference artifacts：Reference Model Profile default v2.4 提供具體的 role 與 model mapping defaults 與 deterministic replacement policies；Implementation Profile impl-default v2 提供可重用的 implementation HOW；Reference Orchestrator Contract orch-default v2.1 提供 Formal lane 的可重用 control-plane HOW。最下層是 project-specific Runtime、Skills 與 Harness，實際 assignment 必須可驗證。Lightweight direct execution 不要求先啟動完整 Orchestrator run。">
+      <defs>
+        <marker id="f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <rect class="n-auth" x="40" y="12" width="14" height="14" rx="3"/><text class="l" x="60" y="23">治理 authority（唯一）</text>
+      <rect class="n-op" x="270" y="12" width="14" height="14" rx="3"/><text class="l" x="290" y="23">Project Bindings（§5.1 選用／採用）</text>
+      <rect class="n-hz" x="520" y="12" width="14" height="14" rx="3"/><text class="l" x="540" y="23">reusable reference（mapping／HOW，從屬）</text>
+      <rect class="n-ok" x="830" y="12" width="14" height="14" rx="3"/><text class="l" x="850" y="23">project-specific Runtime／Skills／Harness</text>
+
+      <rect class="n-auth" x="250" y="44" width="600" height="78" rx="9"/>
+      <text class="t" x="550" y="68" text-anchor="middle">Minimal Operational Governance v2.1 — Adopted／Frozen 2026-10-01</text>
+      <text class="s" x="550" y="90" text-anchor="middle">authority · 六角色 · Outcome Contract properties · routing · audit semantics · worklog · boundaries（§1–§5）</text>
+      <text class="s" x="550" y="110" text-anchor="middle">唯一 authority；下方 reference artifacts 不修改其 semantics（§5.3）</text>
+
+      <path class="e" d="M550 122 L550 148" marker-end="url(#f1)"/>
+      <text class="l" x="562" y="140">adopt（governance adoption binding）</text>
+
+      <rect class="n-op" x="250" y="152" width="600" height="90" rx="9"/>
+      <text class="t" x="550" y="176" text-anchor="middle">Project Bindings（§5.1）</text>
+      <text class="s" x="550" y="196" text-anchor="middle">governance adoption · authority sources（Outcome Contract acceptor、reserved boundaries opt-in）</text>
+      <text class="s" x="550" y="214" text-anchor="middle">definitions ＋ Model Profile pin · lane／assurance policy · skills and runtime · work records</text>
+      <text class="s" x="550" y="232" text-anchor="middle">選用 references，記錄 overrides（無則 none）；不得擴張任何角色 authority、不得豁免 §4.7</text>
+
+      <path class="e" d="M550 242 L550 266"/>
+      <path class="e" d="M190 266 L910 266"/>
+      <path class="e" d="M190 266 L190 290" marker-end="url(#f1)"/>
+      <path class="e" d="M550 266 L550 290" marker-end="url(#f1)"/>
+      <path class="e" d="M910 266 L910 290" marker-end="url(#f1)"/>
+      <text class="l" x="562" y="258">select · pin · overrides</text>
+
+      <rect class="n-hz" x="40" y="292" width="300" height="108" rx="9"/>
+      <text class="t2" x="190" y="316" text-anchor="middle">Reference Model Profile</text>
+      <text class="lm" x="190" y="334" text-anchor="middle">default · v2.4</text>
+      <text class="s" x="190" y="354" text-anchor="middle">具體 mapping defaults · R-DA～R-OR replacement</text>
+      <text class="lm" x="190" y="372" text-anchor="middle">model-profiles/default-v2.4.md</text>
+      <text class="s" x="190" y="390" text-anchor="middle">不授予 authority；無 TBD；PROJECT_BINDING 由 Bindings 填</text>
+
+      <rect class="n-hz" x="400" y="292" width="300" height="108" rx="9"/>
+      <text class="t2" x="550" y="316" text-anchor="middle">Implementation Profile</text>
+      <text class="lm" x="550" y="334" text-anchor="middle">impl-default · v2</text>
+      <text class="s" x="550" y="354" text-anchor="middle">可重用 implementation HOW</text>
+      <text class="lm" x="550" y="372" text-anchor="middle">implementation-profiles/default-v2.md</text>
+      <text class="s" x="550" y="390" text-anchor="middle">Executor method · audit HOW · 5 properties A–E</text>
+
+      <rect class="n-hz" x="760" y="292" width="300" height="108" rx="9"/>
+      <text class="t2" x="910" y="316" text-anchor="middle">Reference Orchestrator Contract</text>
+      <text class="lm" x="910" y="334" text-anchor="middle">orch-default · v2.1</text>
+      <text class="s" x="910" y="354" text-anchor="middle">Formal lane 的可重用 control-plane HOW</text>
+      <text class="lm" x="910" y="372" text-anchor="middle">orchestrator-contracts/default-v2.1.md</text>
+      <text class="s" x="910" y="390" text-anchor="middle">Lightweight 不要求 Orchestrator activation</text>
+
+      <path class="e" d="M190 400 L190 424"/>
+      <path class="e" d="M910 400 L910 424"/>
+      <path class="e" d="M190 424 L910 424"/>
+      <path class="e" d="M550 400 L550 448" marker-end="url(#f1)"/>
+      <text class="l" x="562" y="442">adopt as HOW · verify（§2.2）</text>
+
+      <rect class="n-ok" x="250" y="452" width="600" height="84" rx="9"/>
+      <text class="t" x="550" y="476" text-anchor="middle">Project-specific Runtime／Skills／Harness</text>
+      <text class="s" x="550" y="497" text-anchor="middle">definitions loading · state · schema · Git · dispatch mechanism · checkers（§5.4 下放）</text>
+      <text class="s" x="550" y="517" text-anchor="middle">實際 assignment 可由可觀察證據核對（§2.2）；不得只以文字宣稱能力（§5.4）</text>
+
+      <text class="l" x="550" y="560" text-anchor="middle">Lightweight direct execution 不要求先啟動完整 Orchestrator run（§1.4、§3.5）；Formal 才是 Spec＋Tickets＋Orchestrator（§3.4）</text>
+    </svg>
+  </div>
+  <figcaption>圖 6 · 四種顏色是四種東西：藍色是<b>唯一的治理 authority</b>；黑框是 <b>Project Bindings</b>；紫色是三份<b>從屬的 reusable reference</b>；綠色是<b>專案自己的 Runtime</b>。箭頭是「選用與採用」的方向，不是 authority 的方向。三份 reference 的路徑都在 <code>master_governance/references/</code> 之下；較早版本（含 Minimal v2.0 與 orch-default v2）保留為 frozen baseline，已 pin 的專案不自動改用。</figcaption>
+</figure>
+
+<div class="grid-3">
+  <div class="panel tone-hz">
+    <h3><span class="role-dot rd-hz"></span>Reference Model Profile<span class="rl">default · v2.4</span></h3>
+    <ul class="auth-list">
+      <li>六角色具體預設：DA Fable 5.1／xhigh · Executor Opus 5.5／high · Primary Reviewer <b>Codex（preferred，只在此 identifier）</b>，Claude path Opus 5.5／xhigh → Opus 4.8／xhigh → Fable 5.1／xhigh · Alternate Fable 5.1／xhigh · FA Fable 5.1／xhigh · Orchestrator Opus 5.5／high；Opus 4.8 保留於 fallback</li>
+      <li>deterministic replacement policies R-DA～R-OR；intended diversity 兩條恆有＋一條條件性（Codex）、非 independence；<code>diversity_lost</code> 只在宣告關係因替代消失時記錄</li>
+      <li>四種值狀態：<span class="val">具體值</span> <span class="pb">PROJECT_BINDING</span> <span class="na">N/A</span>；本版無 <span class="tbd">TBD</span></li>
+    </ul>
+    <p class="note"><a href="references/model-profiles/default-v2.4.md">references/model-profiles/default-v2.4.md</a> · Adopted／Frozen 2026-10-02（<a href="references/model-profiles/default-v2.3.md">default-v2.3.md</a>、<a href="references/model-profiles/default-v2.2.md">default-v2.2.md</a>、<a href="references/model-profiles/default-v2.1.md">default-v2.1.md</a> 與 <a href="references/model-profiles/default-v2.md">default-v2.md</a> 保留為 frozen baseline）。</p>
+  </div>
+  <div class="panel tone-hz">
+    <h3><span class="role-dot rd-hz"></span>Implementation Profile<span class="rl">impl-default · v2</span></h3>
+    <ul class="auth-list">
+      <li>§3 Executor method、§4 result contract（<code>DONE</code>／<code>DONE_WITH_CONCERNS</code>／<code>BLOCKED</code>／<code>NEEDS_CONTEXT</code>；routing 依 §2.4）、§5 self-verification 與 quality floor</li>
+      <li>§6 formal audit dispatch（§2.3 四項）＋ <b>Spec Integration Audit dispatch pack 與單 Ticket fast path 核對</b>；§7 evidence／subject identity；§8 authorization：核對 Outcome Contract 接受／授權紀錄、Ticket→Spec→Outcome Contract 引用鏈與 derivation record 存在（<b>不判斷 boundary determination 內容</b>）</li>
+      <li>§12 五項 mandatory properties：binding integrity · audit independence classification · final-subject coverage · authorization · <b>traceability presence</b>；mandatory property ≠ mandatory checker</li>
+    </ul>
+    <p class="note"><a href="references/implementation-profiles/default-v2.md">references/implementation-profiles/default-v2.md</a> · Adopted／Frozen 2026-09-22。§3／§5／§7／§9／§10 method 沿 v1.1；既有 v2 母版 adopters 的 migration constraints 移至其 Appendix A，適用性不變。</p>
+  </div>
+  <div class="panel tone-ctl">
+    <h3><span class="role-dot rd-ctl"></span>Reference Orchestrator Contract<span class="rl">orch-default · v2.1</span></h3>
+    <ul class="auth-list">
+      <li>§3 activation：已接受並授權的 Outcome Contract（authority record）、DA derive 的 Spec／Tickets 與 derivation record、§5.1 bindings、§2.3 機制、work records；Orchestrator 不核准 Spec，只核對存在、版本對應與引用鏈</li>
+      <li>§5 routing table（§2.4 五情況＋boundary 列）；§6 audit dispatch 含 Spec Integration Audit；§7 completion predicates P1–P9 ＋ <b>P10（Spec-level）</b>；§9 只有 §1.5 四項可停止；§12 records 含 derivation record；§13 checks A–E</li>
+      <li>MUST NOT 判斷 derived contract 是否在 Outcome Contract boundary 內（那是 DA 的 boundary determination）</li>
+      <li><b>v2.1：</b>Orchestrator 是 root role session（§2）；designation MUST 有可持久引用的紀錄，對自身 model／effort 的核對 MUST 先於第一次 dispatch（§3）；checkpoint 與 rollover 重新 grounding（§8）；設定方式屬 Harness HOW（§11）</li>
+    </ul>
+    <p class="note"><a href="references/orchestrator-contracts/default-v2.1.md">references/orchestrator-contracts/default-v2.1.md</a> · Adopted／Frozen 2026-10-01（<a href="references/orchestrator-contracts/default-v2.md">default-v2.md</a> 保留為 frozen baseline）。<b>Lightweight direct execution 不啟動 run（orch-default v2.1 §1）。</b></p>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-top:14px">
+  <div class="panel tone-exec">
+    <h3><span class="role-dot rd-exec"></span>Lightweight<span class="rl">§3.3 · §3.5 · §4.1</span></h3>
+    <div class="flow" style="margin:0 0 8px">
+      <div class="step s-op"><div class="st">Outcome Contract</div><div class="sd">被接受的 prompt／brief／Jira item</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-exec"><div class="st">direct execution</div></div><div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">task-applicable self-verification</div></div><div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">durable worklog</div></div><div class="arrow"><span>→</span></div>
+      <div class="step"><div class="st">applicable gates</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-ok"><div class="st">completion</div></div>
+    </div>
+    <p class="note"><b>不要求 full Orchestrator activation、fresh worker dispatch 或 Formal ceremony。</b>Independent audit 只依 §4.1 觸發；一旦觸發，semantics 與 Formal 相同。§4.7 不適用（無 Spec）。</p>
+  </div>
+  <div class="panel tone-auth">
+    <h3><span class="role-dot rd-auth"></span>Formal<span class="rl">§3.4 · §4 · orch-default v2.1</span></h3>
+    <div class="flow" style="margin:0 0 8px">
+      <div class="step s-op"><div class="st">Outcome Contract</div><div class="sd">acceptor 一次接受＋授權</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-auth"><div class="st">DA derive Spec ＋ Tickets</div><div class="sd">derivation record</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-ctl"><div class="st">Orchestrator</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-exec"><div class="st">Executor</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-aud"><div class="st">Ticket audit</div><div class="sd">R1／R2／Alternate／FA</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-aud"><div class="st">Spec Integration Audit</div><div class="sd">per Spec</div></div><div class="arrow"><span>→</span></div>
+      <div class="step s-ok"><div class="st">DA phase acceptance · completion</div></div>
+    </div>
+    <p class="note">Spec＋Tickets＋Orchestrator 一律完整（§3.4）。Orchestrator 依 <code>orch-default v2.1</code>；Executor 依 <code>impl-default v2</code>；formal audit 由 separately bound Reviewer 執行並保持 §2.3 四項 properties。</p>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-top:12px">
+  <div class="panel tone-auth">
+    <h3>Authority separation 在 package 中不變<span class="rl">§2.1 · §2.4</span></h3>
+    <ul class="auth-list">
+      <li><b>Design Authority</b> → 語義、material ambiguity、設計與 promotion 判斷、derivation 與 boundary determination</li>
+      <li><b>Executor</b> → 契約內 implementation HOW</li>
+      <li><b>Reviewer</b> → findings、blocking、evidence sufficiency（含 Spec Integration Audit）</li>
+      <li><b>Final Adjudicator</b> → review dispute、合法 disposition、routing 爭議（不裁決 boundary 本身）</li>
+      <li><b>Orchestrator</b> → routing、dispatch、progression、recovery coordination（control plane）</li>
+      <li><b>人類 acceptor／operator</b> → Outcome Contract 的接受與授權、boundary re-authorization、Bindings 枚舉的 reserved boundaries</li>
+    </ul>
+  </div>
+  <div class="panel tone-aud">
+    <h3>Audit 邊界在 package 中不變<span class="rl">§2.3 · §4</span></h3>
+    <ul class="auth-list">
+      <li>Executor-context review（含 code-review 類 Skill、Executor 使用且繼承其 context 的 subagents）<b>仍是 self-verification</b>，不是 formal audit</li>
+      <li>Formal independent audit 保持 §2.3 四項 properties；Spec Integration Audit 適用同一套</li>
+      <li>R1 → targeted correction → R2 → exactly one Alternate → Final Adjudication；不加 R3／R4，不加 approval layer</li>
+    </ul>
+    <p class="note">Profiles 與 reference contract 只描述<b>怎麼做</b>；<b>誰能決定什麼</b>只由 Governance v2.1 決定。</p>
+  </div>
+</div>
+
+<!-- ============ 10. lineage + adoption ============ -->
+<h2 id="s10"><span class="num">10</span>v1.0 → v2.0 → v2.1 與採用紀錄<span class="badge rec">record</span><span class="sec">Appendix A · Appendix B · Appendix C</span></h2>
+<p class="sub">下表是 Appendix B.1 的五項 semantic changes（v1.0 → v2.0）。未列入者語義不變（Appendix A.2：Final Adjudicator disposition 邊界、bounded cycle 規則、recovery boundary 皆「不變」；§1.5 三步 recovery 段與 v1.0 byte-identical）。六角色的<b>組成</b>不變，但 §2.1 的 Design Authority 列依 N-1 新增 derivation 與 boundary determination。</p>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:9%">ID</th><th style="width:24%">條文</th><th>變更</th></tr></thead>
+    <tbody>
+      <tr><td><b>N-1</b></td><td>§1.2、§2.1、§2.4、§3.1(3)(4)、§3.4、§3.6、§5.1、§5.2</td><td>Outcome Contract 為人類接受的契約；Spec／Tickets 為 DA derived contracts，附 derivation record 與 boundary determination（含所分配的 acceptance boundary 部分）；derived contract 不需逐份核准；boundary 疑義 DA-first，DA 無法確立時 fail-closed；Reviewer boundary finding 在 DA determination 後仍有爭議即視為 DA 無法確立，FA 不代 acceptor 裁決 boundary</td></tr>
+      <tr><td><b>N-2</b></td><td>§2.4</td><td>五種 deterministic routing cases；缺 label 不是爭議；explicit label 與規則衝突才是 routing 爭議；契約語義／sufficiency 無法機械判類 → DA-first</td></tr>
+      <tr><td><b>N-3</b></td><td>§3.4、§3.8、§4.1、§4.7（新）、§5.2</td><td>Spec Integration Audit：Formal 每份 Spec MUST；獨立 audit instance，不是 R3；範圍五項（AC coverage 以所分配部分為判準；最後一份未結 Spec 核對全部 Specs 合起來涵蓋整個 boundary）；DA phase acceptance MUST 引用；DA／Orchestrator／Bindings 不得豁免；單 Ticket fast path 限制</td></tr>
+      <tr><td><b>N-4</b></td><td>§2.2</td><td>Cross-model 由 core SHOULD 改為 Profile／Bindings assurance default；替代 MUST 維持 §2.3 四項，MAY 改變 diversity 並記錄</td></tr>
+      <tr><td><b>N-5</b></td><td>§1.5、§3.4、§5.2、§5.3</td><td>Reserved acts 單一清單於 §1.5（四項）；contract change 判準錨定 Outcome Contract 語義；兩類劃分唯一定義於 §5.3；Spec review／implementation authorization opt-in</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="margin-top:10px">Editorial（semantics-preserving；節錄自 Appendix B.2 與 B.4 的 pruning 列）：兩類劃分只在 §5.3 定義（E-1）；§4.3 縮為一句引用（E-3）；route 語句加「依第 2.4 節」（E-4）；Grill 縮為 methodology（E-5）；IR-1 併入 §3.3、§3.6-B(1)（E-6）；歷史敘述與文末四表移至 Appendix A、新增 Appendix B（E-7）；header 縮短（E-8）；pruning pass：§1.1／§1.3 改為索引、A.4／B.0 新增。</p>
+
+<h3 class="sh">v2.0 → v2.1（2026-10-01）<span class="sec">Appendix C.1 · C.2</span></h3>
+<p class="sub">v2.1 只改下表五處，全部在 §2.2 與 §5.1。起因是 Orchestrator Runtime Architecture Review 的裁決：v1.0 §2.2 把被指定的 root control-plane session 與被派工的 assignment 寫成同一種東西，v2.0 原樣繼承；較早的母版與參考實作從未要求 root Orchestrator 由 agent definition instantiate。</p>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:9%">ID</th><th style="width:24%">條文</th><th>變更</th></tr></thead>
+    <tbody>
+      <tr><td><b>R-1</b></td><td>§2.2 binding 句</td><td>分為<b>被派工的 assignment</b>（原 predicate 不變）與 <b>root role session</b>（只限 Orchestrator 與 Lightweight direct-execution Executor；四項 MUST：activation basis、model／effort runtime verification、role-definition grounding、work identity and records）。Root role session 的建立方式屬 Runtime／Harness HOW，由 definition instantiate 不是必要條件；Orchestrator 在 model／effort 核對成立前不得派工</td></tr>
+      <tr><td><b>R-2</b></td><td>§2.2 prompt 自稱句</td><td>原句保留；designation 與接受／授權是 acceptor／operator 的 authority 行為，不是自稱；designation 不構成 Outcome Contract 的接受或授權</td></tr>
+      <tr><td><b>R-3</b></td><td>§5.1 首段</td><td>原句保留；加限定：root role session 的 activation basis 依 §2.2，不屬此處所稱的 prompt 自述</td></tr>
+      <tr><td><b>R-4</b></td><td>§5.1 表 definitions and Model Mapping Profile 列</td><td>Bindings 另列明 root role session 核對 model／effort 的方式與證據位置</td></tr>
+      <tr><td><b>R-5</b></td><td>§2.2 修復／替代句</td><td>「不得冒充」的列舉加入 orchestration</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="sub" style="margin-top:10px">不變（Appendix C.2）：六角色與 definition 要求、被派工 Agent／Subagent 的 binding 與 runtime evidence、§2.3 四項 independence properties、audit flow、reserved boundaries、worklog、run-to-completion。未新增角色、lane、audit round、approval layer、operator gate，也未新增任何特定 harness／CLI 的要求。Companion：orch-default v2.1 只改 §2、§3、§8、§11；Model Profile default v2.3 與 impl-default v2 未改（Model Profile 其後於 2026-10-02 另行改版為 v2.4，只涉 <code>primary_reviewer</code> fallback 與 Codex 範圍，見第 04 節與下方 adoption chain）。</p>
+
+<h3 class="sh">Adoption chain（v2.0：2026-09-22；Model Profile：2026-09-23、2026-09-29；v2.1：2026-10-01）<span class="sec">Appendix B.4 · Appendix C.4 · Adoption and Freeze Records</span></h3>
+<div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th style="width:20%">Stage</th><th style="width:44%">Record（repo root）</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Design</td><td><code>Governance vNext Architecture Analysis(Fable-5.1).md</code></td><td>DESIGN VIABLE WITH CONDITIONS；operator S-1 決定</td></tr>
+      <tr><td>S-2 draft</td><td><code>Governance v2.0 Candidate S-2 Drafting Report(Fable-5.1).md</code></td><td>Candidate 四檔；完整 MUST／SHOULD／MAY diff</td></tr>
+      <tr><td>S-3 acceptance review</td><td><code>Governance v2.0 Candidate Independent Acceptance Review(Opus-5).md</code></td><td><b>ADOPT WITH REQUIRED CHANGES</b>（0 BLOCKER、4 MATERIAL、8 NON-MATERIAL）</td></tr>
+      <tr><td>S-4 targeted correction</td><td><code>Governance v2.0 Candidate S-4 Targeted Correction Report(Fable-5.1).md</code></td><td>M-1～M-4 修正，18 hunks，限 review §6 edit sites</td></tr>
+      <tr><td>S-4 closure</td><td><code>Governance v2.0 Candidate S-4 Closure Review(Opus-5).md</code></td><td>M-1、M-2、M-3、M-4 <b>CLOSED</b>；targeted regression PASS</td></tr>
+      <tr><td>Pruning pass</td><td><code>Governance v2.0 Candidate Pruning Pass Report(Fable-5.1).md</code></td><td>Astra spec P-01～P-15：套用 11、deferred 4；23 hunks；語義不變</td></tr>
+      <tr><td>Final pruning regression</td><td><code>Governance v2.0 Final Pruning Regression Check(Astra).md</code></td><td>五項 dimension 全 <b>PASS</b>；flagged pointers SAFE AS-IS</td></tr>
+      <tr><td>S-5 adoption／freeze</td><td><code>Governance v2.0 Adoption and Freeze Record.md</code></td><td><b>Adopted／Frozen 2026-09-22</b>；adoption edits 限 metadata；§1–§5 body 與 Astra 核可 pruned baseline byte-identical</td></tr>
+      <tr><td>Model Profile v2.1</td><td><code>master_governance/references/model-profiles/default-v2.1.md</code> §8</td><td><b>Adopted／Frozen 2026-09-23</b>；operator 明確授權的 model-id revision（Opus 5 → Opus 5.5／<code>claude-opus-5-5</code>）；未另行 independent review；v2 byte-unchanged</td></tr>
+      <tr><td>Model Profile v2.2</td><td><code>master_governance/references/model-profiles/default-v2.2.md</code> §8</td><td><b>Adopted／Frozen 2026-09-23</b>；operator 明確授權的 effort-only revision（<code>primary_reviewer</code> 與 R-PR Opus 4.8 fallback：<code>high</code> → <code>xhigh</code>）；未另行 independent review；v2.1 byte-unchanged</td></tr>
+      <tr><td>Model Profile v2.3</td><td><code>master_governance/references/model-profiles/default-v2.3.md</code> §8；<code>Governance Model Profile v2.3 Targeted Consistency Check(Opus).md</code></td><td><b>Adopted／Frozen 2026-09-29</b>；operator 明確授權的 production mapping migration（Opus 4.8 預設 → Opus 5.5；<code>primary_reviewer</code> Codex-preferred；chain 重排；§4 diversity 語義；四項 clarification；effort 不變）；兩次 targeted independent consistency check（Opus 5.5／high fresh context）＋ closure 皆 PASS；v2.2 byte-unchanged</td></tr>
+      <tr><td>Model Profile v2.4</td><td><code>master_governance/references/model-profiles/default-v2.4.md</code> §8；<code>Governance Package v2.1 Architecture Review(Fable-5.1).md</code> Addendum</td><td><b>Adopted／Frozen 2026-10-02</b>；operator 指示並授權的 <code>primary_reviewer</code>-only revision：R-PR 單一 Claude path（Opus 5.5 → Opus 4.8 → Fable 5.1，皆 <code>xhigh</code>）、Codex 自 R-EX／R-AR 與其他角色的 Profile 層 override 移除，Codex 只作 <code>primary_reviewer</code> 的 preferred／effective mapping；resolution／substitution／<code>diversity_lost</code> 語義與其他五個 identifier 的 model、effort 不變；未另行 independent review；v2.3 byte-unchanged</td></tr>
+      <tr><td>v2.1 architecture review</td><td><code>Governance Orchestrator Runtime Architecture Review(Fable-5.1).md</code></td><td><b>GOVERNANCE SEMANTIC DRIFT</b>；operator 採用 verdict 與其 §9.1 architecture，並裁決 Lightweight direct-execution Executor 適用同一區分</td></tr>
+      <tr><td>v2.1 draft</td><td><code>Governance v2.1 Candidate Drafting Report(Fable-5.1).md</code></td><td>Minimal 只改 §2.2 與 §5.1；orch-default 只改 §2、§3、§8、§11；architecture regression</td></tr>
+      <tr><td>v2.1 independent review</td><td><code>Governance v2.1 Candidate Independent Review(Opus).md</code></td><td>Fresh-context Opus 5.5／high：<b>ADOPT WITH REQUIRED CHANGES</b>（0 BLOCKER、3 MATERIAL、9 NON-MATERIAL）→ 定點修正 → closure check <b>ADOPT</b>（M-1～M-3 CLOSED）→ final-md5 <b>ACKNOWLEDGED</b></td></tr>
+      <tr><td>v2.1 adoption／freeze</td><td><code>Governance v2.1 Adoption and Freeze Record.md</code></td><td><b>Adopted／Frozen 2026-10-01</b>（Minimal v2.1、orch-default v2.1）；operator ACCEPT；adoption edits 限 metadata；Minimal §1–§5 body 與 reviewer 確認的 Candidate byte-identical；v2.0 與 orch-default v2 byte-unchanged</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="callout op"><b>採用效果（§5.3）：</b>不自動適用任何專案；新專案透過 Project Bindings 依 §5.1 採用 Minimal v2.1＋<code>default／v2.4</code>＋<code>impl-default／v2</code>＋<code>orch-default／v2.1</code> 並記錄 overrides。已採 v1.0 或 v2.0 的專案在明確 re-pin 並處理進行中 assignments、audit 與 evidence coverage 前，仍以其已 pin 的版本為 frozen baseline。Profile／contract acceptance 不等於任何專案 Runtime／Orchestrator migration 已完成驗證。</div>
+
+<!-- ============ traceability ============ -->
+<footer class="src" id="trace">
+  <b style="color:var(--ink)">追溯</b>
+  <dl class="kv">
+    <dt>採用版本</dt><dd><b>Minimal Operational Governance v2.1 — Adopted / Frozen 2026-10-01</b>（operator 明確授權）。本頁對應該版本。Minimal v2.0 與 reusable package v2（Model Profile default v2、Implementation Profile impl-default v2、Reference Orchestrator Contract orch-default v2）於 2026-09-22 Adopted／Frozen（operator S-5）；Model Profile 於 2026-09-23 先後以 default v2.1、v2.2 取代 v2，2026-09-29 以 v2.3 取代 v2.2，2026-10-02 以 v2.4 取代 v2.3；Minimal v2.1 與 orch-default v2.1 於 2026-10-01 取代 v2.0 與 v2 作為新採用預設。現行組合：Minimal v2.1＋default v2.4＋impl-default v2＋orch-default v2.1。</dd>
+    <dt>權威來源</dt><dd><b>Markdown 本體是 authoritative source</b>；本 HTML 是由下列四檔產生（2026-09-22 初版；2026-09-23 改用 Model Profile v2.2；2026-09-29 改用 Model Profile v2.3；2026-10-01 改用 Minimal v2.1 與 orch-default v2.1；2026-10-02 改用 Model Profile v2.4）的 derived、non-normative visualization，與任一檔不一致時<b>一律以該檔為準</b>。檔名沿用歷史名稱（<code>_Candidate.md</code>），狀態以檔內 header 為準；路徑相對於 <code>master_governance/</code>：<br>
+      <code>Minimal_Operational_Governance_v2.1_Candidate.md</code> — md5 <code>d4d458eeb6d571f1f4f3f0cc607feac9</code>（2026-10-02 header metadata update：package references 改指 default v2.4、visualization 句改指本頁，Appendix C.3／C.4 留紀錄，§1–§5 body 不變；2026-10-01 凍結時整檔 md5 <code>8d2012ca3b021e598be71e382ab7b00b</code>）（§1–§5 body <code>9113074ad8f7a586ae9a77c4a80ac5d1</code>；baseline <code>Minimal_Operational_Governance_v2.0_Candidate.md</code> md5 <code>5d258fd3e4b5cd0894f7f7cd1175eca6</code> 未變）<br>
+      <code>references/model-profiles/default-v2.4.md</code> — md5 <code>5bc265e535a6e3983851b675795375cc</code>（baseline <code>default-v2.3.md</code> md5 <code>c400372e660431f279045bf0c7056597</code>、<code>default-v2.2.md</code> md5 <code>a26ed091325a89c4c1e4173d6b858ede</code>、<code>default-v2.1.md</code> md5 <code>fe473990915f0e7c22b43f51cf4d5658</code>、<code>default-v2.md</code> md5 <code>d97d8d1b3a2f7b011c9b52eab639054d</code> 未變）<br>
+      <code>references/implementation-profiles/default-v2.md</code> — md5 <code>825e8ae285823349fc69c9ada43cd58e</code><br>
+      <code>references/orchestrator-contracts/default-v2.1.md</code> — md5 <code>1f5136b638c6a972a7e78c521ed9986b</code>（baseline <code>default-v2.md</code> md5 <code>ea52da0d8af011c69b6a83b80fd63595</code> 未變）</dd>
+    <dt>裁決基礎</dt><dd>S-3 Independent Acceptance Review（Opus-5）：ADOPT WITH REQUIRED CHANGES → S-4 targeted correction → 同一 reviewer closure check：M-1～M-4 CLOSED、targeted regression PASS → pruning pass（Astra spec）→ Astra final pruning regression：全 PASS、flagged pointers SAFE AS-IS → operator S-5 adoption 2026-09-22。Model Profile v2.1（model-id revision）與 v2.2（effort-only revision）：operator 2026-09-23 明確授權（各檔 §8）。Model Profile v2.3（production mapping migration ＋ Codex-preferred primary_reviewer）：兩次 fresh-context targeted consistency check（Opus 5.5／high，record <code>Governance Model Profile v2.3 Targeted Consistency Check(Opus).md</code>）與 closure 皆 PASS；operator 2026-09-29 明確授權（該檔 §8）。Model Profile v2.4（<code>primary_reviewer</code>-only revision：單一 Claude path、Codex 只作 <code>primary_reviewer</code>）：operator 2026-10-02 明確授權「採用」（檔內 §8），未另行 independent review。Minimal v2.1 與 orch-default v2.1（root role session 與被派工 assignment 的區分）：Orchestrator Runtime Architecture Review → fresh-context independent review（Opus 5.5／high，record <code>Governance v2.1 Candidate Independent Review(Opus).md</code>）：ADOPT WITH REQUIRED CHANGES → 定點修正 → closure check ADOPT → final-md5 acknowledgement；operator 2026-10-01 ACCEPT（<code>Governance v2.1 Adoption and Freeze Record.md</code>）。全部記錄見第 10 節。</dd>
+    <dt>本 HTML 的角色</dt><dd>僅供人閱讀的視覺化。<b>它不新增任何規則、角色、lane、audit round、approval layer 或 gate</b>；只是重繪 v2.1 的 Markdown 本體。本頁引用的 § 編號指 Governance v2.1 的節次（與 v2.0 相同）；Profile／contract 的 § 編號在對應處標明其檔名。</dd>
+    <dt>與較早版本的關係</dt><dd>v2.0（<code>Minimal_Operational_Governance_v2.0_Candidate.md</code>，Adopted／Frozen 2026-09-22）與其 map（<code>minimal_governance_map_v2.0_zh-TW_2026-09-29.html</code>）保留不動，作為已採 v2.0 專案的 frozen baseline。v1.0（<code>Minimal_Operational_Governance_Final_Candidate.md</code>，Adopted／Frozen 2026-09-17）與其 map（<code>minimal_governance_map_final_zh-TW_2026-09-18.html</code>）保留不動，作為已採 v1.0 專案的 frozen baseline。v2.0、v1.0 及更早版本、v2 母版僅供歷史參考，<b>不補充本稿未定義的義務，也不構成隱性 fallback authority</b>。</dd>
+    <dt>本頁版本規則</dt><dd>新版 HTML 一律在檔名加日期；本檔為 <code>minimal_governance_map_v2.1_zh-TW_2026-10-01.html</code>；v2.0 的三版（<code>minimal_governance_map_v2.0_zh-TW_2026-09-29.html</code>、<code>..._2026-09-23.html</code>、<code>..._2026-09-22.html</code>）保留為快照。日後若 Markdown 出新版本，本檔保留為 2026-10-01 快照，另存新檔。</dd>
+    <dt>本頁產生與核對</dt><dd>2026-10-02：由 Fable 5.1 自 2026-10-01 版（md5 <code>fab59d68ebcf538191908a185b35283d</code>）做 targeted update，對應 Model Profile default v2.4：頁首 meta／chip／分層卡、第 04 節（圖 3 第 2 層與第 3 層文字、Reference Profile panel、Profile 表 <code>primary_reviewer</code> 列與其下段落、replacement policies 表 R-EX／R-PR／R-AR 三列、Codex panel）、第 08 節 bindings panel 的預設 Profile 版本、第 09 節（圖 6 文字、Model Profile 卡）、第 10 節（lineage 段、Appendix C.2 companion 註、adoption chain 新列、採用效果）與本追溯段；其餘節次未動。本次更新由作者對照 Markdown 自行核對，未另做獨立 fidelity check。<br>2026-10-01：由 Fable 5.1 自 2026-09-29 版（md5 <code>71f8e80fdfdf1ee3cad139fb277fbc32</code>）做 targeted update，對應 Minimal v2.1 §2.2、§5.1 與 orch-default v2.1 §2、§3、§8、§11：頁首、第 04 節（圖 3 第 4 層、新增「實際 assignment 分兩種」小節、Runtime Assignment 與 Binding verification 兩 panel）、第 08 節 bindings、第 09 節、第 10 節（新增 v2.0 → v2.1 表與 adoption chain 四列）與本追溯段。同時更正 2026-09-29 版殘留的舊版本字樣：頁首副標日期、圖 3 與第 08 節的 Profile 版本（<code>v2</code> → <code>v2.3</code>）、第 09 節導言（v2.2 → v2.3）。其餘節次未動。本次更新由作者對照 Markdown 自行核對並做版面檢查，未另做獨立 fidelity check。<br>2026-09-29：由 Fable 5.1 自 2026-09-23 版做 targeted update（第 04 節 Profile 表、replacement policies、assurance／binding／Codex 三 panel、第 09 節 panel、第 10 節 lineage 列、本追溯段），對應 default v2.3 §2–§6；其餘節次未動。<br>2026-09-22 由 Fable 5.1 自四份 frozen Markdown 產生。獨立 fresh-context fidelity check（Opus 5）逐句比對本頁與 Markdown：normative 陳述（requirement strength、authority、routing、boundary、audit scope、Model Profile 值與 replacement policies、bindings 清單、worklog 八項、adoption chain）無不符；1 項 provenance 措辭（第 10 節對 v1.0 byte-identical 的過度宣稱）與 14 項用語精確度已於同日全部修正。版面檢查：六張圖的 SVG 文字皆在 viewBox 與所屬方框內；desktop 與 375px 寬皆無橫向溢出。2026-09-23 由 Opus 5.5 對本頁做 targeted 更新：Model Profile 參照改為 default v2.2（v2.1：Opus 5 綁定改為 Opus 5.5；v2.2：<code>primary_reviewer</code> effort <code>high</code> → <code>xhigh</code>）、補 adoption chain 兩列與追溯 md5；其餘內容與 2026-09-22 版相同。</dd>
+    <dt>版面參考</dt><dd>視覺版面、配色與主題切換沿用 v1.0 map；<b>僅沿用版面</b>。§5.4 明文下放的機制（state machine、validator、schema、Git trailer、rollover／heartbeat 演算法等）只出現在第 08 節「下放 Runtime／Harness」欄，作為<b>治理不規定</b>的說明。</dd>
+    <dt>術語</dt><dd>治理術語（角色名、lane 名、property 名、verdict、MUST／SHOULD／MAY）依原稿慣例保留英文原文。</dd>
+    <dt>採用狀態</dt><dd>本文件層級的 closure 不代表任何專案的 Runtime、Lightweight lane、binding、independence 或 recovery 能力已完成實際執行驗證；該驗證由採用專案依 §2.2、§2.3、§5.1 進行。</dd>
+  </dl>
+</footer>
+</main>
+<script>
+(function () {
+  var btn = document.getElementById('themeBtn');
+  if (!btn) return;
+  var order = ['system', 'light', 'dark'];
+  var names = { system: '系統', light: '淺色', dark: '深色' };
+  var current = 'system';
+  try { current = localStorage.getItem('gov-map-theme') || 'system'; } catch (e) {}
+  function apply(mode) {
+    var root = document.documentElement;
+    if (mode === 'system') { root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', mode); }
+    btn.textContent = '主題：' + names[mode];
+    btn.setAttribute('data-mode', mode);
+    try { localStorage.setItem('gov-map-theme', mode); } catch (e) {}
+  }
+  apply(order.indexOf(current) >= 0 ? current : 'system');
+  btn.addEventListener('click', function () {
+    var i = order.indexOf(btn.getAttribute('data-mode'));
+    apply(order[(i + 1) % order.length]);
+  });
+})();
+</script>
+</body>
+</html>

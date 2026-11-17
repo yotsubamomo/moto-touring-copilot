@@ -1,0 +1,2 @@
+# Keep the Reusable Package a bit-for-bit copy so MD5SUMS / SHA256SUMS stay verifiable after checkout.
+* -text

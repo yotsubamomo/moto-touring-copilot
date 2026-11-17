@@ -27,3 +27,8 @@ Thumbs.db
 
 # Rider GPX exports and private ingest outputs
 data/bmw/
+
+# Course lecture materials from the instructor: kept local, not published.
+# The requirement text (docs/requirement/requirements_proposal.txt) stays tracked.
+docs/requirement/*.pdf
+docs/requirement/*.png
