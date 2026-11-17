@@ -527,3 +527,48 @@ def test_known_round_trip_direction_no_rest_cancels_the_rest():
     at.button(key="clarify_reply").click().run()
     assert not _clarify_radios(at)
     assert "示範觀景台" not in [row["地點"] for row in _rider_rests(at)]
+
+
+# ---------------------------------------------------------------------------
+# SIA-R1-F1 regression: the Planner note did not pass rule 5 (DELTA 11.3, CR-C3)
+# ---------------------------------------------------------------------------
+
+PLANNER_CAPTION = "來源：Planner 產生的補充說明（模擬文字），通過規則 5。"
+TEMPLATE_CAPTION = "來源：固定模板（由結構化欄位組成）。"
+
+
+def test_supplement_failed_is_literal_data():
+    plan_data = S.PLANS["supplement_failed"]
+    assert plan_data["planner_note"] is None
+    assert plan_data["rule5"]["result"] == "PASS"  # the template passed; written as data
+    assert plan_data["explanation"]
+    assert S.SCENARIO_BY_ID["s16"]["outcome"] == {"kind": "plan", "plan": "supplement_failed"}
+    # Every other plan with a result keeps a passing note; only the infeasible plan has no rule 5.
+    for plan_id, other in S.PLANS.items():
+        if plan_id in {"supplement_failed", "infeasible"}:
+            continue
+        assert other["planner_note"]
+
+
+def test_planner_note_not_passing_keeps_template_and_omits_note():
+    at = plan(select(run_app(), "s16"))
+    assert not at.exception
+    plan_data = S.PLANS["supplement_failed"]
+    texts = values(at.markdown)
+    captions = values(at.caption)
+    assert plan_data["explanation"] in texts
+    assert TEMPLATE_CAPTION in captions
+    assert PLANNER_CAPTION not in captions
+    assert S.PLAN_ONE_WAY["planner_note"] not in texts
+    assert "已改用固定模板" not in all_text(at)
+    assert f"- **結果**：{plan_data['rule5']['detail']}" in texts
+
+
+def test_planner_note_passing_is_shown_for_the_same_plan_data():
+    """Control: the one-way plan with a passing note shows note and caption (same scenario form)."""
+    at = plan(select(run_app(), "s04b"))
+    texts = values(at.markdown)
+    assert S.PLAN_ONE_WAY["explanation"] in texts
+    assert S.PLAN_ONE_WAY["planner_note"] in texts
+    assert PLANNER_CAPTION in values(at.caption)
+    assert TEMPLATE_CAPTION in values(at.caption)

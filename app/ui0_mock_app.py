@@ -525,8 +525,10 @@ def render_trip_result(plan: dict, rests: list[dict]) -> None:
     st.subheader("說明")
     st.write(plan["explanation"])
     st.caption("來源：固定模板（由結構化欄位組成）。")
-    st.write(plan["planner_note"])
-    st.caption("來源：Planner 產生的補充說明（模擬文字），通過規則 5。")
+    if plan["planner_note"] is not None:
+        # Shown only when the scenario data has a note that passed rule 5 (CR-C3).
+        st.write(plan["planner_note"])
+        st.caption("來源：Planner 產生的補充說明（模擬文字），通過規則 5。")
     st.subheader("採用的條件")
     st.table(conditions_rows(plan, rests), hide_index=True)
     st.subheader("休息")

@@ -497,9 +497,30 @@ PLAN_INFEASIBLE = {
     "sources": SOURCES_COMMON,
 }
 
+# The Planner's supplementary note did not pass rule 5 (UI_CR01_DELTA 11.3, CR-C3).
+# Literal mock result: the fixed template is shown, the note is not ("planner_note": None).
+# The rule 5 result of the final output is a literal PASS: the template passed.
+PLAN_SUPPLEMENT_FAILED = {
+    **PLAN_ONE_WAY,
+    "id": "supplement_failed",
+    "planner_note": None,
+    "rule5": {
+        "result": "PASS",
+        "detail": "Planner 的補充說明沒有通過，沒有顯示；說明區的固定模板通過。",
+    },
+}
+
 PLANS = {
     plan["id"]: plan
-    for plan in (PLAN_ROUND, PLAN_ONE_WAY, PLAN_TARGET_GPX, PLAN_UNKNOWN, PLAN_DEFAULT_MARGIN, PLAN_INFEASIBLE)
+    for plan in (
+        PLAN_ROUND,
+        PLAN_ONE_WAY,
+        PLAN_TARGET_GPX,
+        PLAN_UNKNOWN,
+        PLAN_DEFAULT_MARGIN,
+        PLAN_INFEASIBLE,
+        PLAN_SUPPLEMENT_FAILED,
+    )
 }
 
 # ---------------------------------------------------------------------------
@@ -791,6 +812,15 @@ SCENARIOS = [
         "profile_after": "ok_more",
         "form": _form(desc="從示範車站出發，走示範公路甲線接示範公路乙線到示範山口。", trip=T.TRIP_ONE_WAY, earliest=dt.time(15, 0), deadline=dt.time(17, 0)),
         "outcome": {"kind": "plan", "plan": "infeasible"},
+    },
+    {
+        "id": "s16",
+        "label": "16. 補充：Planner 的補充說明沒通過規則 5（模擬）",
+        "note": "說明區照常顯示固定模板組成的文字；Planner 的補充說明沒有通過規則 5，所以不顯示（UI_CR01_DELTA 第 11.3 節、CR-C3）。結果是寫定的模擬資料。",
+        "profile": "ok",
+        "profile_after": "ok_more",
+        "form": _form(desc=DESC_ONE_WAY, trip=T.TRIP_ONE_WAY, earliest=dt.time(12, 0), deadline=dt.time(17, 0)),
+        "outcome": {"kind": "plan", "plan": "supplement_failed"},
     },
 ]
 
