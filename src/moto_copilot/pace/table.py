@@ -67,28 +67,30 @@ def _check_min_segments(min_segments) -> None:
 
 
 def timed_rows(rows: list[dict], trip_ids: list[str]) -> list[dict]:
-    """The timed segments (CL-B1-4 item 1): rows of the given trips with trip_role pace, quality ok,
-    a curvature, and a moving time above 0. Raises ValueError if such a row has a missing or
-    non-finite number in a field the pace table uses."""
+    """The timed segments (CL-B1-4 item 1 as revised by CL-B1-12): rows of the given trips that are
+    eligible under contract 1 invariant 4 (trip_role pace, quality ok, seg_category not null).
+    seg_category only selects the row; it does not classify it.
+
+    Such a row with a null curvature, or with a missing, non-finite or out-of-range number in a field
+    the pace table uses (length_m and moving_time_s above 0; short_stop_time_s and curvature at least
+    0), is an error: no row is skipped and no value is filled in."""
     wanted = set(trip_ids)
     out = []
     for row in rows:
         if not (row.get("trip_id") in wanted and row.get("trip_role") == "pace" and row.get("quality") == "ok"
-                and row.get("curvature_deg_per_km") is not None):
+                and row.get("seg_category") is not None):
             continue
-        moving = row.get("moving_time_s")
-        if _is_number(moving) and not math.isfinite(moving):
-            raise ValueError(f"trip {row.get('trip_id')} seg {row.get('seg_index')}: moving_time_s is {moving!r}, "
-                             f"not a finite number")
-        if _is_number(moving) and moving > 0:
-            for field in ("length_m", "moving_time_s", "short_stop_time_s", "curvature_deg_per_km"):
-                value = row.get(field)
-                if not (_is_number(value) and math.isfinite(value) and value >= 0):
-                    raise ValueError(f"trip {row.get('trip_id')} seg {row.get('seg_index')}: {field} is "
-                                     f"{value!r}, not a finite number of at least 0")
-            if not row["length_m"] > 0:
-                raise ValueError(f"trip {row.get('trip_id')} seg {row.get('seg_index')}: length_m is not above 0")
-            out.append(row)
+        where = f"trip {row.get('trip_id')} seg {row.get('seg_index')}"
+        if row.get("curvature_deg_per_km") is None:
+            raise ValueError(f"{where}: an eligible row has no curvature_deg_per_km")
+        for field in ("length_m", "moving_time_s", "short_stop_time_s", "curvature_deg_per_km"):
+            value = row.get(field)
+            if not (_is_number(value) and math.isfinite(value) and value >= 0):
+                raise ValueError(f"{where}: {field} is {value!r}, not a finite number of at least 0")
+        for field in ("length_m", "moving_time_s"):
+            if not row[field] > 0:
+                raise ValueError(f"{where}: {field} is {row[field]!r}, not above 0")
+        out.append(row)
     return out
 
 
@@ -258,7 +260,7 @@ def create_pace_table(directory, rows: list[dict], trip_ids: list[str], *, kind:
 
     header, categories = build_pace_table(rows, trip_ids, pace_version=pace_version, min_segments=min_segments,
                                           built_at=built_at)
-    violations = validate_pace_table(header, categories)
+    violations = validate_pace_table(header, categories, rows)  # with the derived rows: invariants 2 and 3 too
     if violations:
         raise ValueError(f"the pace table does not conform to contract 3, nothing written: {violations}")
     path = path_dir / f"{pace_version}.json"
@@ -276,10 +278,14 @@ def load_pace_table(path) -> tuple[dict, list[dict]]:
 def latest_user_pace_table(directory) -> Path | None:
     """The user- version with the latest built_at in `directory`; the larger number on a tie
     (CL-B1-4 item 9). None when the directory has no user- version: falling back to the research-
-    version of the freeze list is outside this module."""
+    version of the freeze list is outside this module. Two user- files with the same number (for
+    example user-04.json and user-004.json) are one version in two files: an error (CL-B1-14)."""
     path_dir = _require_directory(directory)
     best, best_key = None, None
     for number, paths in _existing_versions(path_dir, "user").items():
+        if len(paths) > 1:
+            names = ", ".join(sorted(p.name for p in paths))
+            raise ValueError(f"user- version {number} is in more than one file ({names}); not choosing one")
         for path in paths:
             header, _ = load_pace_table(path)
             if header.get("pace_version") != path.stem:

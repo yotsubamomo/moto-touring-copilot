@@ -5,6 +5,8 @@ Contract v0.2 plus the approved v0.3 stop-allowance fields and invariants of con
 
 Every validate_* function returns a list of violation messages; an empty list means the data
 conforms. Nothing here computes pace or ETA: it only checks data that some producer wrote.
+Contract 3 invariant 3 is checked as a total count of eligible rows, and per category only when the
+derived rows carry the pace table's category_scheme (SPEC-B1 CL-B1-12).
 """
 from __future__ import annotations
 
@@ -250,12 +252,21 @@ def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | Non
                 out.append(f"pace_header: trip {trip_id} is not a pace trip (holdout or unknown) (invariant 2)")
         if {r.get("ingest_version") for r in derived_rows} - {header.get("ingest_version")}:
             out.append("pace_header: ingest_version differs from the derived segment table")
-        for rec in categories:
-            eligible = sum(1 for r in derived_rows if pace_eligible(r) and r.get("trip_id") in trip_ids
-                           and r.get("seg_category") == rec.get("seg_category"))
-            if rec.get("n_segments") != eligible:
-                out.append(f"pace_categories: {rec.get('seg_category')} n_segments is {rec.get('n_segments')}, "
-                           f"but {eligible} rows are eligible (invariant 3)")
+        # Invariant 3 (CL-B1-12): the pace table classifies the eligible rows with its own
+        # category_scheme. The total is always checked; the per-category count only when every
+        # eligible row has the pace table's category_scheme, so that the derived seg_category is the
+        # pace table's category. The scheme is not parsed and nothing is reclassified here.
+        eligible_rows = [r for r in derived_rows if pace_eligible(r) and r.get("trip_id") in trip_ids]
+        counts = [rec.get("n_segments") for rec in categories]
+        if all(isinstance(n, int) and not isinstance(n, bool) for n in counts) and sum(counts) != len(eligible_rows):
+            out.append(f"pace_categories: n_segments add up to {sum(counts)}, but {len(eligible_rows)} rows "
+                       f"are eligible (invariant 3)")
+        if all(r.get("category_scheme") == header.get("category_scheme") for r in eligible_rows):
+            for rec in categories:
+                eligible = sum(1 for r in eligible_rows if r.get("seg_category") == rec.get("seg_category"))
+                if rec.get("n_segments") != eligible:
+                    out.append(f"pace_categories: {rec.get('seg_category')} n_segments is {rec.get('n_segments')}, "
+                               f"but {eligible} rows are eligible (invariant 3)")
     return out
 
 

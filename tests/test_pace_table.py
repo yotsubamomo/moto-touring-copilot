@@ -139,7 +139,7 @@ def test_no_timed_segment_means_no_thresholds_and_no_table(tmp_path):
     with pytest.raises(ValueError, match="no timed segment"):
         tercile_thresholds([])
     rows = [seg("T101", 0, 50.0, quality="suspect"), seg("T101", 1, None, quality="invalid"),
-            seg("T102", 0, 30.0, moving=0.0)]               # moving time 0 is not timed (CL-B1-4 item 1)
+            seg("T102", 0, 30.0, quality="suspect")]
     with pytest.raises(ValueError, match="no timed segment"):
         build_pace_table(rows, ["T101", "T102"], pace_version="user-01", min_segments=1, built_at=NOW)
     with pytest.raises(ValueError, match="no timed segment"):
@@ -311,10 +311,56 @@ def test_built_at_must_be_timezone_aware_and_one_ingest_version():
 
 
 def test_timed_rows_follow_cl_b1_4_item_1():
+    """CL-B1-4 item 1 as revised by CL-B1-12: the eligible rows of contract 1 invariant 4."""
     rows = [seg("T101", 0, 10.0), seg("T101", 1, 20.0, quality="suspect"), seg("T101", 2, None, quality="invalid"),
             seg("T102", 0, 30.0), seg("T191", 0, 40.0, role="holdout")]
-    rows[3]["curvature_deg_per_km"] = None
-    assert [(r["trip_id"], r["seg_index"]) for r in timed_rows(rows, ["T101", "T102", "T191"])] == [("T101", 0)]
+    assert [(r["trip_id"], r["seg_index"]) for r in timed_rows(rows, ["T101", "T102", "T191"])] ==         [("T101", 0), ("T102", 0)]
+    rows[3]["curvature_deg_per_km"] = None              # eligible (seg_category C1) but no curvature: an error
+    with pytest.raises(ValueError, match="no curvature"):
+        timed_rows(rows, ["T101", "T102", "T191"])
+
+
+def test_an_eligible_row_without_curvature_is_an_error_and_nothing_is_written(tmp_path):
+    rows, trip_ids = trips_three_categories([0, 0])
+    rows[1]["curvature_deg_per_km"] = None              # quality ok, seg_category C2, curvature null
+    with pytest.raises(ValueError, match="no curvature"):
+        build_pace_table(rows, trip_ids, pace_version="user-01", min_segments=1, built_at=NOW)
+    with pytest.raises(ValueError, match="no curvature"):
+        create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=1, built_at=NOW)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_an_eligible_row_with_zero_moving_time_is_an_error_and_nothing_is_written(tmp_path):
+    rows, trip_ids = trips_three_categories([0, 0])
+    rows[0]["moving_time_s"] = 0.0
+    with pytest.raises(ValueError, match="moving_time_s is 0.0, not above 0"):
+        build_pace_table(rows, trip_ids, pace_version="user-01", min_segments=1, built_at=NOW)
+    with pytest.raises(ValueError, match="not above 0"):
+        create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=1, built_at=NOW)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_a_row_with_curvature_but_no_seg_category_is_not_used():
+    rows, trip_ids = trips_three_categories([0, 0, 0])
+    stray = seg("T101", 3, 5.0, short=500.0)
+    stray["seg_category"] = None                        # not eligible under contract 1 invariant 4
+    assert build_pace_table(rows + [stray], trip_ids, pace_version="user-01", min_segments=1, built_at=NOW) ==         build_pace_table(rows, trip_ids, pace_version="user-01", min_segments=1, built_at=NOW)
+
+
+def test_a_table_whose_categories_differ_from_the_derived_ones_passes_contract_3(tmp_path):
+    """Curvatures 10, 60, 120: ingest's 80 / 250 gives C1, C1, C2; the recomputed (60, 120) gives
+    C1, C2, C3. The written table passes contract 3 with the derived rows (total count, CL-B1-12)."""
+    rows, trip_ids = [], []
+    for i in range(3):
+        trip_id = f"T{121 + i:03d}"
+        trip_ids.append(trip_id)
+        rows += [seg(trip_id, 0, 10.0), seg(trip_id, 1, 60.0), seg(trip_id, 2, 120.0, short=6.0)]
+    assert [r["seg_category"] for r in rows[:3]] == ["C1", "C1", "C2"]
+    path, header, categories = create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=2, built_at=NOW)
+    assert header["category_scheme"] == "curv-tercile-60-120"
+    assert [c["n_segments"] for c in categories] == [3, 3, 3]
+    assert validate_pace_table(header, categories, rows) == []
+    assert load_pace_table(path) == (header, categories)
 
 
 # --- AC 6-8: versions, files and the chosen version -----------------------------------
@@ -402,6 +448,32 @@ def test_the_latest_user_version_by_built_at_is_chosen(tmp_path):
     assert latest_user_pace_table(tmp_path) == paths[1]         # user-02: latest built_at, not the largest number
     tie = create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=1, built_at=times[1])[0]
     assert latest_user_pace_table(tmp_path) == tie == tmp_path / "user-04.json"   # same built_at: larger number
+
+
+def test_the_writer_checks_contract_3_with_the_derived_rows(tmp_path, monkeypatch):
+    """A table whose counts break invariant 3 only against the derived rows is not written (CL-B1-12 §8)."""
+    import moto_copilot.pace.table as table
+    real = table.build_pace_table
+
+    def miscounted(*args, **kwargs):
+        header, categories = real(*args, **kwargs)
+        categories[2] = {**categories[2], "n_segments": categories[2]["n_segments"] + 1}
+        return header, categories
+
+    monkeypatch.setattr(table, "build_pace_table", miscounted)
+    rows, trip_ids = trips_three_categories([0, 0, 0])
+    with pytest.raises(ValueError, match="n_segments add up to 10, but 9 rows are eligible"):
+        create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=1, built_at=NOW)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_one_user_version_in_two_files_is_an_error(tmp_path):
+    rows, trip_ids = trips_three_categories([0, 0, 0])
+    for _ in range(4):
+        create_pace_table(tmp_path, rows, trip_ids, kind="user", min_segments=1, built_at=NOW)
+    (tmp_path / "user-004.json").write_bytes((tmp_path / "user-04.json").read_bytes())  # same number, same built_at
+    with pytest.raises(ValueError, match="user-004.json, user-04.json"):
+        latest_user_pace_table(tmp_path)
 
 
 def test_a_user_file_with_a_wrong_version_or_time_is_an_error(tmp_path):

@@ -117,8 +117,6 @@ def test_pace_table_matches_the_mock_fixture(data):
     assert header["method"] == "median_unweighted" and header["n_trips"] == 2
 
 
-@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; "
-                                       "build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet")
 def test_pace_table_matches_the_mock_fixture__v03_contract(data):
     header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="user-01",
                                           min_segments=2, built_at=NOW)

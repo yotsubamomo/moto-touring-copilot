@@ -230,6 +230,53 @@ def test_segment_count_counts_only_eligible_rows(data):
     assert_violation(pace_violations(data), "C1 n_segments is 3, but 2 rows are eligible")
 
 
+def recomputed_scheme(d: dict) -> dict:
+    """The fixture's pace table rewritten as a table with its own category_scheme (CL-B1-12): the
+    five eligible rows of T001 and T002 split 1 / 2 / 2 instead of the derived 2 / 2 / 1. C1 then has
+    fewer than min_segments segments, so its speed and stop ratio are null."""
+    d["pace_header"]["category_scheme"] = "curv-tercile-20-150"
+    for category, n, speed, ratio in (("C1", 1, None, None), ("C2", 2, 52.5, 0.1), ("C3", 2, 40.5, 0.0)):
+        by_id(d["pace_categories"], "seg_category", category).update(n_segments=n, speed_kmh=speed, stop_ratio=ratio)
+    return d
+
+
+def test_another_scheme_checks_the_total_not_the_derived_categories(data):
+    """(i) The derived seg_category is not the pace table's category when the schemes differ."""
+    assert pace_violations(recomputed_scheme(data)) == []
+
+
+@pytest.mark.parametrize("category, n, total", [("C3", 3, 6), ("C2", 1, 4)])
+def test_another_scheme_still_needs_the_total_of_eligible_rows(data, category, n, total):
+    """(ii) One row too many (for example the suspect row) or one too few is a violation."""
+    recomputed_scheme(data)
+    rec = by_id(data["pace_categories"], "seg_category", category)
+    rec.update(n_segments=n, speed_kmh=rec["speed_kmh"] if n >= 2 else None,
+               stop_ratio=rec["stop_ratio"] if n >= 2 else None)
+    assert_violation(pace_violations(data), f"n_segments add up to {total}, but 5 rows are eligible (invariant 3)")
+
+
+def test_the_same_scheme_still_checks_each_category(data):
+    """(iii) Same total, wrong split, same scheme as the derived table: the per-category check stays."""
+    by_id(data["pace_categories"], "seg_category", "C1")["n_segments"] = 3
+    by_id(data["pace_categories"], "seg_category", "C2")["n_segments"] = 1
+    by_id(data["pace_categories"], "seg_category", "C2")["speed_kmh"] = None
+    by_id(data["pace_categories"], "seg_category", "C2")["stop_ratio"] = None
+    violations = pace_violations(data)
+    assert_violation(violations, "C1 n_segments is 3, but 2 rows are eligible (invariant 3)")
+    assert not any("add up to" in v for v in violations), violations
+
+
+def test_rows_of_other_trips_and_holdout_rows_are_not_eligible(data):
+    """(iv) Only the eligible rows of trip_ids count: not the holdout trip T003, not another pace trip."""
+    recomputed_scheme(data)
+    data["derived_segments"].append({**data["derived_segments"][0], "trip_id": "T004", "seg_index": 0})
+    assert pace_violations(data) == []
+    by_id(data["pace_categories"], "seg_category", "C3")["n_segments"] = 4   # + T003's two holdout rows
+    assert_violation(pace_violations(data), "n_segments add up to 7, but 5 rows are eligible (invariant 3)")
+    by_id(data["pace_categories"], "seg_category", "C3")["n_segments"] = 3   # + the row of T004
+    assert_violation(pace_violations(data), "n_segments add up to 6, but 5 rows are eligible (invariant 3)")
+
+
 @pytest.mark.parametrize("speed", [0, -10.0])
 def test_speed_must_be_positive(data, speed):
     by_id(data["pace_categories"], "seg_category", "C1")["speed_kmh"] = speed
