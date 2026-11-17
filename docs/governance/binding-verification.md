@@ -24,20 +24,22 @@
 
 第 2、7 列各有 2 則 assistant 訊息，集合仍只有一個元素。
 
-## m3 的重新驗證（Bindings 第 8.2 節 #7，**尚未執行**）
+## m3 的重新驗證（Bindings 第 8.2 節 #7，**部分執行，2026-11-17**）
 
 在 m3 commit 之後開的新 session 執行，因為 definition 的變更只在 session 啟動時載入。m3 接受前做的觀測只算預備，不構成 m3 的 binding 證據，直到 m3 生效。
 
+**結論**：第 13–16 列符合，O-5 的四個 Claude reviewer 派工方式可用於正式派工。第 17–18 列 **BLOCKED**：Codex 在兩次嘗試中都因認證錯誤而 turn failed（見執行紀錄），qualification 沒有完成。依 Bindings 第 3.3 節「Qualification」，Codex 不是有效的 Primary，`primary_reviewer` 解析為 Opus 5.5／`high`（`gov-primary-reviewer`）。acceptor 重新登入 Codex 後，要在新的 probe 中重跑第 17、18 列。
+
 | # | 對象 | 派工方式 | 預期 | 觀測 | 結果 |
 | --- | --- | --- | --- | --- | --- |
-| 13 | `primary_reviewer`（Claude path 首項，O-5） | `gov-primary-reviewer` | `claude-opus-5-5`／`high` | — | 未執行 |
-| 14 | `primary_reviewer`（Claude path 第二項） | `gov-primary-reviewer`＋`model: fable` | `claude-fable-5-2`／`high` | — | 未執行 |
-| 15 | `alternate_reviewer`（O-5） | `gov-alternate-reviewer` | `claude-fable-5-2`／`high` | — | 未執行 |
-| 16 | `alternate_reviewer`（fallback） | `gov-alternate-reviewer`＋`model: opus` | `claude-opus-5-5`／`high` | — | 未執行 |
-| 17 | Codex qualification：預設 model | companion `task --fresh`，不帶 `--model`，effort `high`，專用 worktree | 記錄觀測到的 model `<M>` | — | 未執行 |
-| 18 | Codex qualification：binding | companion `task --fresh --write --model <M> --effort high`，專用 worktree，要求只寫一個 probe 檔 | rollout 全部 `turn_context` 為 (`<M>`, `high`, `workspace-write`)；worktree 只多出 probe 檔；沒有讀取 worktree 以外的路徑 | — | 未執行 |
+| 13 | `primary_reviewer`（Claude path 首項，O-5） | `gov-primary-reviewer` | `claude-opus-5-5`／`high` | agentId `afda6265804a57b33`：`claude-opus-5-5`／`high`（2） | 符合 |
+| 14 | `primary_reviewer`（Claude path 第二項） | `gov-primary-reviewer`＋`model: fable` | `claude-fable-5-2`／`high` | agentId `a64263ce67f55181b`：`claude-fable-5-2`／`high`（1） | 符合 |
+| 15 | `alternate_reviewer`（O-5） | `gov-alternate-reviewer` | `claude-fable-5-2`／`high` | agentId `ae9ca051c77ccd80a`：`claude-fable-5-2`／`high`（1） | 符合 |
+| 16 | `alternate_reviewer`（fallback） | `gov-alternate-reviewer`＋`model: opus` | `claude-opus-5-5`／`high` | agentId `a60491b2732785c59`：`claude-opus-5-5`／`high`（2） | 符合 |
+| 17 | Codex qualification：預設 model | companion `task --fresh`，不帶 `--model`，effort `high`，專用 worktree | 記錄觀測到的 model `<M>` | 兩次嘗試的 rollout 各有 1 個 `turn_context`，都是 (`gpt-6-sol`, `high`, `read-only`)。兩次 turn 都在取得 model 回應前因認證錯誤而失敗，0 次工具呼叫 | **BLOCKED**。`gpt-6-sol` 是 client 送出的設定，沒有完成的 turn 佐證，不作為 `<M>` 的確定值 |
+| 18 | Codex qualification：binding | companion `task --fresh --write --model <M> --effort high`，專用 worktree，要求只寫一個 probe 檔 | rollout 全部 `turn_context` 為 (`<M>`, `high`, `workspace-write`)；worktree 只多出 probe 檔；沒有讀取 worktree 以外的路徑 | 未執行（依賴第 17 列；Codex 認證失敗） | **BLOCKED／NOT RUN** |
 
-## 執行紀錄
+## 執行紀錄（第 1–12 列）
 
 - **日期**：2026-11-17
 - **Session**：`6ccb50de-5234-4a2d-8637-7a94bc585260`，從本 repo 根目錄啟動。主 session 是無角色 session（Bindings 第 3.5 節），只作派工介面。
@@ -65,3 +67,34 @@ agent-a9ec105a2f26cd523 gov-final-adjudicator {('claude-opus-5-5', 'xhigh'): 1}
 agent-ada1dcce3055d7e07 gov-orchestrator {('claude-opus-5-5', 'medium'): 2}
 agent-af267b8ab2ac6a0aa gov-alternate-reviewer {('claude-fable-5-2', 'xhigh'): 1}
 ```
+
+## 執行紀錄（第 13–18 列，m3）
+
+- **日期**：2026-11-17
+- **Session**：`2d8ad5bb-45c7-44c1-98fa-9c8acadcb142`，從本 repo 根目錄啟動，m3 commit 之後才開。主 session 是無角色 session（Bindings 第 3.5 節），只作派工介面。
+- **Definitions 的 commit**：`368c858`（`git log -1 -- .claude/agents` 的結果）。執行時 HEAD 是 `0ccfa7c`，分支 `docs-scope-reduction-mvp`。
+- **Frontmatter**：`gov-primary-reviewer` 是 `claude-opus-5-5`／`high`，`gov-alternate-reviewer` 是 `claude-fable-5-2`／`high`。九個 definitions 都綁定完整的 model id 與 effort，沒有使用 `inherit`。環境變數沒有 `CLAUDE_CODE_SUBAGENT_MODEL`，專案的 `.claude/` 只有 `agents/`，沒有 settings 檔。
+- **第 13–16 列的工具呼叫數**：四次 dry-run 都是 0 次，都只回一行 `ack`。第 13、16 列各有 2 則 assistant 訊息，集合仍只有一個元素。
+- **Root session**：核對時主 session 的觀測值是 `claude-opus-5-5`／`high`（20 則）。這只是當時的狀態，不構成任何角色的 activation。
+- **`git status`**：執行前後未追蹤的都是 `docs/governance/records/decisions/receipts/`、`docs/governance/records/decisions/review-receipts/`、`receipts/`、`review-receipts/`，這四個資料夾在本次執行之前就已存在。本次執行只修改本檔。
+
+核對指令（Bindings 第 3.6 節）的原樣輸出：
+
+```text
+root-session 2d8ad5bb-45c7-44c1-98fa-9c8acadcb142 {('claude-opus-5-5', 'high'): 20}
+agent-a60491b2732785c59 gov-alternate-reviewer {('claude-opus-5-5', 'high'): 2}
+agent-a64263ce67f55181b gov-primary-reviewer {('claude-fable-5-2', 'high'): 1}
+agent-ae9ca051c77ccd80a gov-alternate-reviewer {('claude-fable-5-2', 'high'): 1}
+agent-afda6265804a57b33 gov-primary-reviewer {('claude-opus-5-5', 'high'): 2}
+```
+
+### Codex（第 17–18 列）
+
+- **CLI 與登入**：`codex --version` 輸出 `codex-cli 0.169.0`；`codex login status` 在嘗試前後都輸出 `Logged in using ChatGPT`。Companion 是 codex plugin 1.0.6 的 `scripts/codex-companion.mjs`。沒有讀取 `~/.codex/auth.json`。
+- **Worktree**：第一次 `git worktree add --detach` 用 session scratchpad 之下的路徑，因 Windows 路徑長度限制（`PKG/` 內的長檔名回報 `Filename too long`）失敗，沒有建立 worktree（`git worktree list` 只有主 checkout）。改用 `C:/Users/yotsu/AppData/Local/Temp/cxprobe-20261117` 後建立成功（detached，`0ccfa7c`）；worktree 內沒有 `data/` 與 `.env`。
+- **嘗試 1**：`task --fresh --effort high "<no-op 提示>"`，不帶 `--model`、不帶 `--write`。Thread `01a1e8b3-7bd8-7802-9405-853a675637c7`，rollout `~/.codex/sessions/2026/11/17/rollout-2026-11-17T16-50-46-01a1e8b3-7bd8-7802-9405-853a675637c7.jsonl`。Companion 先回報多次 `Reconnecting... n/5`，最後的錯誤原文：`Your access token could not be refreshed because your refresh token was already used. Please log out and sign in again.`，`Turn failed.`
+- **嘗試 2**（同一指令，用來排除暫時性錯誤）：thread `01a1e8b5-253f-7fc1-8514-36c2c75ef718`，rollout `~/.codex/sessions/2026/11/17/rollout-2026-11-17T16-52-28-01a1e8b5-253f-7fc1-8514-36c2c75ef718.jsonl`。錯誤原文與嘗試 1 相同，`Turn failed.`
+- **Rollout 內容**：兩份 rollout 各有 1 個 `turn_context`，都是 model `gpt-6-sol`、effort `high`、sandbox `read-only`，cwd 是上述 worktree。兩份都沒有 function call 或 shell call（0 次工具呼叫），也沒有 model 回應。
+- **Worktree 的處理**：嘗試後 `git status --porcelain` 為空。`git worktree remove` 已把 worktree 從 git 移除（`git worktree list` 只剩主 checkout）、刪除其內容，但空目錄本身回報 `Permission denied`／`Device or resource busy`，推測是 companion 留下的程序仍以它為 cwd。空目錄留在原處，沒有終止任何程序。
+- **觀察**：`codex login status` 顯示已登入，但 token refresh 失敗。只看 login status 不足以確認 Codex 當次可用；Bindings 第 3.3 節 (2) 已要求同時引用該次呼叫的錯誤原文。
+- **結果**：重新登入屬 RB-3（第三方帳號操作），由 acceptor 進行。acceptor 重新登入後，第 17、18 列要重跑；在那之前 Codex 的 qualification 未完成。
