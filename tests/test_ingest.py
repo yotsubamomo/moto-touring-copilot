@@ -307,3 +307,29 @@ def test_a_stop_in_a_short_tail_goes_with_the_tail_into_the_previous_segment():
     assert report.stop_events == {"false": 0, "short": 1, "long": 0}
     assert [(r["stopped_time_s"], r["short_stop_time_s"]) for r in rows] == [(0, 0), (0, 0), (50, 50)]
     assert sum(r["moving_time_s"] + r["stopped_time_s"] for r in rows) == pytest.approx(trimmed_duration_s(pts), abs=0.2)
+
+
+def test_a_stop_event_cut_by_the_trim_is_classified_by_its_part_inside_the_trimmed_track():
+    """CL-B1-10: the start trim (2000 m) falls inside a 200 s stop whose GPS drift (0.5 m/s, a
+    stopped step) carries the path past 2000 m. The whole event would be a long stop; only the part
+    inside the trimmed track counts, and it is shorter than 180 s, so it is a short stop. The steps
+    before the trim appear in no field."""
+    params = IngestParams()
+    ride_in = straight(1940)                                   # 97 steps of 20 m: 0 .. 1940 m
+    here = ride_in[-1]
+    drift = [at(1940.0 + 0.5 * s, 0.0, 97 + s) for s in range(1, 201)]          # 200 s, 100 m
+    ride_on = [at(2040.0 + 20.0 * s, 0.0, 297 + s) for s in range(1, 501)]       # 10 km more
+    pts = ride_in + drift + ride_on
+    kept, _ = clean_points(pts, params, TripReport())
+    start, _ = trim_ends(kept, params.trim_m)
+    assert here.time < kept[start].time < drift[-1].time     # the trim boundary is inside the stop
+    inside_s = (drift[-1].time - kept[start].time).total_seconds()
+    whole_s = (drift[-1].time - here.time).total_seconds()
+    assert whole_s >= params.long_stop_min_s > inside_s >= params.false_stop_max_s
+    rows, report = rows_of(pts)
+    assert report.stop_events == {"false": 0, "short": 1, "long": 0}
+    assert rows[0]["stopped_time_s"] == inside_s and rows[0]["short_stop_time_s"] == inside_s
+    assert sum(r["stopped_time_s"] for r in rows) == inside_s
+    assert sum(r["short_stop_time_s"] for r in rows) == inside_s
+    assert sum(r["moving_time_s"] + r["stopped_time_s"] for r in rows) == pytest.approx(trimmed_duration_s(pts), abs=0.2)
+    assert validate_derived_segments(rows, "private") == []
