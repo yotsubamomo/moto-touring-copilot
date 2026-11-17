@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #12（UI-0），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator）。依 run record，SPEC-UI0 不採 fast path：#12 的 R1 是一般 Ticket audit，SIA 另派 |
-| 狀態 | **（最新）SPEC-UI0 SIA R1（`spec-SPEC-UI0-c1-r1.md`）`BLOCKING` 的 SIA-R1-F1 已作 targeted correction（實作 `1ce4640`），待 SIA R2（第 12 節）。** 以下是先前的狀態：**cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試。依 Design Authority 的 `decision-20261118-issue12-ui07.md`：K9 不是 UI0-7 的 FAIL（日期可只用鍵盤以年／月／日欄修改），K3-B（作業系統的檔案對話框）不在 #12 的 UI0-7 範圍內、記為範圍外的 NOT VERIFIED；依該 record 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分。UI0-7 是否 PASS、R1-F2 是否 RESOLVED 由 R2 判定。本 worklog 不宣告 Ticket closure。（已取代的敘述：「R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor」——由上述 DA record 取代。）以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-2、UI0-4、UI0-7、UI0-10 列與第 9.1 節已依第 10 節更新 |
+| 狀態 | **（最新）SPEC-UI0 SIA R2（`spec-SPEC-UI0-c1-r2.md`）`Verdict: PASS`：SIA-R1-F1、SIA-R1-N1 RESOLVED；Design Authority phase acceptance ACCEPT（`decision-20261118-spec-ui0-phase-acceptance.md`）。UI Delta Review 仍待 acceptor（第 13 節）。** 已取代的敘述：「SPEC-UI0 SIA R1（`spec-SPEC-UI0-c1-r1.md`）`BLOCKING` 的 SIA-R1-F1 已作 targeted correction（實作 `1ce4640`），待 SIA R2（第 12 節）。」以下是更早的狀態：**cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試。依 Design Authority 的 `decision-20261118-issue12-ui07.md`：K9 不是 UI0-7 的 FAIL（日期可只用鍵盤以年／月／日欄修改），K3-B（作業系統的檔案對話框）不在 #12 的 UI0-7 範圍內、記為範圍外的 NOT VERIFIED；依該 record 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分。UI0-7 是否 PASS、R1-F2 是否 RESOLVED 由 R2 判定。本 worklog 不宣告 Ticket closure。（已取代的敘述：「R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor」——由上述 DA record 取代。）以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-2、UI0-4、UI0-7、UI0-10 列與第 9.1 節已依第 10 節更新 |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `3906e077ab850c027d7833b30d3eebfa16f67761`（`3906e07`）；實作 commit `6a278b40dc79dcbede9486902e52dc8504a8d30e`（`6a278b4`）；**correction commit `619268ad2732b4cdd04593ff20ebe35374a7710c`（`619268a`，只修改 `app/ui0_mock_app.py`、`tests/test_ui0_skeleton.py`）**；R1 受審 HEAD `e836c99`，R1 record 在 `e94d182`；本節的更新在 `619268a` 之後的 record-only commit |
 | 日期 | 2026-11-18 |
 
@@ -180,7 +180,7 @@
 | UI0-5 期限名稱隨行程型態切換；值是否保留照實記錄 | **PASS：值會保留**，採用隨行程型態改變的標籤，不需要退路 | AppTest（16:45 在切換前後保留）；E-2 第 11 列（瀏覽器中 17:00 與 16:45 都在切換後保留）。條件：widget 有固定的 key（D-12-3）。行程型態未選時用固定標籤「期限」（D-12-6） |
 | UI0-6 375 像素沒有整頁的水平溢出 | **PASS** | E-2：23 個情境（含追問回覆後、欄位錯誤後的狀態）、兩個分頁、Profile／公路與地標／全部候選展開時，`scrollWidth` 都是 375，沒有未裁切的溢出；寬表格在自己的容器內捲動 |
 | UI0-7 所有操作都可以只用鍵盤完成 | **待 R2 判定。依 `decision-20261118-issue12-ui07.md`，#12 範圍內沒有 BLOCKED 或 FAIL 的部分**（該 record 第 3、4.3 節）。已取代的判定：(1) R1 前「大部分 PASS；一項 NOT VERIFIED」；(2) correction 時「未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS」 | 以操作為單位（DA record 第 3.1 節）。只用鍵盤完成的操作紀錄：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出多選且限 `.gpx` 的選檔請求（K3）、移除檔案（K5）、選檔之後按「更新 Profile」（K6）、行程描述的輸入、公路與地標 expander、行程型態、日期（K10，年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander（第 10.2 節、第 6 節 E-2）。**K9**（日曆彈窗內鍵盤焦點進不去）：不是 UI0-7 的 FAIL，記為元件的限制（UI0-2 限制 7），日期這項操作由 K10 完成（DA record 第 3.2 節）。**K3-B**（在作業系統的原生檔案對話框中只用鍵盤多選 GPX）：不在 #12 的 UI0-7 範圍內，**範圍外，NOT VERIFIED**；#12 範圍內的上傳操作由 K3、K5、K6 涵蓋（DA record 第 4.2 節）。沒有任何人驗證過作業系統對話框中可只用鍵盤多選，本 worklog 不作此宣稱 |
-| UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **SIA-R1-F1 修正後：清單如下，CR-C3 的合成部分已補（第 12 節）；是否 closure 由 SIA R2 判定。** 已取代的判定：「PASS（清單如下）」——SIA R1（`spec-SPEC-UI0-c1-r1.md` SIA-R1-F1）指出 `UI_CR01_DELTA.md` 第 11.3 節的「Planner 的補充說明沒通過規則 5」情境沒有合成呈現 | 下方「UI0-8 清單」 |
+| UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **SIA R2（`spec-SPEC-UI0-c1-r2.md`）PASS：SIA-R1-F1 RESOLVED；清單如下，CR-C3 的合成部分在第 12 節補上（第 13 節）。** 已取代的判定：「SIA-R1-F1 修正後：清單如下，CR-C3 的合成部分已補（第 12 節）；是否 closure 由 SIA R2 判定。」；更早的已取代判定：「PASS（清單如下）」——SIA R1（`spec-SPEC-UI0-c1-r1.md` SIA-R1-F1）指出 `UI_CR01_DELTA.md` 第 11.3 節的「Planner 的補充說明沒通過規則 5」情境沒有合成呈現 | 下方「UI0-8 清單」 |
 | UI0-9 沒有真實資料；全部標示為模擬 | **PASS** | E-5；E-6 H-3 的模擬標示 |
 | UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況；依 `decision-20261118-issue12-ui07.md` 更新 UI0-7 列、UI0-2 限制 7 與第 10.2、10.3 節的 K3-B、K9 判定（原判定標明已取代）。UI0-7 的最終判定屬 R2；第 12 節補上 SIA-R1-F1 的修正（情境 16、CR-C3） |
 
@@ -474,3 +474,15 @@ C-1～C-3 依 `decision-20261118-issue12-ui0.md` 對 #12 沒有要求，相關�
 ### 12.5 Binding 自我觀測
 
 agentId `acf4b1c528124a22e`（`gov-executor`），全部 assistant 訊息 (`claude-opus-5-5`, `high`) 386 則，集合只有一個元素（本節 commit 前掃描）。這是自我觀測，不是派工者的核對。沒有 escalation、替代或 bounded assignment。
+
+## 13. SPEC-UI0 SIA R2 與 phase acceptance（record-only，WL-1）
+
+本節由 Executor（同一 worklog identity，agentId `acf4b1c528124a22e`）依 Orchestrator 的派工（SPEC-UI0 phase acceptance 的 WL-1）寫入，只修改本 worklog。
+
+- **SIA R2**：`docs/governance/records/audit/spec-SPEC-UI0-c1-r2.md`，`Verdict: PASS`。SIA-R1-F1（第 12 節的修正）與 SIA-R1-N1 都是 RESOLVED，沒有未解的 blocking finding。
+- **Phase acceptance**：Design Authority 的 `docs/governance/records/decisions/decision-20261118-spec-ui0-phase-acceptance.md`，**ACCEPT**（SPEC-UI0 v1）。裁決內容、範圍與限制以該 record 為準，本節不重述。該 record 第 11 節分開陳述：UI Gate／AB-8 未通過（UI Delta Review 待 acceptor）；不是 release authorization。
+- **交 acceptor 的事項**（依該 record 第 7、8 節列出 ID，內容與裁決見該 record）：
+  - 第 8 節：UDR（UI Delta Review）、NV-A、NV-B、NV-C、NV-D、A-UI07、A-ACC-1、A-ACC-2。
+  - 第 7 節中 owner 為 acceptor 的項目：C-5、C-6、C-7；SPEC-001 5.5 提案文字。
+  - 第 7 節中在特定條件下需要 acceptor 的項目：C-1 的方向題模板（提案文字）、C-2／C-3（RB-7）、Q-1b（contract change）、K9／逐元件鍵盤要求（P-11 的 accepted 語義）。
+- 本節不宣告 UI Delta Review、UI Gate、release 或 Issue #12 在 GitHub 上的狀態；這些保留給 acceptor。
