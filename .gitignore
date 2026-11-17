@@ -19,6 +19,10 @@ __pycache__/
 venv/
 .ipynb_checkpoints/
 
+# Tool-call receipt logs written by Claude Code plugin hooks in the working directory
+receipts/
+review-receipts/
+
 # OS / editor
 .DS_Store
 Thumbs.db
