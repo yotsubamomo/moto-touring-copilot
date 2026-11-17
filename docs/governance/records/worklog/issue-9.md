@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #9（BATCH-1 B1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | Cycle 1：R1 BLOCKING（R1-F1）→ targeted correction `6f97561`（第 10 節），待 R2。Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節）。C-9-1、C-9-2 經 Design Authority 裁決（CL-B1-9、CL-B1-10），同一 worklog identity 續派完成 CL-B1-10 的測試與 CL-B1-9 的 E-1（第 9 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）；CL-B1-10 的測試 commit **`b4d1f84eca1b4f80bd0265c81369384d62b055e0`**（`b4d1f84`，父 commit 是 DA record 的 `e165907`）。**R1 受審的程式與測試 subject 是 `b4d1f84`（R1 worktree HEAD `f0b5be9`）**；cycle 1 修正 commit **`6f975619a2e4b6303064955237c254de19f81da5`**（`6f97561`，第 10 節），是 R2 的程式與測試 subject；本 worklog 在其後的 record-only commit 更新（`docs/governance/records/**`，Bindings 第 7 節） |
+| 狀態 | Cycle 2：FA ruling `ruling-20261117-issue9-c1` 要求 targeted rework 並授權 cycle 2；DA 以 CL-B1-11 補上要求。Rework commit `49f1d80`（第 11 節），待 cycle 2 R1。Cycle 1：R1 BLOCKING（R1-F1）→ correction `6f97561`（第 10 節）→ R2 BLOCKING（R2-F1）→ Alternate UNRESOLVED → FA。Cycle 0：Executor 工作完成，回報 `DONE_WITH_CONCERNS`（第 8 節）。C-9-1、C-9-2 經 Design Authority 裁決（CL-B1-9、CL-B1-10），同一 worklog identity 續派完成 CL-B1-10 的測試與 CL-B1-9 的 E-1（第 9 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，不由本 worklog 宣告 |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `0c109aa`（本 work item 開始時的 HEAD）；實作 commit **`a281cb0c07b522f6dad8ed078d085a37b2e59e7e`**（`a281cb0`）；CL-B1-10 的測試 commit **`b4d1f84eca1b4f80bd0265c81369384d62b055e0`**（`b4d1f84`，父 commit 是 DA record 的 `e165907`）。**R1 受審的程式與測試 subject 是 `b4d1f84`（R1 worktree HEAD `f0b5be9`）**；cycle 1 修正 commit **`6f975619a2e4b6303064955237c254de19f81da5`**（`6f97561`，第 10 節），是 cycle 1 R2 的程式與測試 subject；cycle 2 rework commit **`49f1d80ed1c67c09488353faf1d2b1ac479ea3cd`**（`49f1d80`，第 11 節），是 cycle 2 R1 的程式與測試 subject；本 worklog 在其後的 record-only commit 更新（`docs/governance/records/**`，Bindings 第 7 節） |
 | 日期 | 2026-11-17 |
 
 ## 1. Contract reference
@@ -14,6 +14,7 @@
 - **Spec**：SPEC-B1 v1（`docs/governance/records/decisions/derivation-spec-b1.md`）：§2 引用的段落；§4 CL-B1-1、**CL-B1-3**、CL-B1-7；§5 #9 列（Issue 的 4 項 AC＋CL-B1-3 第 4、5 項的三項測試；高風險類別 H-2、H-3、H-4）與 E-1～E-5。
 - **CL-B1-8**：`docs/governance/records/decisions/decision-20261117-issue7-spike-tests.md`（第 3.2 節：#9 結案時 S-1、S-2 的 strict xfail 移除、原斷言不帶標記通過）。
 - **CL-B1-9、CL-B1-10**：`docs/governance/records/decisions/decision-20261117-issue9-e1-and-trim.md`（DA 對 C-9-1、C-9-2 的裁決；E-1 在 #9 的判定方式，以及停等事件跨修剪邊界的處理與另加的驗證條件）。在本 work item 執行中加入 SPEC-B1 的引用集合。
+- **Cycle 2**：FA ruling `docs/governance/records/decisions/ruling-20261117-issue9-c1.md`（第 3.2 節的 rework 要求與 closure 證據、第 3.3 節的 cycle 2 授權）；DA decision `docs/governance/records/decisions/decision-20261118-issue9-qda1.md`（**CL-B1-11**：「不開啟」的範圍、pace 那一邊的連結別名、L-1～L-6）。
 - **其他引用**：`decision-20261117-high-risk-categories.md` 第 5 節（H-2、H-3、H-4 的核對範圍）；`docs/governance/records/worklog/issue-7.md` 第 8 節 C-2（acceptor 指定在 #9 處理）；Outcome Contract OC-1（`docs/governance/records/outcome-contract.md`，acceptor 2026-11-17 針對 `873e37a` 接受）。
 - **規格來源**：`DESIGN.md` §5（資料處理流程、契約 1 的欄位與不變條件、「凍結之前不產生保留行程的列」）；`docs/spec/SPEC-RESOLUTION-001-sb2-sb8-sb9.md` §1.1、§1.4、§1.6（SB2-T1、T2、T3、T11）。
 - 契約在本 work item 執行中的變更：DA 以 CL-B1-9、CL-B1-10 補上 SPEC-B1 的 clarification（不改變 accepted 語義；CL-B1-10 第 6 項第 3 款為 #9 另加一項驗證條件）。
@@ -342,10 +343,10 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 ### 10.1 R1-F1 的修正
 
 - **做法**：`load_manifest` 在檢查完各項目的欄位與 `trip_id` 不重複之後，呼叫 `_refuse_conflicting_roles`：若任一來源檔同時被某個 `pace` 項目與某個非 `pace` 項目引用，整份清單拒絕（`ManifestError`，exit 2）。這發生在選擇行程與開啟任何 GPX 之前，所以自動選擇與 `--trips` 明確指定都被攔住。錯誤訊息只列出行程代號（例如 `T901 (pace) and T902`），不列檔名。
-- **檔名等價**（`source_key`）：只取最後一個路徑成分（`/` 與 `\` 都視為分隔符），並忽略大小寫（`casefold`）、Unicode 正規化形式（NFC）與結尾的句點與空白（Windows 不區分這些）。比較只用清單中的字串，不讀取、不 stat、不雜湊任何非 `pace` 的檔案。鍵相同就視為同一檔，寧可多拒絕。
+- **檔名等價**（`source_key`）：只取最後一個路徑成分（`/` 與 `\` 都視為分隔符），並忽略大小寫（`casefold`）、Unicode 正規化形式（NFC）與結尾的句點與空白（Windows 不區分這些）。比較只用清單中的字串，不讀取、不 stat、不雜湊任何非 `pace` 的檔案。鍵相同就視為同一檔，寧可多拒絕。**（Cycle 2 更正：這個等價關係比作業系統開檔時接受的拼法窄——`::$DATA` 等串流寫法與 8.3 短檔名不在其中，而 `6f97561` 以 `--gpx-dir / source_file` 直接開檔，所以這兩種拼法繞過了比對（R2-F1，FA ruling 第 2.3 節重現）。當時 `source_key` docstring 的「names that can open the same file in the GPX folder are equal」不成立。修正見第 11 節。）**
 - **沒有改變的事**：兩個非 `pace` 項目共用一個檔、兩個 `pace` 項目各自的檔，不構成衝突（有測試）。沒有新增清單欄位，沒有實作內容去重複（Issue #9 排除範圍）。
 - **契約語義**：這是 CL-B1-3 第 4 項「非 `pace` 的項目不開啟」在清單內部矛盾時的 fail-closed 執行方式，只增加拒絕，不改變任何欄位、角色或分類的定義；我判斷不需要 Design Authority 補定。若 R2 認為「整份清單拒絕」超出 CL-B1-3（例如應只略過衝突的項目），屬 Design Authority。
-- **已知的殘餘（記錄，不是本 finding 的要求）**：以名稱比較無法辨識指向同一檔案的不同名稱，例如符號連結、硬連結或 Windows 8.3 短檔名；也無法辨識內容相同、檔名不同的兩個檔（內容去重複屬 Issue #9 排除範圍，DESIGN §5 第 5 步）。偵測這些需要 stat 或讀取非 `pace` 的檔案，R1-F1 的 required fix 也明示不要求。
+- ~~已知的殘餘：以名稱比較無法辨識指向同一檔案的不同名稱，例如符號連結、硬連結或 Windows 8.3 短檔名；也無法辨識內容相同、檔名不同的兩個檔。偵測這些需要 stat 或讀取非 `pace` 的檔案。~~ **（Cycle 2 更正：這個殘餘清單不正確也不完整。它漏了串流寫法；8.3 短檔名與 pace 那一邊的 hard link、符號連結都可以只用 pace 項目自身的資訊或名稱處理，不需要碰非 `pace` 的檔案（Alternate record、FA ruling 第 2.3 節、CL-B1-11 第 3 項）。殘餘以 CL-B1-11 第 4 項為準，見第 11.5 節。）**
 
 **Regression tests**（`tests/test_ingest_cli.py`，合成資料，全部 PASS）：
 
@@ -478,7 +479,7 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 
 - E-2：CL-B1-3 第 4 項（清單中非 `pace` 的項目不開啟）的對應測試加上第 10.1 節的三個測試；第 6、9 節其他各列在 `6f97561` 仍全部 PASS（同一次 (i)）。
 - H-2：新的拒絕在開啟任何 GPX 之前發生，錯誤訊息不含檔名；新測試只用合成檔與合成清單。commit 前確認暫存的只有兩個檔案，`git ls-files` 仍不含 `.env`、`*.gpx`、`*.fit`、`data/`。以真實清單或真實資料核對：NOT VERIFIED（C-9-3）。
-- H-3：凍結前開啟保留行程的程式路徑：自動選擇、明確指定、清單內部角色矛盾三種情形都以測試證明不開啟非 `pace` 指定的檔案（在第 10.1 節所述的名稱等價範圍內；殘餘情形已記錄）。結果陳述照實寫數目。
+- H-3：凍結前開啟保留行程的程式路徑：自動選擇、明確指定、清單內部角色矛盾三種情形都以測試證明不開啟非 `pace` 指定的檔案（在第 10.1 節所述的名稱等價範圍內；殘餘情形已記錄）。結果陳述照實寫數目。**（Cycle 2 更正：在 `6f97561`，「名稱等價範圍內」的限定掩蓋了仍然存在的路徑——串流寫法與 8.3 短檔名會讓非 `pace` 指定的目錄項目被開啟（R2-F1）。這項 H-3 主張在 `6f97561` 不成立；cycle 2 的 H-3 self-verification 見第 11.4 節。）**
 - H-4：清單矛盾是明確的拒絕（exit 2，沒有輸出），不是靜默略過或部分重建。
 - 本次 correction 沒有讀取 `data/` 或 `.env`，沒有讀取或執行 `experiments/` 下的檔案，沒有派工任何 subagent。
 
@@ -486,8 +487,210 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 
 | # | 項目 | 所需 authority／負責者 |
 | --- | --- | --- |
-| C-9-5b | 第 10.1 節的殘餘：名稱比較無法辨識連結、8.3 短檔名或內容相同的不同檔名 | 無（記錄）；是否需要以檔案識別（stat）或內容比較加強，屬 Design Authority／之後的上傳與去重複工作 |
+| C-9-5b | ~~第 10.1 節的殘餘~~ **由 CL-B1-11（`decision-20261118-issue9-qda1.md`）取代**，見第 11.5 節 | Design Authority：已裁決 |
 | C-9-6 | 對清單內部矛盾採「整份清單拒絕」而不是只略過衝突項目（第 10.1 節「契約語義」） | 無（記錄）；R2 有疑義時 Design Authority |
 | C-9-3、C-9-4 | 不變（第 8 節） | acceptor（RB-7）；AB-12 |
 | R-9-1 | R2 closure review（subject `6f97561`） | Orchestrator |
+| R-9-2 | S-3～S-6 由 #10、#11 恢復 | #10、#11 |
+
+## 11. Rework — cycle 2（FA ruling 第 3.2 節、CL-B1-11）
+
+| 欄位 | 內容 |
+| --- | --- |
+| 依據 | FA ruling `ruling-20261117-issue9-c1.md`（R2-F1 與 R1-F1 殘餘為同一 root cause；targeted rework；授權 cycle 2）；DA decision `decision-20261118-issue9-qda1.md`（CL-B1-11）。兩份 record 與 R2、Alternate records 在 HEAD `77d7fdb` 時已 commit。Finding 與裁決的原文以各 record 為準 |
+| 派工 | Orchestrator 以同一 worklog identity 續派同一 Executor（agentId `a6f915a1860417bc9`） |
+| Rework commit | **`49f1d80ed1c67c09488353faf1d2b1ac479ea3cd`**（`49f1d80`），父 commit `77d7fdb`。只改 `src/moto_copilot/ingest/__main__.py` 與 `tests/test_ingest_cli.py`；`segments.py`、`tests/test_ingest.py` 對 `b4d1f84` 沒有差異 |
+| Cycle 2 R1 的 subject | `49f1d80`（程式與測試）；之後只有本 worklog 的 record-only commit |
+
+### 11.1 Root cause 與修正
+
+**Root cause**（FA ruling 第 3.2 節、Alternate record）：`a281cb0` 把 BASE 的「清單名稱逐字等於資料夾列表中的名稱」改為直接以 `--gpx-dir / source_file` 開檔，從此作業系統接受的任何拼法都能開檔；`6f97561` 的角色比對（`source_key`）只涵蓋其中一部分拼法。也就是：重建流程會開啟它沒有納入角色衝突比對的拼法。
+
+**修正**（`ingest/__main__.py`，在 `select_pace_trips` 之後、開啟任何 GPX 之前呼叫 `check_pace_entries`）：
+
+1. **pace 項目只以列表中的名稱開啟。** 以 `os.listdir(--gpx-dir)` 取得名稱（只用名稱）；每一個被選中的 `pace` 項目的 `source_file` 必須**逐字等於**列表中的一個名稱，否則整次重建拒絕。列表只回傳長檔名的主資料串流名稱，所以串流寫法（`::$DATA`、`:x:$DATA`，不分大小寫）、8.3 短檔名、大小寫或結尾字元不同的拼法、含路徑的名稱，在 `pace` 那一邊都不會被開啟。這不依賴磁碟區是否產生短檔名。
+2. **非 `pace` 那一邊的拼法以文字比對。** `source_key` 現在另外去掉 NTFS 串流後綴（最後路徑成分中第一個 `:` 之後的部分），所以 `pace_a.gpx::$DATA`、`PACE_A.GPX::$data`、`pace_a.gpx. ::$DATA` 等與 `pace_a.gpx` 同鍵，在 `load_manifest` 的角色衝突檢查中被拒絕（只用清單字串）。
+3. **非 `pace` 那一邊的 8.3 短檔名以 pace 項目自身的短檔名比對。** 對每一個被選中的 `pace` 項目，以 `GetShortPathNameW` 取得**它自己的**短檔名（CL-B1-11 第 1.3 項允許），若與任何非 `pace` 項目的 `source_key` 相同就拒絕。查詢失敗時拒絕（不猜）。
+4. **pace 那一邊的連結別名（CL-B1-11 第 3 項）。** 對每一個被選中的 `pace` 項目 `os.lstat`：符號連結（`S_ISLNK`）或任何 reparse point（`st_file_attributes & 0x400`）→ 拒絕；不是一般檔案 → 拒絕；`st_nlink != 1` → 拒絕。
+5. 所有被選中的 `pace` 項目都通過之後才開啟第一個 GPX；任何一項不符時 exit 2、不寫出衍生路段表與報告。錯誤訊息只列行程代號與原因（例如 `T901 has more than one hard link`），不列檔名（H-2）。自動選擇與 `--trips` 都適用。
+
+**行為變更（E-4 相關）**：`6f97561` 對「不是單純檔名」與「找不到檔案」的 `pace` 項目在報告中註記、照常結束（exit 0）；現在這兩種情形都屬第 1 項，整次重建拒絕（exit 2）。理由：在不碰檔案系統的前提下無法區分「不存在」與「某個目錄項目的另一種拼法」，所以 fail closed（H-4）。這是更嚴格的拒絕，不改變任何欄位、角色或分類的定義。若 Reviewer 或 DA 認為缺檔應改回註記，可以只對「列表中沒有、且 `source_key` 與列表中任何名稱都不同、且不含 `:` 與 `~`」的名稱恢復註記；我沒有這樣做，因為那會引入啟發式。見第 11.6 節 C-9-7。
+
+**沒有改變的事**：不實作內容去重複、不新增清單欄位、不實作上傳（FA ruling 第 3.2 節第 3 項）。C-9-6（矛盾清單整份拒絕）不變。
+
+### 11.2 L-4：重建流程在開啟 GPX 之前與之時的檔案系統操作
+
+| # | 操作 | 作用對象 | 位置 |
+| --- | --- | --- | --- |
+| 1 | `Path.is_file()`、`read_text`（讀清單） | 行程清單檔（`--manifest` 或 `<out>/trip_manifest.json`） | `load_manifest` |
+| 2 | `source_key` 等字串處理 | 清單字串（含非 `pace` 項目的 `source_file`），不碰檔案系統 | `load_manifest` → `_refuse_conflicting_roles`、`check_pace_entries` |
+| 3 | `os.listdir(--gpx-dir)` | GPX 資料夾的列舉，**只用名稱** | `check_pace_entries` |
+| 4 | `os.lstat`、`GetShortPathNameW` | **只有被選中的 `pace` 項目**（`--gpx-dir / source_file`，而且 `source_file` 已確認逐字在列表中） | `pace_entry_problem` |
+| 5 | `read_gpx`（`ET.parse` 開檔讀取） | 只有通過第 4 項檢查的 `pace` 項目 | `main` 的迴圈 |
+| 6 | `mkdir`、`write_text` | `--out` 資料夾與兩個輸出檔（只在沒有拒絕時） | `main` |
+
+非 `pace` 項目所指的目錄項目沒有任何操作作用其上（CL-B1-11 第 1 項）：它們只在第 2 項以字串出現；第 3 項的列舉只產生名稱。Python 的 `open` audit 事件不涵蓋 stat 類呼叫，所以另有 `test_no_metadata_is_asked_of_a_non_pace_item`：把 `os.lstat` 與 `short_name` 換成會記錄引數的包裝，在一份含 holdout 與 excluded 項目的清單上執行完整 CLI，斷言兩者只被用在兩個 `pace` 檔、沒有用在非 `pace` 項目，且 audit hook 只看到兩個 `pace` 檔被開啟。這只涵蓋本程式的呼叫路徑；Reviewer 仍以閱讀程式核對（L-4）。
+
+### 11.3 Regression tests（`tests/test_ingest_cli.py`，合成資料，在 `49f1d80` 全部 PASS）
+
+| 測試 | 內容 | 對應 |
+| --- | --- | --- |
+| `test_an_ntfs_stream_spelling_on_either_side_is_refused_before_any_gpx_is_opened`（24 例） | 串流寫法 6 種（`pace` 那一邊 3 種：`::$DATA`、`::$data`、`:other:$DATA`；非 `pace` 那一邊 3 種：`::$DATA`、大寫檔名＋`::$data`、`. ::$DATA`）× `holdout`／`excluded` × 自動／`--trips T901` | FA closure 1；R2 的四個重現與 Alternate 的兩個補充情形 |
+| `test_a_stream_spelling_alone_on_a_pace_entry_is_refused`（2 例） | 沒有衝突項目、只有串流寫法的 `pace` 項目也不開啟 | Alternate 重現第 7 列 |
+| `test_an_8_3_short_name_on_the_pace_entry_is_refused`（4 例） | `pace` 項目寫成 `PACE_L~1.GPX`，非 `pace` 項目寫長檔名；測試先斷言這個拼法不在列表中。不論磁碟區是否產生短檔名都成立 | FA closure 1、2 |
+| `test_an_8_3_short_name_on_the_non_pace_item_is_refused`（4 例） | 非 `pace` 項目寫成 `PACE_L~1.GPX`；`short_name` 以 monkeypatch 回傳該值，使測試不依賴磁碟區；並斷言短檔名只被問了 `pace` 項目 | FA closure 1、2 |
+| `test_the_real_short_name_lookup_is_only_used_on_pace_entries_and_matches_the_os` | 實際呼叫 `short_name`：Windows 上回傳含 `~` 的短檔名或長檔名本身 | 真實查詢的健全性 |
+| `test_a_pace_entry_that_is_a_hard_link_to_a_holdout_file_is_refused`（2 例） | 以 `os.link` 建立真實 hard link：`pace` 項目是 `holdout` 檔的另一個名稱；自動與 `--trips T901`；斷言訊息含 `T901` 與原因、不含兩個檔名 | L-1 (1)(2) |
+| `test_a_pace_file_with_a_hard_link_named_by_an_excluded_item_is_refused` | 方向相反：`pace` 項目是原檔，`excluded` 項目是另一個 hard link 名稱 | L-1 (3) |
+| `test_a_pace_entry_that_is_a_symbolic_link_is_refused`（4 例） | 以 monkeypatch 替換 `os.lstat` 對該 `pace` 項目的回答（符號連結的 mode，或帶 reparse point 屬性的一般檔），其他路徑取得真實回答；自動與 `--trips`；訊息不含檔名 | L-2（不依賴建立符號連結的特權） |
+| `test_no_metadata_is_asked_of_a_non_pace_item` | 第 11.2 節 | L-4 的輔助證據 |
+| `test_a_missing_pace_file_refuses_the_run` | 找不到的 `pace` 檔 → exit 2、沒有開啟、沒有輸出 | 第 11.1 節的行為變更 |
+
+每一例拒絕的斷言都是：exit 2、audit hook 在 GPX 資料夾內沒有看到任何 `open`、沒有寫出衍生路段表與報告。沒有新增 `skip`／`xfail`（K-1 見第 11.4 節）。
+
+**8.3 短檔名的證據如何不依賴環境**：`pace` 那一邊只靠「名稱必須逐字在列表中」，列表不回傳短檔名，所以在任何磁碟區都成立；非 `pace` 那一邊以替換 `short_name` 的回答表現比對邏輯。**實際觀測**（本機，scratchpad 內的合成檔，沒有 mock，腳本 `<scratchpad>/c2obs/obs.py`，執行後刪除工作目錄）：此磁碟區對 `pace_long_named_trip_a.gpx` 產生短檔名 `PACE_L~1.GPX`；以它寫在非 `pace` 項目（`holdout`／`excluded` × 自動／`--trips T901`）時四例都是 exit 2、沒有開啟任何 GPX、只剩清單檔，訊息 `T901 has a short name that a non-pace item names`；寫在 `pace` 項目時 exit 2，訊息 `T901 is not exactly the name of an entry in the GPX folder`。
+
+**符號連結的實際觀測**：`os.symlink` 失敗（`OSError`，`winerror 1314`，缺少建立符號連結的特權）→ **NOT RUN**。L-2 的證據是上表以替換 `os.lstat` 回答的測試。
+
+**L-3**：`test_only_pace_entries_are_opened_and_the_result_passes_the_contract`、`test_requested_pace_trips_are_the_only_ones_opened`、`test_non_pace_entries_sharing_a_file_and_distinct_pace_files_are_not_a_conflict` 沒有修改斷言，在 `49f1d80` 通過。R1-F1 的 regression tests（第 10.1 節三個）沒有修改，通過。
+
+**E-4（修改的既有測試）**：`test_a_source_file_outside_the_gpx_folder_is_not_opened` 由「exit 0、報告註記 `source_file is not a plain file name`」改為「exit 2、沒有報告」，`outside.gpx` 沒有被開啟的斷言不變。理由：第 11.1 節的行為變更（含路徑的名稱不在列表中，整次重建拒絕）。
+
+**Mutation check（self-verification，修改後已還原，未 commit）**，`tests/test_ingest_cli.py` 的結果：拿掉列表逐字比對 → 5 個失敗；`source_key` 不去串流後綴 → 12 個失敗；拿掉短檔名比對 → 4 個失敗；拿掉 hard link 檢查 → 3 個失敗；拿掉符號連結／reparse point 檢查 → 4 個失敗；整個不呼叫 `check_pace_entries` → 20 個失敗。（拿掉列表比對時只有 5 個失敗，是因為 `pace` 那一邊的串流寫法在有衝突項目時也會被第 2 項的文字比對攔住——兩道防線重疊。）
+
+### 11.4 E-1：依 CL-B1-9 第 2 項，在 `49f1d80` 執行（主 checkout）
+
+**(i) `.venv/Scripts/python.exe -m pytest -q`**（exit code 0）：
+
+```text
+........................................................................ [ 23%]
+........................................................................ [ 46%]
+........................................................................ [ 69%]
+........................................................................ [ 92%]
+...............x....x.xx.                                                [100%]
+309 passed, 4 xfailed in 1.44s
+```
+
+**(iii) `.venv/Scripts/python.exe -m pytest -q -rxX`**（exit code 0）：
+
+```text
+........................................................................ [ 23%]
+........................................................................ [ 46%]
+........................................................................ [ 69%]
+........................................................................ [ 92%]
+...............x....x.xx.                                                [100%]
+=========================== short test summary info ===========================
+XFAIL tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+309 passed, 4 xfailed in 1.36s
+```
+
+K-1：`grep -rn "xfail\|skip" tests/` 只有 `tests/test_routes_pace_eta.py` 第 117（`restored by #10`）、159、173、182 行（`restored by #11`）的 4 個 CL-B1-8 標記；沒有 `restored by #9`，沒有其他 `xfail`／`skip`。
+
+**(iv) `.venv/Scripts/python.exe -m pytest -q --runxfail tests/test_ingest.py tests/test_ingest_cli.py tests/test_routes_pace_eta.py`**（exit code 1；`--collect-only` 為 115 個測試；以 `PYTHONIOENCODING=utf-8` 執行）：
+
+```text
+........................................................................ [ 62%]
+.................................F....F.FF.                              [100%]
+================================== FAILURES ===================================
+___________ test_pace_table_matches_the_mock_fixture__v03_contract ____________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; "
+                                           "build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet")
+    def test_pace_table_matches_the_mock_fixture__v03_contract(data):
+        header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="user-01",
+                                              min_segments=2, built_at=NOW)
+>       assert validate_pace_table(header, categories, data["derived_segments"]) == []
+E       assert ['pace_header...red property'] == []
+E         
+E         Left contains 5 more items, first extra item: "pace_header[0] schema: (record): 'margin_coeff' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:122: AssertionError
+_____________ test_eta_reproduces_the_mock_fixture__v03_contract ______________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_reproduces_the_mock_fixture__v03_contract(data):
+        header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
+>       assert rows == [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
+E       AssertionError: assert [{'plan_id': ...: 600.0, ...}] == [{'plan_id': ...s': 0.0, ...}]
+E         
+E         At index 0 diff: {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'} != {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'stop_allow_s': 0.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'}
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:163: AssertionError
+________ test_eta_is_unknown_when_a_category_has_no_pace__v03_contract ________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
+        header, rows = eta_for(data, "R02", "P-MOCK-2", [])
+        data["eta_headers"], data["eta_segments"] = [header], rows
+>       assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                   data["pace_header"], data["pace_categories"]) == []
+E       assert ['eta_segment...red property'] == []
+E         
+E         Left contains 2 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:178: AssertionError
+_________ test_eta_output_passes_the_contract_with_and_without_breaks _________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_output_passes_the_contract_with_and_without_breaks(data):
+        for plan_id, breaks in (("P-A", []), ("P-B", [{"after_checkpoint_id": "R01-CP04", "duration_s": 900.0}])):
+            header, rows = eta_for(data, "R01", plan_id, breaks)
+>           assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                       data["pace_header"], data["pace_categories"]) == []
+E           assert ['eta_segment...status is ok'] == []
+E             
+E             Left contains 5 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E             Use -v to get more diff
+
+tests\test_routes_pace_eta.py:187: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks
+4 failed, 111 passed in 1.11s
+```
+
+失敗的恰好是 (iii) 的 4 個 xfail 測試；訊息只涉及配速表表頭與類別紀錄缺少的 v0.3 欄位（`margin_coeff` 等）、ETA 路段列缺少 `stop_allow_s`，以及 S-4 列比對中缺少 `stop_allow_s` 及隨它改變的時間值，都在 CL-B1-8 §3.3 第 4 項列舉的 v0.3 項目之內。與第 10.3 節在 `6f97561` 的輸出比較，除了進度列與計數（`67 passed` → `111 passed`）之外完全相同。
+
+**(v)** `git diff 0c109aa 49f1d80 --stat -- tests/test_routes_pace_eta.py tests/conftest.py tests/test_contracts.py pyproject.toml` 沒有輸出（S-3～S-6 沒有修改）；`git diff b4d1f84 49f1d80 --stat -- src/moto_copilot/ingest/segments.py tests/test_ingest.py` 沒有輸出（停等與修剪行為沒有改變，FA closure 3）；`git diff --check 0c109aa 49f1d80 -- src tests` 沒有輸出。
+
+**結果照實寫：`309 passed, 4 xfailed`（依 CL-B1-8、CL-B1-9）。** 這不是「全數通過」；E-1 是否滿足由 cycle 2 的 Reviewer 依 CL-B1-9 核對。測試數：`--collect-only` 全部 313 個 ＝ 309＋4；`tests/test_ingest_cli.py` 由 26 個增為 70 個（＋44），`6f97561` 的 269 個＋44 ＝ 313。
+
+### 11.5 E-2、E-5 與殘餘（L-5、L-6）
+
+- **E-2**：CL-B1-3 第 4 項與 CL-B1-11 第 3 項的對應測試是第 11.3 節的表（L-6）；第 6、9、10 節其他各列在 `49f1d80` 仍全部 PASS（同一次 (i)）。
+- **H-2**：拒絕都在開啟任何 GPX 之前；錯誤訊息只列行程代號與原因，不列檔名（hard link 與符號連結的測試斷言訊息不含檔名）。非 `pace` 項目所指的目錄項目沒有任何檔案系統操作（第 11.2 節）。新測試只用合成檔、合成清單與在 pytest 暫存目錄建立的 hard link。commit 前確認暫存的只有兩個檔案；`git ls-files` 中 `.env`、`*.key`、`*.gpx`、`*.fit`、`data/` 的數目是 0。以真實清單或真實資料核對：NOT VERIFIED（C-9-3）。
+- **H-3**：凍結前開啟非 `pace` 指定檔案的程式路徑：同名、大小寫、結尾字元、路徑前綴、串流寫法（兩邊）、8.3 短檔名（兩邊）、`pace` 項目是 hard link 或符號連結／reparse point、缺檔，都以測試證明拒絕且不開啟任何 GPX。**仍不涵蓋**的只有 CL-B1-11 第 4 項的殘餘（下一點），以及 CL-B1-11 第 5 項明示不在要求內的 TOCTOU。結果陳述照實寫數目。
+- **H-4**：所有不確定的情形（不在列表、無法 lstat、無法取得短檔名、不是一般檔、連結數不是 1）都是明確的拒絕，不是略過或部分重建。
+- **殘餘（CL-B1-11 第 4 項，取代 C-9-5b）**：(i) 內容相同、名稱不同的兩個檔案；(ii) 非 `pace` 項目本身是指向 `pace` 檔的符號連結；(iii) 其他不同目錄項目承載同一趟行程、而 `pace` 項目自身看不出來的情形。這些依 CL-B1-11 歸 G-ING，辨識它們需要非 `pace` 項目的 metadata 或內容，#9 依 CL-B1-11 第 1 項不得處理。模組說明已寫明這兩類不在此偵測。
+- 本次 rework 沒有讀取 `data/` 或 `.env`，沒有讀取或執行 `experiments/` 下的檔案，沒有派工任何 subagent。
+
+### 11.6 Concerns 與剩餘工作
+
+| # | 項目 | 所需 authority／負責者 |
+| --- | --- | --- |
+| C-9-7 | 第 11.1 節的行為變更：找不到或不在列表中的 `pace` 項目由「註記、exit 0」改為「整次重建拒絕、exit 2」。我判斷這是 fail-closed 的 HOW（無法不碰檔案系統就區分缺檔與別名），不改變契約語義 | 無（記錄）；Reviewer 有疑義時 Design Authority |
+| C-9-8 | 對 `pace` 項目以 `GetShortPathNameW` 取得短檔名：CL-B1-11 第 1.3 項明列「它的短檔名」為允許的查詢。只在 Windows 上呼叫；其他系統沒有短檔名，回傳 None | 無（記錄） |
+| C-9-3 | 以真實資料重建：NOT VERIFIED。另見 CL-B1-11 第 7 節 A-2（真實資料夾是否有跨角色連結或複本）與 FA ruling NV-2（真實磁碟區的短檔名） | acceptor（RB-7） |
+| C-9-4 | 文件寫明重建需要清單；另依 CL-B1-11 第 8 節，`DESIGN.md` §12 應如實寫出 CL-B1-11 第 4 項的殘餘 | AB-12 的文件工作 |
+| C-9-6 | 不變 | 無（記錄） |
+| R-9-1 | Cycle 2 R1（完整 audit，subject `49f1d80`；pack 引用 FA ruling 與 CL-B1-11） | Orchestrator |
 | R-9-2 | S-3～S-6 由 #10、#11 恢復 | #10、#11 |
