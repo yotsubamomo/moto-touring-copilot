@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #12（UI-0），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator）。依 run record，SPEC-UI0 不採 fast path：#12 的 R1 是一般 Ticket audit，SIA 另派 |
-| 狀態 | **cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試。依 Design Authority 的 `decision-20261118-issue12-ui07.md`：K9 不是 UI0-7 的 FAIL（日期可只用鍵盤以年／月／日欄修改），K3-B（作業系統的檔案對話框）不在 #12 的 UI0-7 範圍內、記為範圍外的 NOT VERIFIED；依該 record 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分。UI0-7 是否 PASS、R1-F2 是否 RESOLVED 由 R2 判定。本 worklog 不宣告 Ticket closure。（已取代的敘述：「R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor」——由上述 DA record 取代。）以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-2、UI0-4、UI0-7、UI0-10 列與第 9.1 節已依第 10 節更新 |
+| 狀態 | **（最新）SPEC-UI0 SIA R1（`spec-SPEC-UI0-c1-r1.md`）`BLOCKING` 的 SIA-R1-F1 已作 targeted correction（實作 `1ce4640`），待 SIA R2（第 12 節）。** 以下是先前的狀態：**cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試。依 Design Authority 的 `decision-20261118-issue12-ui07.md`：K9 不是 UI0-7 的 FAIL（日期可只用鍵盤以年／月／日欄修改），K3-B（作業系統的檔案對話框）不在 #12 的 UI0-7 範圍內、記為範圍外的 NOT VERIFIED；依該 record 第 4.3 節，UI0-7 在 #12 範圍內沒有 BLOCKED 或 FAIL 的部分。UI0-7 是否 PASS、R1-F2 是否 RESOLVED 由 R2 判定。本 worklog 不宣告 Ticket closure。（已取代的敘述：「R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor」——由上述 DA record 取代。）以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-2、UI0-4、UI0-7、UI0-10 列與第 9.1 節已依第 10 節更新 |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `3906e077ab850c027d7833b30d3eebfa16f67761`（`3906e07`）；實作 commit `6a278b40dc79dcbede9486902e52dc8504a8d30e`（`6a278b4`）；**correction commit `619268ad2732b4cdd04593ff20ebe35374a7710c`（`619268a`，只修改 `app/ui0_mock_app.py`、`tests/test_ui0_skeleton.py`）**；R1 受審 HEAD `e836c99`，R1 record 在 `e94d182`；本節的更新在 `619268a` 之後的 record-only commit |
 | 日期 | 2026-11-18 |
 
@@ -180,9 +180,9 @@
 | UI0-5 期限名稱隨行程型態切換；值是否保留照實記錄 | **PASS：值會保留**，採用隨行程型態改變的標籤，不需要退路 | AppTest（16:45 在切換前後保留）；E-2 第 11 列（瀏覽器中 17:00 與 16:45 都在切換後保留）。條件：widget 有固定的 key（D-12-3）。行程型態未選時用固定標籤「期限」（D-12-6） |
 | UI0-6 375 像素沒有整頁的水平溢出 | **PASS** | E-2：23 個情境（含追問回覆後、欄位錯誤後的狀態）、兩個分頁、Profile／公路與地標／全部候選展開時，`scrollWidth` 都是 375，沒有未裁切的溢出；寬表格在自己的容器內捲動 |
 | UI0-7 所有操作都可以只用鍵盤完成 | **待 R2 判定。依 `decision-20261118-issue12-ui07.md`，#12 範圍內沒有 BLOCKED 或 FAIL 的部分**（該 record 第 3、4.3 節）。已取代的判定：(1) R1 前「大部分 PASS；一項 NOT VERIFIED」；(2) correction 時「未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS」 | 以操作為單位（DA record 第 3.1 節）。只用鍵盤完成的操作紀錄：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出多選且限 `.gpx` 的選檔請求（K3）、移除檔案（K5）、選檔之後按「更新 Profile」（K6）、行程描述的輸入、公路與地標 expander、行程型態、日期（K10，年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander（第 10.2 節、第 6 節 E-2）。**K9**（日曆彈窗內鍵盤焦點進不去）：不是 UI0-7 的 FAIL，記為元件的限制（UI0-2 限制 7），日期這項操作由 K10 完成（DA record 第 3.2 節）。**K3-B**（在作業系統的原生檔案對話框中只用鍵盤多選 GPX）：不在 #12 的 UI0-7 範圍內，**範圍外，NOT VERIFIED**；#12 範圍內的上傳操作由 K3、K5、K6 涵蓋（DA record 第 4.2 節）。沒有任何人驗證過作業系統對話框中可只用鍵盤多選，本 worklog 不作此宣稱 |
-| UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **PASS（清單如下）** | 下方「UI0-8 清單」 |
+| UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **SIA-R1-F1 修正後：清單如下，CR-C3 的合成部分已補（第 12 節）；是否 closure 由 SIA R2 判定。** 已取代的判定：「PASS（清單如下）」——SIA R1（`spec-SPEC-UI0-c1-r1.md` SIA-R1-F1）指出 `UI_CR01_DELTA.md` 第 11.3 節的「Planner 的補充說明沒通過規則 5」情境沒有合成呈現 | 下方「UI0-8 清單」 |
 | UI0-9 沒有真實資料；全部標示為模擬 | **PASS** | E-5；E-6 H-3 的模擬標示 |
-| UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況；依 `decision-20261118-issue12-ui07.md` 更新 UI0-7 列、UI0-2 限制 7 與第 10.2、10.3 節的 K3-B、K9 判定（原判定標明已取代）。UI0-7 的最終判定屬 R2 |
+| UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況；依 `decision-20261118-issue12-ui07.md` 更新 UI0-7 列、UI0-2 限制 7 與第 10.2、10.3 節的 K3-B、K9 判定（原判定標明已取代）。UI0-7 的最終判定屬 R2；第 12 節補上 SIA-R1-F1 的修正（情境 16、CR-C3） |
 
 **元件的對應、替代與限制（UI0-2）**
 
@@ -218,7 +218,7 @@
 | CR-R4 | 里程差的句子與去回里程（PASS） | 百分比由結構化欄位算出且一致 |
 | CR-C1 | 三種涵蓋比例句子（PASS） | 百分比與結構化欄位一致 |
 | CR-C2 | 評估失敗不顯示計畫狀態與出發時間（PASS） | 評估未完成的判定 |
-| CR-C3 | 模板文字與 Planner 補充說明的來源標示（PASS） | 規則 5 通過才顯示 |
+| CR-C3 | 模板文字與 Planner 補充說明的來源標示；**補充說明沒通過規則 5 時，固定模板照常顯示、補充說明與其「通過」caption 不顯示（情境 16，寫定的模擬資料；第 12 節）**（PASS 的 AppTest 證據） 已取代：原只列「模板文字與 Planner 補充說明的來源標示（PASS）」，SIA-R1-F1 | 規則 5 的實際判定（Planner 補充說明是否通過） |
 | CR-C4、CR-C5、CR-C6 | 加油的去程／回程、去回兩次；預報時段與時段長度、UNKNOWN 的列；去回分表與固定句子（PASS） | 預報時段的實際格式與鄉鎮對應（等 C3） |
 | CR-C7 | 騎士指定的休息顯示、追問的三種休息題（PASS） | 排入並計入 ETA；追問後仍對應不到的判定 |
 | CR-C8 | 抵達時間的固定句子、預設餘裕係數的句子（PASS） | 是否使用預設值的判定 |
@@ -423,3 +423,54 @@ C-1～C-3 依 `decision-20261118-issue12-ui0.md` 對 #12 沒有要求，相關�
 ### 11.6 Binding
 
 本節由 agentId `acf4b1c528124a22e`（`gov-executor`，有效 mapping `claude-opus-5-5`／`high`）寫入；沒有派工任何 subagent。本節 commit 前的自我掃描：全部 assistant 訊息 (`claude-opus-5-5`, `high`) 369 則，集合只有一個元素。這是自我觀測，Orchestrator 採用前須自行核對。
+
+## 12. SPEC-UI0 SIA R1 之後的 targeted correction（SIA-R1-F1）
+
+- 依據：SIA R1 record `docs/governance/records/audit/spec-SPEC-UI0-c1-r1.md`（`Verdict: BLOCKING`），SIA-R1-F1（Medium／blocking，owner #12 Executor）；Orchestrator 的 routing（同一 worklog identity）。
+- 適用性：沒有爭議。`derivation-spec-ui0.md` 第 2 節引用 `UI_CR01_DELTA.md` 第 11 節；第 11.3 節以「Planner 的補充說明沒通過規則 5」取代已不適用的「說明改用固定模板」情境，CR-C3 要求補充說明通過規則 5 才顯示。這個畫面可以只用寫定的資料示範，不需要判定邏輯，所以在 Skeleton 的範圍內。
+- 執行者：agentId `acf4b1c528124a22e`（`gov-executor`，以 SendMessage 續派）；binding 見第 12.4 節。
+
+### 12.1 修正（實作 commit `1ce4640e60eb3be566b4a7886b50814bff5df7b8`）
+
+- `app/ui0_scenarios.py`：新增模擬計畫 `PLAN_SUPPLEMENT_FAILED`（以單向的模擬計畫為底，`planner_note` 為 `None`；規則 5 的結果寫定為 PASS，說明「Planner 的補充說明沒有通過，沒有顯示；說明區的固定模板通過。」），以及情境 16「補充：Planner 的補充說明沒通過規則 5（模擬）」。結果全部是寫定的資料（CL-UI0-5）。
+- `app/ui0_mock_app.py`：說明區照常顯示固定模板的文字與「來源：固定模板（由結構化欄位組成）。」；**只有情境資料有補充說明時**才顯示補充說明與「來源：Planner 產生的補充說明（模擬文字），通過規則 5。」。沒有新增任何判定、Validator、語言模型呼叫或規則計算；renderer 只依資料是否有補充說明決定顯示。
+- 沒有恢復已取消的「已改用固定模板」提示（`app/` 中沒有這段文字）。`app/ui0_texts.py` 沒有變更，Issue #12 的固定文字維持逐字相同。
+- 情境選單由 23 項變為 24 項（第 3 節、第 6 節 E-2 的「23」是當時的數字，保留不改）。
+
+### 12.2 Regression evidence
+
+- 新增 3 個測試（`tests/test_ui0_skeleton.py`）：
+  - `test_supplement_failed_is_literal_data`：該計畫的 `planner_note` 是 `None`、規則 5 是寫定的 PASS、模板文字存在；情境 16 指向它；其他有結果的計畫都有補充說明。
+  - `test_planner_note_not_passing_keeps_template_and_omits_note`（AppTest，情境 16）：模板文字與模板的來源 caption 都在；補充說明的文字與「通過規則 5」的 caption 都**不在**；畫面上沒有「已改用固定模板」；Validation 分頁顯示規則 5 的寫定說明。
+  - `test_planner_note_passing_is_shown_for_the_same_plan_data`（對照，情境 4b，同一份單向模擬資料）：補充說明與其 caption 都在。
+- 測試確實能抓到缺陷：只把 `app/ui0_mock_app.py` 還原成修正前（`git stash push app/ui0_mock_app.py`）時，`tests/test_ui0_skeleton.py` 是 `1 failed, 57 passed`，失敗的是 `test_planner_note_not_passing_keeps_template_and_omits_note`；修正後 `58 passed`。
+- 瀏覽器操作：**NOT RUN**（派工說明為選用）。本次沒有啟動 Streamlit。
+
+### 12.3 Gate（主 checkout，`1ce4640` 的工作目錄）
+
+`.venv/Scripts/python.exe -m pytest -q`：
+
+```text
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 35%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 93%]
+......................................                                   [100%]
+614 passed in 24.55s
+```
+
+614＝611＋3；沒有 skip、xfail。correction commit 的檔案 SHA-256（工作目錄 LF 內容）：`app/ui0_mock_app.py` `769adcdcd8242189aa57860f53eb85df4510b1ca74866f2f0acb12c6b486ef13`、`app/ui0_scenarios.py` `b2e2feeb8b75f1a2b87f4eab34502f3b6849168b29058cac40d83938f8573709`、`tests/test_ui0_skeleton.py` `dfea62c9ed29624af5f42ff5d869bb55d922ccacd44fd0ff93b9119a2c8aa7b5`。沒有修改 `docs/ui/`、`prototype/`、`src/`、`app/ui0_texts.py`。
+
+### 12.4 高風險類別、binding、剩餘工作
+
+- H-3：新增的畫面文字只有情境標籤、情境說明與規則 5 的寫定說明，沒有保守估計、降雨、隱私、國道或模擬標示的新宣稱；既有的用語靜態測試照常通過。H-2：沒有觸及上傳或資料路徑。H-1、H-4：不涉及（沒有判定邏輯，CL-UI0-5 的靜態測試照常通過）。
+- Binding 自我觀測：見本節 commit 前的掃描（第 12.5 節）；Orchestrator 採用前須自行核對。
+- 剩餘：SIA R2（Orchestrator 派工）核對 SIA-R1-F1 的 closure 與回歸。SIA-R1-N1（DA record 的 fast-path 描述）沒有派給 #12 Executor，本節沒有處理。第 11.5 節的追蹤事項不變。
+
+### 12.5 Binding 自我觀測
+
+agentId `acf4b1c528124a22e`（`gov-executor`），全部 assistant 訊息 (`claude-opus-5-5`, `high`) 386 則，集合只有一個元素（本節 commit 前掃描）。這是自我觀測，不是派工者的核對。沒有 escalation、替代或 bounded assignment。
