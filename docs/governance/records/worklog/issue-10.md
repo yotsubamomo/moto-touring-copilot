@@ -611,7 +611,7 @@ FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_a
 
 ### 10.5 Binding、audit status 與 concerns
 
-- Binding：見本次 return 前的自我觀測（第 10.6 節）。沒有使用 bounded assignments，沒有派工任何 subagent。
+- Binding（自我觀測，不是派工者的核對）：agentId `a54ac9cf0e452782b`，correction 與 worklog commit 之後，(`claude-opus-5-5`, `high`) 163 則，集合只有一個元素。沒有使用 bounded assignments，沒有派工任何 subagent。
 - Audit status：R1 BLOCKING（R1-F1、R1-F2）；兩項都已作 targeted correction，待 R2（Primary，scoped closure review）。本節的突變與重現檢查是 self-verification，不是 closure。
 - **C-10-7（新，不阻擋 #10；required authority = Design Authority）**：同類的 fail-open 也存在於 `validate_pace_table` 既有的「路段數少於 `min_segments` 卻有 `speed_kmh`」等檢查（`contracts/validate.py` 第 250 行 `if isinstance(n, int) and isinstance(minimum, int):`，v0.2 Spike 既有、#10 沒有修改）。以 mock fixture 探測：C3 只有 1 段（`min_segments` 2）卻寫了 `speed_kmh` 30.0 時，`n_segments` 為 `1` 回報違反，為 `1.0` 則回傳 `[]`。它不在 R1-F1 的 required fix（合計檢查）內，修改它會是與本次 correction 無關的變更，所以沒有改。是否在 #10、#7 的後續或 SPEC-B1 的 SIA 範圍處理，由 Design Authority 決定。
 - C-10-1～C-10-6 的狀態不變（第 8、9 節）。真實行程上的行為仍是 NOT VERIFIED（RB-7，required authority = acceptor）。
