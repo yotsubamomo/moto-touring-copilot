@@ -16,6 +16,19 @@ rebuilt (SPEC-B1 CL-B1-3 items 4 and 5):
   * a manifest that gives one source file both a pace role and another role is refused before any
     GPX file is opened, whichever trips are requested.
 
+Which files are touched before the research freeze (SPEC-B1 CL-B1-11, decision-20261118-issue9-qda1):
+  * nothing is done to the entry that a non-pace item names: it is not opened, read, hashed or
+    even stat-ed. Its `source_file` string is only compared, as text, with the pace entries;
+  * the GPX folder is listed for names only;
+  * a selected pace entry is opened only under a name that is exactly an entry of that listing,
+    after its own metadata shows it is a regular file with one hard link and no other spelling of
+    it (letter case, an NTFS stream suffix such as "::$DATA", trailing dots or spaces, its 8.3
+    short name) is named by a non-pace item. Any selected pace entry that fails this refuses the
+    whole run before the first GPX file is opened.
+  * Not detected here (CL-B1-11 item 4, left to the later upload and de-duplication work): a
+    non-pace item that is a symbolic link to a pace file, and two files with the same content
+    under different names.
+
 Only counts are printed.
 """
 from __future__ import annotations
@@ -23,6 +36,8 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import os
+import stat
 import sys
 import unicodedata
 from pathlib import Path, PureWindowsPath
@@ -60,15 +75,18 @@ def load_manifest(path: Path) -> list[dict]:
 
 
 def source_key(source_file: str) -> str:
-    """A comparison key under which names that can open the same file in the GPX folder are equal.
+    """A text key for comparing a manifest `source_file` with the name of a pace entry.
 
-    It keeps only the last path component (either separator), and ignores letter case, Unicode
-    normalization form and trailing dots and spaces, which Windows file names do not distinguish.
-    Two names with the same key are treated as the same file, even where they might not be: the
-    check errs towards refusing.
+    It keeps only the last path component (either separator), drops an NTFS stream suffix (from
+    the first ":" on, e.g. "::$DATA"), and ignores trailing dots and spaces, letter case and the
+    Unicode normalization form. It is computed from the string alone and touches no file. It does
+    not by itself cover every spelling of a file: 8.3 short names are handled by comparing with
+    the short name of each pace entry (`pace_entry_problem`), and pace entries are opened only
+    under their exact listed name. Two strings with the same key are treated as one file even
+    where they might not be: the comparison errs towards refusing.
     """
     name = PureWindowsPath(unicodedata.normalize("NFC", source_file)).name
-    return name.rstrip(" .").casefold()
+    return name.split(":", 1)[0].rstrip(" .").casefold()
 
 
 def _refuse_conflicting_roles(trips: list[dict]) -> None:
@@ -82,6 +100,69 @@ def _refuse_conflicting_roles(trips: list[dict]) -> None:
     if clashes:
         pairs = ", ".join(f"{pace_ids[k]} (pace) and {other_ids[k]}" for k in clashes)
         raise ManifestError(f"the trip manifest gives the same source file a pace role and another role: {pairs}")
+
+
+_REPARSE_POINT = 0x400  # FILE_ATTRIBUTE_REPARSE_POINT
+
+
+def short_name(path: Path) -> str | None:
+    """The 8.3 short name of a pace entry, or None when the system has no such name.
+
+    Only ever called for pace entries (CL-B1-11 item 1.3). Raises OSError when Windows cannot
+    answer, so that the caller refuses instead of guessing.
+    """
+    if os.name != "nt":
+        return None
+    import ctypes
+    size = 32768
+    buffer = ctypes.create_unicode_buffer(size)
+    got = ctypes.windll.kernel32.GetShortPathNameW(str(path), buffer, size)
+    if got == 0 or got >= size:
+        raise OSError("GetShortPathNameW failed")
+    return PureWindowsPath(buffer.value).name
+
+
+def pace_entry_problem(gpx_dir: Path, name: str, listed: set[str], other_keys: set[str]) -> str | None:
+    """Why a selected pace entry may not be opened, or None when it may.
+
+    `listed` holds the names in the GPX folder listing; `other_keys` holds `source_key` of every
+    non-pace item. Only the pace entry itself is queried (lstat and its short name).
+    """
+    if name not in listed:
+        return "is not exactly the name of an entry in the GPX folder"
+    path = gpx_dir / name
+    try:
+        info = os.lstat(path)
+        alias = short_name(path)
+    except OSError:
+        return "cannot be checked"
+    if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & _REPARSE_POINT:
+        return "is a symbolic link or another reparse point"
+    if not stat.S_ISREG(info.st_mode):
+        return "is not a regular file"
+    if info.st_nlink != 1:
+        return "has more than one hard link"
+    if alias is not None and source_key(alias) in other_keys:
+        return "has a short name that a non-pace item names"
+    return None
+
+
+def check_pace_entries(gpx_dir: Path, chosen: list[dict], trips: list[dict]) -> None:
+    """Refuse the run (ManifestError) unless every chosen pace entry may be opened.
+
+    Runs before any GPX file is opened. Lists the GPX folder for names only; never touches the
+    entry that a non-pace item names. Messages name trip ids, never file names.
+    """
+    try:
+        listed = set(os.listdir(gpx_dir))
+    except OSError:
+        raise ManifestError("the GPX folder cannot be listed") from None
+    other_keys = {source_key(t["source_file"]) for t in trips if t["trip_role"] != PACE}
+    problems = [(t["trip_id"], pace_entry_problem(gpx_dir, t["source_file"], listed, other_keys)) for t in chosen]
+    problems = [(trip_id, why) for trip_id, why in problems if why]
+    if problems:
+        raise ManifestError("pace source file(s) may not be opened: "
+                            + "; ".join(f"{trip_id} {why}" for trip_id, why in problems))
 
 
 def select_pace_trips(trips: list[dict], requested: list[str] | None) -> tuple[list[dict], int]:
@@ -119,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         manifest = load_manifest(args.manifest or args.out / "trip_manifest.json")
         chosen, not_opened = select_pace_trips(manifest, args.trips)
+        check_pace_entries(args.gpx_dir, chosen, manifest)
     except ManifestError as error:
         print(f"refused: {error}")
         return 2
@@ -127,15 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     all_rows: list[dict] = []
     reports: dict[str, dict] = {}
     for trip in chosen:
-        name = trip["source_file"]
-        if Path(name).name != name:
-            reports[trip["trip_id"]] = {"note": "source_file is not a plain file name"}
-            continue
-        source = args.gpx_dir / name
-        if not source.is_file():
-            reports[trip["trip_id"]] = {"note": "source file not found"}
-            continue
-        points, without_time = read_gpx(source)
+        points, without_time = read_gpx(args.gpx_dir / trip["source_file"])
         rows, report = build_rows(points, trip_id=trip["trip_id"], trip_role=PACE,
                                   route_id=trip.get("route_id"), params=params)
         report.dropped_no_time = without_time
