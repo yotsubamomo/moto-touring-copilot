@@ -277,6 +277,52 @@ def test_rows_of_other_trips_and_holdout_rows_are_not_eligible(data):
     assert_violation(pace_violations(data), "n_segments add up to 6, but 5 rows are eligible (invariant 3)")
 
 
+def json_round_trip(d: dict) -> dict:
+    return json.loads(json.dumps(d))
+
+
+@pytest.mark.parametrize("counts, total", [
+    ([1.0, 2.0, 2.0], None),        # whole-number floats, correct total
+    ([1, 2.0, 2], None),            # mixed int and float, correct total
+    ([1.0, 2.0, 3.0], 6),           # one too many
+    ([1, 2, 3.0], 6),
+    ([1.0, 1.0, 2.0], 4),           # one too few
+])
+@pytest.mark.parametrize("round_trip", [False, True])
+def test_another_scheme_counts_whole_number_floats_too(data, counts, total, round_trip):
+    """R1-F1: JSON Schema's integer accepts 3.0, so the total check must count it and not let a wrong
+    total through. Also after a JSON round trip."""
+    recomputed_scheme(data)
+    for rec, n in zip(data["pace_categories"], counts):
+        rec.update(n_segments=n, speed_kmh=rec["speed_kmh"] if n >= 2 else None,
+                   stop_ratio=rec["stop_ratio"] if n >= 2 else None)
+    if round_trip:
+        data = json_round_trip(data)
+    violations = pace_violations(data)
+    if total is None:
+        assert violations == []
+    else:
+        assert_violation(violations, f"n_segments add up to {total}, but 5 rows are eligible (invariant 3)")
+
+
+def test_the_same_scheme_checks_each_category_with_whole_number_floats(data):
+    for rec in data["pace_categories"]:
+        rec["n_segments"] = float(rec["n_segments"])
+    assert pace_violations(json_round_trip(data)) == []
+    by_id(data["pace_categories"], "seg_category", "C1")["n_segments"] = 3.0
+    by_id(data["pace_categories"], "seg_category", "C2")["n_segments"] = 1.0
+    by_id(data["pace_categories"], "seg_category", "C2").update(speed_kmh=None, stop_ratio=None)
+    assert_violation(pace_violations(json_round_trip(data)), "C1 n_segments is 3.0, but 2 rows are eligible")
+
+
+@pytest.mark.parametrize("value", [2.5, "2", True, None, float("nan"), float("inf")])
+def test_a_count_that_cannot_be_added_up_is_a_violation(data, value):
+    """Any other value is reported for invariant 3 itself, not left to the schema alone."""
+    recomputed_scheme(data)
+    by_id(data["pace_categories"], "seg_category", "C3")["n_segments"] = value
+    assert_violation(pace_violations(data), "n_segments cannot be added up, a value is not a whole number (invariant 3)")
+
+
 @pytest.mark.parametrize("speed", [0, -10.0])
 def test_speed_must_be_positive(data, speed):
     by_id(data["pace_categories"], "seg_category", "C1")["speed_kmh"] = speed

@@ -79,6 +79,18 @@ def _non_finite_errors(label: str, rows: Iterable[dict], fields: tuple[str, ...]
     return out
 
 
+def _whole_count(value: Any) -> int | None:
+    """The value as a count if it is a whole number (an int, or a finite float such as 3.0, which
+    JSON Schema's integer accepts); None otherwise (bool, other floats, strings, null)."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and math.isfinite(value) and value.is_integer():
+        return int(value)
+    return None
+
+
 def _is_multiple_of_step(value: float) -> bool:
     steps = value / MARGIN_STEP
     return math.isfinite(steps) and abs(steps - round(steps)) <= MARGIN_FLOAT_TOLERANCE
@@ -256,9 +268,13 @@ def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | Non
         # category_scheme. The total is always checked; the per-category count only when every
         # eligible row has the pace table's category_scheme, so that the derived seg_category is the
         # pace table's category. The scheme is not parsed and nothing is reclassified here.
+        # JSON Schema's integer also accepts an integer-valued float such as 3.0, so those are
+        # counted too; any other value cannot be counted and is reported, never skipped (R1-F1).
         eligible_rows = [r for r in derived_rows if pace_eligible(r) and r.get("trip_id") in trip_ids]
-        counts = [rec.get("n_segments") for rec in categories]
-        if all(isinstance(n, int) and not isinstance(n, bool) for n in counts) and sum(counts) != len(eligible_rows):
+        counts = [_whole_count(rec.get("n_segments")) for rec in categories]
+        if any(n is None for n in counts):
+            out.append("pace_categories: n_segments cannot be added up, a value is not a whole number (invariant 3)")
+        elif sum(counts) != len(eligible_rows):
             out.append(f"pace_categories: n_segments add up to {sum(counts)}, but {len(eligible_rows)} rows "
                        f"are eligible (invariant 3)")
         if all(r.get("category_scheme") == header.get("category_scheme") for r in eligible_rows):
