@@ -446,3 +446,84 @@ def test_candidate_table_is_read_only():
     assert at.dataframe
     for frame in at.dataframe:
         assert not frame.proto.selection_mode
+
+
+# ---------------------------------------------------------------------------
+# R1-F1 regression: 「不安排這段休息」 cancels the rest also when the reply is 單向
+# ---------------------------------------------------------------------------
+
+
+def _rest_rows(at: AppTest) -> list[dict]:
+    """Rows of the result's 「休息」 table (columns 地點／方向／長度／來源)."""
+    for table in at.table:
+        frame = table.value
+        if list(frame.columns) == ["地點", "方向", "長度", "來源"]:
+            return frame.to_dict("records")
+    return []
+
+
+def _answer_of(at: AppTest, question_text: str):
+    for table in at.table:
+        frame = table.value
+        if list(frame.columns) == ["追問", "回覆"]:
+            for row in frame.to_dict("records"):
+                if row["追問"] == question_text:
+                    return row["回覆"]
+    raise AssertionError("answers table not found")
+
+
+def _reply_6b(trip: str, direction: str | None) -> AppTest:
+    at = plan(select(run_app(), "s06b"))
+    at.radio(key="clarify_trip").set_value(trip)
+    if direction is not None:
+        at.radio(key="clarify_direction").set_value(direction)
+    at.run()
+    at.button(key="clarify_reply").click().run()
+    assert not at.exception
+    assert not _clarify_radios(at), "the reply was not accepted"
+    return at
+
+
+DIRECTION_TEXT = T.fill(T.Q_REST_DIRECTION_TRIP_TYPE_UNKNOWN, 休息需求的原文=S.REST_TEXT_DIRECTION)
+
+
+def _rider_rests(at: AppTest) -> list[dict]:
+    return [row for row in _rest_rows(at) if row["來源"].startswith("騎士指定")]
+
+
+def test_one_way_reply_with_no_rest_cancels_the_rest():
+    at = _reply_6b(T.TRIP_ONE_WAY, T.OPTION_NO_REST)
+    assert _rider_rests(at) == []
+    assert _answer_of(at, DIRECTION_TEXT) == T.OPTION_NO_REST
+    # Only the Profile default rest of the mock one-way plan remains; it is not the cancelled request.
+    assert [row["來源"] for row in _rest_rows(at)] == ["依 Profile 排入的預設休息"]
+
+
+@pytest.mark.parametrize("direction", [T.OPTION_OUTBOUND, T.OPTION_RETURN, None])
+def test_one_way_reply_ignores_only_the_outbound_or_return_choice(direction):
+    at = _reply_6b(T.TRIP_ONE_WAY, direction)
+    assert _rider_rests(at) == [{"地點": "示範觀景台", "方向": "—", "長度": "20 分鐘", "來源": "騎士指定（行程描述）"}]
+    assert _answer_of(at, DIRECTION_TEXT) == T.DIRECTION_NOT_USED
+
+
+def test_round_trip_reply_with_no_rest_cancels_the_rest():
+    at = _reply_6b(T.TRIP_ROUND, T.OPTION_NO_REST)
+    assert _rider_rests(at) == []
+    assert _answer_of(at, DIRECTION_TEXT) == T.OPTION_NO_REST
+
+
+@pytest.mark.parametrize("direction", [T.OPTION_OUTBOUND, T.OPTION_RETURN])
+def test_round_trip_reply_uses_the_chosen_direction(direction):
+    at = _reply_6b(T.TRIP_ROUND, direction)
+    assert _rider_rests(at) == [{"地點": "示範觀景台", "方向": direction, "長度": "20 分鐘", "來源": "騎士指定（追問的回覆）"}]
+    assert _answer_of(at, DIRECTION_TEXT) == direction
+
+
+def test_known_round_trip_direction_no_rest_cancels_the_rest():
+    at = plan(select(run_app(), "s06a"))
+    at.radio(key="clarify_entry").set_value("示範車站端")
+    at.radio(key="clarify_duration").set_value("10 分鐘")
+    at.radio(key="clarify_direction").set_value(T.OPTION_NO_REST).run()
+    at.button(key="clarify_reply").click().run()
+    assert not _clarify_radios(at)
+    assert "示範觀景台" not in [row["地點"] for row in _rider_rests(at)]

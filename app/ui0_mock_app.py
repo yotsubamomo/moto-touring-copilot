@@ -329,7 +329,12 @@ def render_clarify_answers(questions: list[dict]) -> None:
     rows = []
     for question in questions:
         answer = answers.get(question["id"])
-        if question["kind"] == "direction_if_round" and answers.get("trip") == T.TRIP_ONE_WAY:
+        if (
+            question["kind"] == "direction_if_round"
+            and answers.get("trip") == T.TRIP_ONE_WAY
+            and answer != T.OPTION_NO_REST
+        ):
+            # 單向時只忽略「去程」「回程」；「不安排這段休息」仍然取消那一筆休息（Issue #12 §2）。
             answer = T.DIRECTION_NOT_USED
         rows.append({"追問": question["text"], "回覆": answer})
     with st.chat_message("assistant", avatar=":material/help:"):
@@ -349,9 +354,12 @@ def rests_after_clarify(plan: dict, questions: list[dict]) -> list[dict]:
             replied.append({"地點": place, "方向": direction, "長度": "20 分鐘", "來源": "騎士指定（追問的回覆）"})
     if "direction" in kinds or "direction_if_round" in kinds:
         direction = answers.get("direction")
-        if plan["trip_type"] == T.TRIP_ONE_WAY:
+        if direction == T.OPTION_NO_REST:
+            pass  # 「不安排這段休息」一律取消那一筆休息，單向與來回相同（Issue #12 §2）
+        elif plan["trip_type"] == T.TRIP_ONE_WAY:
+            # 單向時不使用「去程」「回程」的答案（或沒有回答），休息照行程描述排入、不分方向。
             replied.append({"地點": "示範觀景台", "方向": "—", "長度": "20 分鐘", "來源": "騎士指定（行程描述）"})
-        elif direction != T.OPTION_NO_REST:
+        else:
             replied.append({"地點": "示範觀景台", "方向": direction, "長度": "20 分鐘", "來源": "騎士指定（追問的回覆）"})
     if "break_duration" in kinds:
         replied.append({"地點": "示範老街", "方向": "去程", "長度": answers.get("duration"), "來源": "騎士指定（追問的回覆）"})
