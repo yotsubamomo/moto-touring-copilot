@@ -98,9 +98,13 @@ acceptor（GitHub `yotsubamomo`，Bindings 第 2.1 節）接受本契約時，�
 - **既有產出**（Bindings 第 8.1 節）：`DESIGN.md`、G1、G3、CR-01 與其裁決、SPEC-001 Draft v0.2、SPEC-RESOLUTION-001、Issues #7–#12、Spike 程式與 100 個 v0.2 契約測試。它們是輸入，不重新詢問已裁決的事。
 - **未 implementation-ready 的範圍**：SB-3（路段對應鄉鎮）、SB-4（預報時段欄位）、SB-5（C3 真實 API 驗證，BLOCKED／NOT RUN）、SB-6（行程描述的輸入保護）、SB-10（尚未逐項審查的內容）涵蓋的部分，在 Blocker 關閉前不得納入 Formal run 的 Tickets。
 - **外部依賴**：Anthropic 憑證（C3 與 `planner`）、中央氣象署授權碼（`sources`）、公開的 Valhalla 伺服器（`routing`，有條件批准）。
-- **時程**：`DESIGN.md` §9.3。期末繳交期限尚未確認（PD-6），內部目標 12/20；剩餘工作量估計 23–32.5 人日當量，除 M5 最後兩天外沒有緩衝。治理增加的 audit 成本沒有估進時程。
+- **時程**：`DESIGN.md` §9.3。acceptor 2026-11-17 決定（原文「先定12/20」）：先以 2026-12-20 作為完成期限；老師尚未公布正式的繳交期限（PD-6），公布後若早於 12/20，依第 4.2 節處理；剩餘工作量估計 23–32.5 人日當量，除 M5 最後兩天外沒有緩衝。治理增加的 audit 成本沒有估進時程。
 - **已知風險**：高風險類別 H-1～H-4（`decision-20261117-high-risk-categories.md`）；Fable alias 已改為 Fable 5.2（Bindings m2 O-4）。
-- **未知的課程資訊**：評分比重、資料來源是否必須含 IoT 感測器、一人一組是否可行、最小知識庫的深度是否足夠，由 acceptor 向老師確認；Agents 不自行補出（Bindings 第 2.4 節）。確認結果若改變範圍，依第 4.2 節處理。
+- **課程資訊**（acceptor 2026-11-17 的決定，原文「評分其實沒有寫，先不管，IoT 先預設不必含。目前是3人一組，不過我會全做。」）：
+  - 評分比重：課程文件沒有寫，先不處理。
+  - IoT 感測器：預設不必包含，與 `DESIGN.md` §2.3 的 IoT 列（Won't）一致。老師若要求包含，屬範圍變更，依第 4.2 節處理。
+  - 組別：3 人一組，全部工作由 acceptor 一人完成。
+  - 仍未確認：最小知識庫（關鍵字檢索）的深度是否足夠。由 acceptor 向老師確認；Agents 不自行補出（Bindings 第 2.4 節）。確認結果若改變範圍，依第 4.2 節處理。
 
 ## 6. Assurance path
 
