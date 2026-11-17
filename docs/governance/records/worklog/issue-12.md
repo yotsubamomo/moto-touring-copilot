@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #12（UI-0），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator）。依 run record，SPEC-UI0 不採 fast path：#12 的 R1 是一般 Ticket audit，SIA 另派 |
-| 狀態 | **實作與 self-verification 完成，待 R1。** 本 worklog 不宣告 Ticket closure；closure 由 Orchestrator 依 orch-default §7 判定。UI0-7 有一項 NOT VERIFIED（第 7 節） |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `3906e077ab850c027d7833b30d3eebfa16f67761`（`3906e07`，派工時的 HEAD）；實作 commit **`6a278b40dc79dcbede9486902e52dc8504a8d30e`**（`6a278b4`，唯一修改 `app/`、`tests/`、`.streamlit/`、`pyproject.toml` 的 commit）；本 worklog 在其後的 record-only commit |
+| 狀態 | **cycle 1 R1 `BLOCKING`（R1-F1、R1-F2）後的 targeted correction 完成，待 R2（第 10 節）。** R1-F1 已修正並有 regression 測試；R1-F2 補做了只用鍵盤的操作，**仍有 BLOCKED 與 FAIL 項目**（第 10.3 節），required authority = acceptor。本 worklog 不宣告 Ticket closure。以下第 1–9 節是 R1 前的紀錄，第 7 節 UI0-1、UI0-4、UI0-7、UI0-10 列已依第 10 節更新 |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `3906e077ab850c027d7833b30d3eebfa16f67761`（`3906e07`）；實作 commit `6a278b40dc79dcbede9486902e52dc8504a8d30e`（`6a278b4`）；**correction commit `619268ad2732b4cdd04593ff20ebe35374a7710c`（`619268a`，只修改 `app/ui0_mock_app.py`、`tests/test_ui0_skeleton.py`）**；R1 受審 HEAD `e836c99`，R1 record 在 `e94d182`；本節的更新在 `619268a` 之後的 record-only commit |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -173,16 +173,16 @@
 
 | AC | 結果 | 依據 |
 | --- | --- | --- |
-| UI0-1 六個區塊可在瀏覽器操作，每個狀態有合成情境 | **PASS** | E-2 第 1～19 列；AppTest 23 個情境。追問的六種題目都有情境（缺起點、行程型態、休息對應不到：情境 5；進入端、休息長度、方向：6a；行程型態＋方向同一輪：6b） |
+| UI0-1 六個區塊可在瀏覽器操作，每個狀態有合成情境 | **PASS（R1-F1 修正後）** | E-2 第 1～19 列；AppTest 23 個情境。追問的六種題目都有情境（缺起點、行程型態、休息對應不到：情境 5；進入端、休息長度、方向：6a；行程型態＋方向同一輪：6b）。R1-F1（單向＋「不安排這段休息」沒有取消休息）在 `619268a` 修正，第 10.1 節 |
 | UI0-2 元件在 1.67.0 可用；做不到的列出替代 | **PASS（有替代與限制，見下表）** | 實際安裝 `streamlit==1.67.0`，Issue 對照表的元件全部使用並實際渲染 |
 | UI0-3 固定文字逐字相同 | **PASS** | E-4 |
-| UI0-4 追問一輪；行程型態與方向同一輪；方向只在來回需要回答 | **PASS** | AppTest（5、6a、6b）；E-2 第 8 列（鍵盤） |
+| UI0-4 追問一輪；行程型態與方向同一輪；方向只在來回需要回答 | **PASS（R1-F1 修正後）** | AppTest（5、6a、6b）；E-2 第 8 列（鍵盤）；第 10.1 節的 regression 測試與第 10.2 節 K9（瀏覽器、只用鍵盤） |
 | UI0-5 期限名稱隨行程型態切換；值是否保留照實記錄 | **PASS：值會保留**，採用隨行程型態改變的標籤，不需要退路 | AppTest（16:45 在切換前後保留）；E-2 第 11 列（瀏覽器中 17:00 與 16:45 都在切換後保留）。條件：widget 有固定的 key（D-12-3）。行程型態未選時用固定標籤「期限」（D-12-6） |
 | UI0-6 375 像素沒有整頁的水平溢出 | **PASS** | E-2：23 個情境（含追問回覆後、欄位錯誤後的狀態）、兩個分頁、Profile／公路與地標／全部候選展開時，`scrollWidth` 都是 375，沒有未裁切的溢出；寬表格在自己的容器內捲動 |
-| UI0-7 所有操作都可以只用鍵盤完成 | **大部分 PASS；一項 NOT VERIFIED** | Tab 依序到達：情境選單（輸入篩選字、Enter 選取）、Profile expander（Enter 展開）、上傳元件的「Upload」／「Remove …」／「Add files」按鈕、「更新 Profile」（Enter 執行）、行程描述、公路與地標 expander、行程型態（Space／方向鍵）、日期（年／月／日欄與日曆按鈕）、兩個時間欄（小時／分鐘 spinbutton，方向鍵與數字）、出發油量（輸入數字）、目標 GPX 路徑、Snapshot Mode、「規劃」、規劃進度、分頁（方向鍵＋Enter）、全部候選 expander、表格。**NOT VERIFIED**：按「Upload」後開啟的是作業系統的檔案選擇對話框，本工具無法操作，檔案以 DataTransfer 放入；行程描述與 GPX 路徑欄的打字、日曆彈窗、Snapshot Mode 的切換沒有逐一以按鍵操作（是標準的 textarea／input／checkbox）。之後由 acceptor 在 UI Delta Review 實際檢視（CL-UI0-4） |
+| UI0-7 所有操作都可以只用鍵盤完成 | **未通過驗證：BLOCKED 一項、FAIL 一項，其餘 PASS**（第 10.3 節）。R1 前本列寫「大部分 PASS；一項 NOT VERIFIED」，已由第 10 節取代 | 只用鍵盤 PASS：情境選單、Profile expander、「更新 Profile」（含沒有選檔）、「Upload」按鈕送出選檔請求、「Remove …」移除檔案、行程描述的輸入、公路與地標 expander、行程型態、日期（年／月／日欄）、時間、出發油量、目標 GPX 路徑、Snapshot Mode、「規劃」、追問的 radio 與回覆、分頁、全部候選 expander。**BLOCKED**：在作業系統的檔案選擇對話框中選取檔案（缺少的能力：瀏覽器工具無法操作 OS 對話框）。**FAIL（本環境觀察）**：日曆彈窗開得起來，但鍵盤焦點進不到日期格子；改日期可以用年／月／日欄完成。required authority = acceptor（第 10.3 節） |
 | UI0-8 可用合成資料檢查的介面條件；需要後端的列為整合後驗收 | **PASS（清單如下）** | 下方「UI0-8 清單」 |
 | UI0-9 沒有真實資料；全部標示為模擬 | **PASS** | E-5；E-6 H-3 的模擬標示 |
-| UI0-10 簡短紀錄 | **本節＋第 9.2 節** | — |
+| UI0-10 簡短紀錄 | **本節＋第 9.2 節＋第 10 節** | 第 10 節補上 R1-F1 的修正、R1-F2 的鍵盤操作紀錄與 UI0-7 的現況 |
 
 **元件的對應、替代與限制（UI0-2）**
 
@@ -228,7 +228,7 @@
 ## 8. Audit status
 
 - Formal：本 Ticket 的 independent audit 必要（Bindings 第 5 節；治理 §4.1）。依 run record，SPEC-UI0 不採 fast path，R1 是一般 Ticket audit，SIA 另派。
-- 進度：**R1 尚未派工**。派工由 Orchestrator 依 Bindings 第 3.7 節進行。
+- 進度：R1 已完成（Codex，`docs/governance/records/audit/issue-12-c1-r1.md`，`Verdict: BLOCKING`；R1-F1、R1-F2 都是 Medium／blocking）。targeted correction 見第 10 節；R2 待 Orchestrator 派工。（R1 前本列寫「R1 尚未派工」。）
 - 所涉高風險類別：H-2、H-3（DA 標示）；最終 diff 重新判定 H-1、H-4 不涉及（第 6 節 E-6），請 Reviewer 核對。
 - 本 worklog 的 self-verification 不是 audit。
 
@@ -254,3 +254,101 @@
 | C-8 | 另加情境 15（無可行解），不是 Issue 的 14 個情境之一（D-12-11） | Reviewer 判斷是否在範圍內 |
 
 C-1～C-3 不影響本 Ticket 的 AC 結果（Skeleton 沒有自行決定語義，也沒有處理真實檔案）；依治理 §2.4 由 Orchestrator route。
+
+## 10. Cycle 1 R1 之後的 targeted correction（治理 §4.4）
+
+- 依據：R1 record `docs/governance/records/audit/issue-12-c1-r1.md`（Codex `primary_reviewer`，受審 HEAD `e836c99`，`Verdict: BLOCKING`）的 R1-F1、R1-F2；Orchestrator 的 routing（同一 worklog identity）。DA record `decision-20261118-issue12-ui0.md`：C-1～C-3 對 #12 無要求，本節沒有為它們修改任何東西。
+- 執行者與 binding：同第 2 節（agentId `acf4b1c528124a22e`，以 SendMessage 續派），第 10.5 節。
+- 範圍：只修 R1-F1 並補 regression 測試；R1-F2 補做瀏覽器的鍵盤操作並如實更新 UI0-7、UI0-10。沒有修改驗收條件、`docs/ui/`、`prototype/`、R1 record 或 DA record。
+
+### 10.1 R1-F1：單向回覆忽略了明確的取消
+
+- **原因**：`rests_after_clarify` 在單向時不看方向題的回答，一律排入休息；`render_clarify_answers` 在單向時把整題回答改成「未使用（行程型態是單向）」，取消也被隱藏。Issue #12 §2：「回覆是單向時，『去程』『回程』的答案不使用。選『不安排這段休息』一律取消那一筆休息。」
+- **修正**（`619268a`，`app/ui0_mock_app.py`）：方向題回答「不安排這段休息」時，單向與來回都不排入那一筆休息；單向只忽略「去程」「回程」（或沒有回答），休息照行程描述排入、不分方向；回覆表在取消時顯示「不安排這段休息」，只有「去程」「回程」或沒有回答時才顯示「未使用（行程型態是單向）」。Profile 的預設休息不是這一筆休息需求，不受影響（R1 record 亦同）。沒有加入 Validator、排程或 ETA 計算，CL-UI0-5 不變；H-4 的判定不變（顯示回覆，不是休息的排入）。
+- **Regression 測試**（`tests/test_ui0_skeleton.py`，新增 8 個）：
+  - `test_one_way_reply_with_no_rest_cancels_the_rest`：6b、單向＋取消 → 騎士指定的休息為空，回覆表顯示「不安排這段休息」，只剩 Profile 預設休息。
+  - `test_one_way_reply_ignores_only_the_outbound_or_return_choice`（去程、回程、沒有回答三個參數）：休息照行程描述排入、方向「—」，回覆表顯示「未使用」。
+  - `test_round_trip_reply_with_no_rest_cancels_the_rest`；`test_round_trip_reply_uses_the_chosen_direction`（去程、回程）；`test_known_round_trip_direction_no_rest_cancels_the_rest`（6a）。
+  - 既有的「單向不必回答方向」「來回時方向必答」測試保留不變。
+- **測試確實能抓到缺陷**：只把 `app/ui0_mock_app.py` 還原成 `6a278b4` 的版本（`git stash push app/ui0_mock_app.py`）時，`tests/test_ui0_skeleton.py` 的結果是 `1 failed, 54 passed`，失敗的是 `test_one_way_reply_with_no_rest_cancels_the_rest`；修正後 `55 passed`。
+- **瀏覽器**：第 10.2 節 K9 以只用鍵盤的方式重做 6b 的單向＋取消，結果與測試相同。
+
+### 10.2 R1-F2：只用鍵盤的瀏覽器操作紀錄
+
+- Subject：工作目錄等於 `619268a`（修正已套用；`git status` 只有這兩個檔案被修改，之後 commit 為 `619268a`）。Streamlit 啟動：repo root，`.venv/Scripts/python.exe -m streamlit run app/ui0_mock_app.py --server.port 8501`（背景）；內建瀏覽器 `mcp__Claude_Browser__*` 開 `http://localhost:8501`；檢查結束後停止程序（PID 37600），`8501` 沒有 listener。視窗是 pane 的預設尺寸（375 像素的檢查見第 6 節 E-2，本節沒有改版面）。
+- **規則**：本節所有操作都只用 `computer` 的 `key`／`type`（Tab、Shift+Tab、Enter、Space、方向鍵、Escape、Ctrl+A、輸入文字）。JavaScript 只用來**讀取**狀態（`document.activeElement`、`focusin` 事件的紀錄、元件的文字與值），沒有用 `focus()` 移動焦點，也沒有以程式點擊。兩個例外如實標明：K3 的攔截器、K4 的以程式放入檔案。
+- 只用合成資料：檔名 `synthetic-empty-a.gpx`、`synthetic-empty-b.gpx`（0 B）、`synthetic-header-only.gpx`（48 B，只有 `<gpx version="1.1"></gpx>`），在瀏覽器記憶體中以 `File` 物件建立，沒有寫到磁碟；文字與路徑都是「示範…」或 `synthetic/…`。
+
+| # | 操作 | 按鍵 | 結果（讀取的狀態） | 判定 |
+| --- | --- | --- | --- | --- |
+| K1 | 從頁面載入開始到情境選單，選情境 3 | Tab ×6（Skip to main content → Main menu → main → 兩個標題連結 → 模擬情境）；Ctrl+A；輸入 `3.`；Enter | 焦點 `INPUT 模擬情境`；畫面出現情境 3 的說明「畫面上已經有上次規劃的結果…」 | PASS |
+| K2 | 打開 Profile，沒有選檔就按「更新 Profile」 | Tab（Profile summary）、Enter；Tab ×2（Upload → 更新 Profile）；Enter | Profile 展開；提示「還沒有選取任何 .gpx 檔。」；沒有處理結果 | PASS |
+| K3 | 以鍵盤按「Upload」 | Shift+Tab（Upload）；Enter；Space | 為了不在使用者的桌面留下開著的 OS 對話框，事先在頁面掛一個 capture listener，記錄並取消 file input 的 `click`（只有這個作用）。Enter 與 Space 各送出一次選檔請求：`{multiple: true, accept: "application/streamlit,.gpx"}` ×2 | 按鈕可以用鍵盤啟動：PASS。**對話框內選取多個檔案：BLOCKED**（K3-B） |
+| K4 | 放入三個合成檔（**以程式放入，不是鍵盤**） | —（`input.files = DataTransfer` 加 `change` 事件） | 元件列出 `synthet...mpty-a.gpx 0.0B`、`synthet...mpty-b.gpx 0.0B`、`synthet...r-only.gpx 48.0B` | 不算鍵盤操作，只是讓 K5、K6 能進行 |
+| K5 | 以鍵盤移除第二個檔 | Tab 走到 `Remove synthetic-empty-b.gpx`（focusin 紀錄：Remove a → Remove b → Remove header-only → Add files → 更新 Profile）；Shift+Tab 回到它；Enter | 清單只剩 `synthetic-empty-a.gpx`、`synthetic-header-only.gpx`。觀察：移除後焦點離開被移除的按鈕（`activeElement` 一度是 BODY），再按 Tab 從下一個控制項繼續 | PASS（焦點的移動記為觀察） |
+| K6 | 以鍵盤按「更新 Profile」 | Tab／Shift+Tab 到 `更新 Profile`；Enter | 「處理結果（模擬，與選取的 2 個檔案的內容無關）：新增 3 個；略過 1 個內容重複的；1 個無法讀取…」；`st.status`「Profile 更新完成（模擬）」；「結果已過期。Profile 已更新。…」；分頁仍是 2 個（沒有自動規劃）；可用的行程數 12 | PASS |
+| K7 | 行程描述的輸入（輸入保護命中） | Tab 到 `TEXTAREA 行程描述`；Ctrl+A；輸入「從中正路一段 123 號出發，走示範縣道丙到示範老街。」；Tab ×14 到「規劃」；Enter | textarea 的值是輸入的文字；欄位下方「行程描述中有看起來像門牌地址或座標的內容，系統沒有送出這段文字…」；上次的結果保留並標示「上次規劃後變更了：行程描述」。（第一次少按一個 Tab，焦點在標題連結上，沒有輸入任何字；退回後重做，如實記錄） | PASS |
+| K8 | 行程描述改為公路寫法、目標 GPX 路徑、Snapshot Mode、規劃 | Shift+Tab ×14 回 textarea；Ctrl+A；輸入「從示範車站出發，不要走國道 3 號，改走台 9 線到示範老街。」；Tab ×12 到 `INPUT 目標路線 GPX 的檔案路徑`；輸入 `synthetic/keyboard-demo.gpx`；Tab 到 `Snapshot Mode`；Space；Tab 到「規劃」；Enter | checkbox 由 false 變 true；規劃後沒有輸入保護訊息、沒有過期提示；頁首「Snapshot Mode：目前顯示的結果使用固定的資料快照」；採用的條件「Snapshot Mode（固定的資料快照）」；路線確認有「資料快照」標籤；textarea 與路徑欄的值是輸入的文字 | PASS |
+| K9 | 日曆彈窗 | Shift+Tab ×8 到 `Choose date`；Enter → 彈窗開啟（`role=dialog`，文字「Use arrow keys to navigate dates. Enter to select. Escape to close.」），焦點仍在按鈕；→、↓：日期不變、焦點不動；Tab：焦點跳到「最早可出發時間」的小時欄，彈窗關閉；Space 再開；Shift+Tab：焦點到日欄；Escape：彈窗關閉、焦點回按鈕 | 彈窗內有可聚焦的「Previous month」「Next month」等按鈕與日期格子，但在這個環境中**鍵盤焦點進不去**，沒有辦法用鍵盤在彈窗中選日期 | **FAIL（本環境觀察）**（K9-F） |
+| K10 | 日期改用年／月／日欄 | Shift+Tab 到日欄；↑；Shift+Tab 到月欄；輸入 `11`；Tab ×2 | 日期 2026/12/06 → 2026/12/07 → 2026/11/07；過期提示列出「日期」 | PASS（選日期這件事可以只用鍵盤完成） |
+| K11 | 最早可出發時間與出發油量 | 在小時欄按 ↑；Tab ×4 到出發油量；Ctrl+A；輸入 `55`；Tab | 最早可出發時間 12:00 → 13:00；油量 55；過期提示「上次規劃後變更了：日期、最早可出發時間、出發油量」 | PASS |
+| K12 | R1-F1 的路徑（6b，單向＋取消） | Shift+Tab ×20 回情境選單；Ctrl+A；輸入 `6b.`；Enter；Tab ×19 到「規劃」；Enter；Tab ×2 到行程型態題；Space、↓（單向）；Tab 到方向題；Space、↓×2（不安排這段休息）；Tab 到「回覆並繼續規劃」；Enter | 回覆後沒有任何追問 radio；回覆表：行程型態「單向」、方向題「不安排這段休息」；休息表只有「示範觀景台／—／15 分鐘／依 Profile 排入的預設休息」，沒有騎士指定的那一筆 | PASS |
+
+第一次 R1 前的操作（第 6 節 E-2 第 8、10、11 列，與第 7 節原 UI0-7 列所列的 Tab 走訪）仍然有效；那幾列中以 JavaScript `focus()` 移動焦點的部分，只作 375 像素量測的證據，不作鍵盤證據（R1 record 亦同）。
+
+### 10.3 UI0-7 的現況
+
+| 項目 | 判定 | 說明與所需 authority |
+| --- | --- | --- |
+| K1、K2、K5～K8、K10～K12，以及第 7 節列出的其他控制項（公路與地標 expander、分頁、全部候選 expander、追問的 radio） | PASS | 實際按鍵操作的紀錄在第 10.2 節與第 6 節 E-2 |
+| K3「Upload」按鈕的啟動 | PASS | 選檔請求有送出；對話框以 listener 取消，沒有實際打開 |
+| **K3-B 在作業系統的檔案選擇對話框中選取多個合成或空的 GPX** | **BLOCKED** | 缺少的能力：內建瀏覽器的工具（`mcp__Claude_Browser__*`）只能操作頁面，不能操作作業系統的對話框，也沒有上傳檔案的工具；為了不在使用者的桌面留下無法關閉的對話框，沒有實際打開它。檔案只能以程式放入（K4），那不是鍵盤操作。**required authority = acceptor**：在 UI Delta Review 中實際以鍵盤操作對話框，或另作決定 |
+| **K9-F 以鍵盤在日曆彈窗中選日期** | **FAIL（本環境觀察）** | Streamlit 1.67.0 的 `st.date_input` 日曆彈窗在這個瀏覽器中，焦點無法進入彈窗（Enter／Space 開啟、Tab 離開時關閉、方向鍵沒有作用）。日期本身可以只用鍵盤在年／月／日欄改（K10），所以「選日期」的操作可以完成；但日曆彈窗這個控制項不能只用鍵盤操作。沒有修改元件或驗收條件。是否以年／月／日欄滿足 UI0-7、或要求改用其他元件，**required authority = acceptor**（UI Delta Review）；如需修改契約或元件對應，經 Design Authority |
+| K5 的焦點移動（移除檔案後焦點離開該按鈕） | 觀察，不是失敗 | 下一個 Tab 從下一個控制項繼續；交 UI Delta Review 檢視 |
+
+UI0-7 因 K3-B（BLOCKED）與 K9-F（FAIL）**不能標為 PASS**；本 worklog 不以「標準元件」推定任何未操作的項目。
+
+### 10.4 Gates（主 checkout，`619268a` 的工作目錄）
+
+`.venv/Scripts/python.exe -m pytest -q`：
+
+```text
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 35%]
+........................................................................ [ 47%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 94%]
+...................................                                      [100%]
+611 passed in 22.97s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`：
+
+```text
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 35%]
+........................................................................ [ 47%]
+........................................................................ [ 58%]
+........................................................................ [ 70%]
+........................................................................ [ 82%]
+........................................................................ [ 94%]
+...................................                                      [100%]
+611 passed in 22.50s
+```
+
+611＝603＋8 個 R1-F1 regression 測試；沒有 xfail、xpass、skip（`-rxX` 沒有任何摘要列）。correction commit 的檔案 SHA-256（工作目錄 LF 內容）：`app/ui0_mock_app.py` `1aecf7ac35711c5a35e8f3b1765f5f242a5583b58fdf4281339a5e58b81639d0`、`tests/test_ui0_skeleton.py` `77deefffd8b8e6a300fa470acd7a424117921dd61fa36fc0bf6899487f7eef61`。`git diff --name-only 6a278b4 619268a` 只含這兩個檔與 record 路徑。暫存內容沒有 `.env`、`*.gpx` 或 `data/` 的檔案。
+
+### 10.5 Binding、高風險類別與剩餘工作
+
+- Binding 自我觀測：見第 10.6 節（record-only commit 前掃描）。這是自我觀測，Orchestrator 採用前須自行核對。
+- 高風險類別：修正只改追問回覆的顯示與模擬休息列，H-2（上傳的處理不變）、H-3（沒有新的宣稱文字；新增的只有既有常數的使用）的核對結果不變；H-1、H-4 仍不涉及。
+- R1-F2 的 BLOCKED（K3-B）與 FAIL（K9-F）由 acceptor 處理；R1 record 的 NV-1～NV-4、Q-1 不屬本次 correction 的範圍，本節沒有處理。
+- 剩餘：R2（Orchestrator 派工；只核對 R1-F1、R1-F2 的修正與回歸）。
+
+### 10.6 Binding 自我觀測（correction 之後）
+
+agentId `acf4b1c528124a22e`（`agentType` `gov-executor`，同第 2 節的派工，correction 以 SendMessage 續派），全部 assistant 訊息 (`claude-opus-5-5`, `high`) 346 則，集合只有一個元素（record-only commit 前掃描）。沒有 escalation、替代或 bounded assignment。
