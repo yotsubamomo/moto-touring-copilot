@@ -5,6 +5,7 @@ of it. They say nothing about real rides: no GPX has been ingested yet.
 """
 from __future__ import annotations
 
+import json
 import re
 
 import pytest
@@ -620,3 +621,71 @@ def test_eta_margin_of_0_05_is_allowed(data):
     for row, safe in zip(rows, ["07:03:09", "07:05:24", "07:19:55", "07:26:13"]):
         row["eta_safe"] = f"2026-11-21T{safe}+08:00"
     assert eta_violations(data) == []
+
+
+# --- R1-F1 (issue-7-c1-r1): non-finite numbers in the v0.3 fields ------------
+NON_FINITE = [float("nan"), float("inf"), float("-inf")]
+
+
+def target_of(d: dict, where: str) -> dict:
+    return {"derived": d["derived_segments"][0], "pace_category": by_id(d["pace_categories"], "seg_category", "C2"),
+            "pace_header": d["pace_header"], "eta_header": d["eta_headers"][0],
+            "eta_ok_row": ok_rows(d)[1], "eta_unknown_row": d["eta_segments"][4]}[where]
+
+
+@pytest.mark.parametrize("value", NON_FINITE, ids=["nan", "inf", "-inf"])
+@pytest.mark.parametrize("where, field, report_key, label", [
+    ("derived", "short_stop_time_s", "derived_segments", "derived_segments(public)[0]"),
+    ("pace_category", "stop_ratio", "pace_table", "pace_categories[1]"),
+    ("pace_header", "margin_coeff", "pace_table", "pace_header[0]"),
+    ("eta_header", "margin_coeff", "eta_output", "eta_headers[0]"),
+    ("eta_ok_row", "stop_allow_s", "eta_output", "eta_segments[1]"),
+    ("eta_unknown_row", "stop_allow_s", "eta_output", "eta_segments[4]"),
+])
+def test_non_finite_values_in_the_v03_fields_are_rejected(data, where, field, report_key, label, value):
+    """validate_dataset returns a violation (and does not raise) for NaN and +/-infinity."""
+    target_of(data, where)[field] = value
+    report = validate_dataset(data)
+    assert_violation(report[report_key], f"{label}: {field} is not a finite number")
+
+
+@pytest.mark.parametrize("value", NON_FINITE, ids=["nan", "inf", "-inf"])
+def test_non_finite_short_stops_are_rejected_on_their_own(data, value):
+    data["derived_segments"][0]["short_stop_time_s"] = value
+    assert_violation(validate_derived_segments(data["derived_segments"]), "short_stop_time_s is not a finite number")
+
+
+@pytest.mark.parametrize("value", NON_FINITE, ids=["nan", "inf", "-inf"])
+@pytest.mark.parametrize("basis", ["default", "loo_rule"])
+def test_non_finite_margin_is_rejected_by_the_pace_table_alone(data, basis, value):
+    data["pace_header"].update(margin_basis=basis, margin_coeff=value)
+    assert_violation(validate_pace_table(data["pace_header"], data["pace_categories"], data["derived_segments"]),
+                     "pace_header[0]: margin_coeff is not a finite number")
+
+
+@pytest.mark.parametrize("value", NON_FINITE, ids=["nan", "inf", "-inf"])
+def test_non_finite_stop_ratio_does_not_let_the_eta_pass(data, value):
+    """Without the pace table check, the ETA itself must not accept a stop allowance it cannot verify."""
+    by_id(data["pace_categories"], "seg_category", "C2")["stop_ratio"] = value
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 1 stop_allow_s cannot be checked: category C2 has a non-finite stop_ratio")
+
+
+@pytest.mark.parametrize("value", NON_FINITE, ids=["nan", "inf", "-inf"])
+def test_non_finite_eta_values_give_violations_without_a_pace_table(data, value):
+    args = (data["eta_headers"], data["eta_segments"], data["routes"], data["route_segments"], data["checkpoints"])
+    ok_rows(data)[1]["stop_allow_s"] = value
+    assert_violation(validate_eta_output(*args), "eta_segments[1]: stop_allow_s is not a finite number")
+    ok_rows(data)[1]["stop_allow_s"] = 9.0
+    data["eta_headers"][0]["margin_coeff"] = value
+    assert_violation(validate_eta_output(*args), "eta_headers[0]: margin_coeff is not a finite number")
+
+
+@pytest.mark.parametrize("literal", ["NaN", "Infinity", "-Infinity"])
+def test_non_finite_literals_parsed_from_json_text_are_rejected(literal):
+    """json.loads (used by the contracts CLI) accepts these non-standard literals; the validators must not."""
+    from conftest import MOCK_DATASET
+    text = MOCK_DATASET.read_text(encoding="utf-8").replace('"stop_ratio": 0.075', f'"stop_ratio": {literal}', 1)
+    assert f'"stop_ratio": {literal}' in text
+    report = validate_dataset(json.loads(text))
+    assert_violation(report["pace_table"], "pace_categories[1]: stop_ratio is not a finite number")
+    assert_violation(report["eta_output"], "has a non-finite stop_ratio")

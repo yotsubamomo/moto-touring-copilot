@@ -61,6 +61,22 @@ def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def _is_finite_number(value: Any) -> bool:
+    return _is_number(value) and math.isfinite(value)
+
+
+def _non_finite_errors(label: str, rows: Iterable[dict], fields: tuple[str, ...]) -> list[str]:
+    """NaN and +/-infinity are not JSON numbers, but Python dicts (and json.loads) can carry them, and
+    JSON Schema's minimum does not reject NaN. Reject them explicitly for the v0.3 fields (R1-F1)."""
+    out = []
+    for i, row in enumerate(rows):
+        for field in fields:
+            value = row.get(field)
+            if _is_number(value) and not math.isfinite(value):
+                out.append(f"{label}[{i}]: {field} is not a finite number ({value})")
+    return out
+
+
 def _is_multiple_of_step(value: float) -> bool:
     steps = value / MARGIN_STEP
     return math.isfinite(steps) and abs(steps - round(steps)) <= MARGIN_FLOAT_TOLERANCE
@@ -85,6 +101,7 @@ def validate_derived_segments(rows: Rows, visibility: str = "public") -> list[st
         raise ValueError("visibility must be 'public' or 'private'")
     schema = S.DERIVED_SEGMENT_PUBLIC if visibility == "public" else S.DERIVED_SEGMENT_PRIVATE
     out = _schema_errors(f"derived_segments({visibility})", rows, schema)
+    out += _non_finite_errors(f"derived_segments({visibility})", rows, ("short_stop_time_s",))
 
     for key in _duplicates((r.get("trip_id"), r.get("seg_index")) for r in rows):
         out.append(f"derived_segments: duplicate primary key {key}")
@@ -112,7 +129,7 @@ def validate_derived_segments(rows: Rows, visibility: str = "public") -> list[st
         if not invalid and not has_time:
             out.append(f"derived_segments[{i}]: moving_time_s is null but quality is not invalid (invariant 3)")
         short, stopped = r.get("short_stop_time_s"), r.get("stopped_time_s")
-        if _is_number(short) and _is_number(stopped) and short > stopped:
+        if _is_finite_number(short) and _is_number(stopped) and short > stopped:
             out.append(f"derived_segments[{i}]: short_stop_time_s is greater than stopped_time_s (invariant 6)")
     return out
 
@@ -186,6 +203,8 @@ def validate_route_catalog(routes: Rows, segments: Rows, checkpoints: Rows) -> l
 # --- Contract 3: Pace Table -------------------------------------------------
 def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | None = None) -> list[str]:
     out = _schema_errors("pace_header", [header], S.PACE_HEADER) + _schema_errors("pace_categories", categories, S.PACE_CATEGORY)
+    out += _non_finite_errors("pace_header", [header], ("margin_coeff",))
+    out += _non_finite_errors("pace_categories", categories, ("stop_ratio",))
     version = header.get("pace_version")
     if isinstance(version, str) and not PACE_VERSION_PATTERN.fullmatch(version):
         out.append(f"pace_header: pace_version {version!r} is not research- or user- followed by "
@@ -195,7 +214,7 @@ def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | Non
             out.append(f"pace_categories: {rec.get('seg_category')} belongs to another pace_version")
 
     basis, coeff = header.get("margin_basis"), header.get("margin_coeff")
-    if _is_number(coeff):
+    if _is_finite_number(coeff):
         if basis == "default" and abs(coeff - DEFAULT_MARGIN_COEFF) > MARGIN_FLOAT_TOLERANCE:
             out.append(f"pace_header: margin_basis is default but margin_coeff is {coeff}, not 0.20 (invariant 6)")
         if basis == "loo_rule" and not (coeff >= MARGIN_STEP - MARGIN_FLOAT_TOLERANCE and _is_multiple_of_step(coeff)):
@@ -268,6 +287,8 @@ def checkpoint_arrival(header: dict, eta_rows: Rows, checkpoint: dict) -> tuple[
 def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_segments: Rows, checkpoints: Rows,
                         pace_header: dict | None = None, pace_categories: Rows | None = None) -> list[str]:
     out = _schema_errors("eta_headers", headers, S.ETA_HEADER) + _schema_errors("eta_segments", eta_segments, S.ETA_SEGMENT)
+    out += _non_finite_errors("eta_headers", headers, ("margin_coeff",))
+    out += _non_finite_errors("eta_segments", eta_segments, ("stop_allow_s",))
     for key in _duplicates(h.get("plan_id") for h in headers):
         out.append(f"eta_headers: duplicate plan_id {key}")
     for key in _duplicates((s.get("plan_id"), s.get("seg_index")) for s in eta_segments):
@@ -333,6 +354,7 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
 
         # cumulative is the running sum of typ_seg_time_s + stop_allow_s (the typical ride time).
         departure, margin = _time(h.get("departure_time")), h.get("margin_coeff", 0)
+        margin_ok = _is_finite_number(margin)  # otherwise already reported; skip the margin arithmetic
         category_of = {s.get("seg_index"): s.get("seg_category") for s in route_segments if s.get("route_id") == rid}
         stop_ratio = ({c.get("seg_category"): c.get("stop_ratio") for c in pace_categories}
                       if pace_categories is not None else None)
@@ -343,13 +365,16 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
             if typical is None or allowance is None or typ is None or safe is None:
                 out.append(f"eta_segments: {pid} seg {k} has a null time although status is ok")
                 break
-            if not (_is_number(typical) and _is_number(allowance)):
-                break  # already reported by the schema; the arithmetic below would be meaningless
+            if not (_is_number(typical) and _is_finite_number(allowance)):
+                break  # already reported (schema or non-finite check); the arithmetic below would be meaningless
             if stop_ratio is not None:  # invariant 8: needs the pace table
                 ratio = stop_ratio.get(category_of.get(k))
                 if not _is_number(ratio):
                     out.append(f"eta_segments: {pid} seg {k} stop_allow_s cannot be checked: category "
                                f"{category_of.get(k)} has no stop_ratio in the pace table (invariant 8)")
+                elif not math.isfinite(ratio):
+                    out.append(f"eta_segments: {pid} seg {k} stop_allow_s cannot be checked: category "
+                               f"{category_of.get(k)} has a non-finite stop_ratio ({ratio}) in the pace table (invariant 8)")
                 elif abs(allowance - ratio * typical) > ETA_TOLERANCE_S:
                     out.append(f"eta_segments: {pid} seg {k} stop_allow_s is not stop_ratio x typ_seg_time_s (invariant 8)")
             cumulative += typical + allowance
@@ -357,10 +382,10 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
                 expected = departure + dt.timedelta(seconds=cumulative + s["break_time_s"])
                 if abs((typ - expected).total_seconds()) > ETA_TOLERANCE_S:
                     out.append(f"eta_segments: {pid} seg {k} eta_typ is not departure + cumulative time + break_time_s")
-                expected_safe = expected + dt.timedelta(seconds=margin * cumulative)
-                if abs((safe - expected_safe).total_seconds()) > ETA_TOLERANCE_S:
+                expected_safe = expected + dt.timedelta(seconds=margin * cumulative) if margin_ok else None
+                if expected_safe is not None and abs((safe - expected_safe).total_seconds()) > ETA_TOLERANCE_S:
                     out.append(f"eta_segments: {pid} seg {k} eta_safe is not eta_typ + margin_coeff x cumulative time")
-            if _is_number(margin) and abs((safe - typ).total_seconds() - margin * cumulative) > ETA_TOLERANCE_S:
+            if margin_ok and abs((safe - typ).total_seconds() - margin * cumulative) > ETA_TOLERANCE_S:
                 out.append(f"eta_segments: {pid} seg {k} eta_safe - eta_typ is not margin_coeff x cumulative "
                            f"(typ_seg_time_s + stop_allow_s) (invariant 8)")
             break_time = s.get("break_time_s")
