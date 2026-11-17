@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #7（BATCH-1 B1-1），OC-1 Formal run `run-20261117-oc1-issue7` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | Executor 工作完成（`DONE_WITH_CONCERNS`，見第 8 節）；independent audit 尚未進行 |
-| Subject | branch `oc1-run1-contracts-v03`；BASE `ff049661f968adace4dd017cf560316e5684440d`；實作 commit **`a304ee2ac0ec3d8468e446b089216f0cb000f72b`**（`a304ee2`）。本 worklog 在其後的 record-only commit 加入（`docs/governance/records/**`，Bindings 第 7 節） |
+| 狀態 | Cycle 0：Executor 工作完成（`DONE_WITH_CONCERNS`）。Cycle 1：R1 為 BLOCKING（R1-F1），targeted correction 已完成（第 9 節），待 R2 |
+| Subject | branch `oc1-run1-contracts-v03`；BASE `ff049661f968adace4dd017cf560316e5684440d`；實作 commit **`a304ee2ac0ec3d8468e446b089216f0cb000f72b`**（`a304ee2`）。本 worklog 在其後的 record-only commit 加入（`docs/governance/records/**`，Bindings 第 7 節）。Cycle 1 修正 commit **`8981e9d32d4fb2f1c13dd4909243b88114af06a2`**（第 9 節） |
 | 日期 | 2026-11-17 |
 
 ## 1. Contract reference
@@ -404,19 +404,292 @@ M13 missing-ratio fail-open: 1 failed, 161 passed in 0.32s
 ## 7. Audit status
 
 - **Required**：Formal lane，每張 Ticket 都需要 independent audit（治理 §4.1；Bindings 第 5 節）；#7 涉及 H-3、H-4，audit record 須逐項寫明對所涉類別的核對（高風險類別 record 第 5 節）。依 run record 第 1 節第 4、5 項，R1 由 Codex（`gpt-6.1-sol`／`high`）執行，不兼作 Spec Integration Audit。
-- **進度**：尚未派工。派工由 Orchestrator 進行；Executor 不派正式 audit。
+- **進度**：cycle 1 R1 已完成，verdict **BLOCKING**，record `docs/governance/records/audit/issue-7-c1-r1.md`（`881fd7a`），blocking finding R1-F1。Executor 已依 Required fix 作 targeted correction（第 9 節，`8981e9d`）；Executor 的「已修正」不是 closure，R1-F1 的 closure 由 R2 判定。派工由 Orchestrator 進行；Executor 不派正式 audit。
+- **高風險類別**：依 Design Authority 的判定為 H-2、H-3、H-4（`docs/governance/records/decisions/decision-20261117-issue7-h2.md`）。
 - 第 6 節的 mutation 檢查與 self-verification 不是 audit。
 
 ## 8. Remaining work 與 concerns
 
 | # | 項目 | 所需 authority／負責者 |
 | --- | --- | --- |
-| C-1 | **H-2 是否涉及。** #7 在契約 1 公開版的 schema 新增欄位 `short_stop_time_s`，符合 H-2 判定 3.2 第 2 項的字面（「公開版衍生路段表的……欄位」），但 SPEC-B1 對 #7 只標示 H-3、H-4。依高風險類別 record 第 4 節第 2、3 項，由 Design Authority 判定是否要補標 H-2；若補標，R1 須依第 5 節加做 H-2 的最低核對 | Design Authority（經 Orchestrator route） |
+| C-1 | **H-2 是否涉及。** #7 在契約 1 公開版的 schema 新增欄位 `short_stop_time_s`，符合 H-2 判定 3.2 第 2 項的字面（「公開版衍生路段表的……欄位」），但 SPEC-B1 對 #7 只標示 H-3、H-4。依高風險類別 record 第 4 節第 2、3 項，由 Design Authority 判定是否要補標 H-2；若補標，R1 須依第 5 節加做 H-2 的最低核對 | **已判定**：`decision-20261117-issue7-h2` 判定 #7 涉及 H-2（類別改為 H-2、H-3、H-4） |
 | C-2 | Spike 的 `python -m moto_copilot.ingest` 在 #9 完成前會回報契約違反（`build_rows` 沒有 `short_stop_time_s`），exit code 1。這是 CL-B1-8 所述的產生者缺口，屬 #9；本 work item 沒有執行該指令（它會讀私有資料）：NOT RUN | #9 的 Executor |
 | C-3 | 既有（v0.2）的 `validate_eta_output` 在某些 schema 不合法的輸入下會拋例外而不是回報違反，例如字串的 `typ_seg_time_s`、缺 `break_time_s` 的列、沒有時區的時間字串。本次新增的程式路徑已避開（D-8），既有路徑沒有修改（超出 #7 的 AC）。記為觀察，是否處理由之後的工作決定 | 無（記錄） |
 | C-4 | `DESIGN.md` §5 寫「`src/moto_copilot/contracts/` 的驗證程式與契約測試仍然依 v0.2 檢查」，本 commit 之後對停等寬放的部分已不正確；依 SPEC-B1 §8，`DESIGN.md` 的實作狀態陳述由 AB-12 的文件工作處理，本 work item 沒有修改 `DESIGN.md` | AB-12 的文件工作 |
 | C-5 | Fixture 目錄名稱 `contract_v02` 沒有改（不在 Issue #7 範圍；改名會動到 `conftest.py` 與 root `CLAUDE.md` 的指令）。 | 無（記錄） |
-| R-1 | Independent audit（R1）與其後的 closure | Orchestrator 派工；Reviewer |
+| R-1 | R1 已完成（BLOCKING，R1-F1）；correction 已提交（第 9 節）。剩下 R2 closure review 與其後的 Ticket closure | Orchestrator 派工；Reviewer |
 | R-2 | 6 個 strict xfail 依 CL-B1-8 §3.2 在 #9（S-1、S-2）、#10（S-3）、#11（S-4～S-6）結案前移除並恢復檢查 | #9、#10、#11 |
 
 Executor 工作的完成不等於 #7 的 closure（orch-default §7）、SPEC-B1 的 Spec Integration Audit 或 phase acceptance。
+
+## 9. Correction — cycle 1（R1-F1）
+
+| 欄位 | 內容 |
+| --- | --- |
+| 依據 | R1 audit record `docs/governance/records/audit/issue-7-c1-r1.md`（Codex，`primary_reviewer`，cycle 1，verdict BLOCKING；原樣 commit 於 `881fd7a`）的 blocking finding **R1-F1**「新增 numeric 欄位接受 NaN，繞過不變條件」與其 Required fix。Finding 原文不在此轉述或改寫，以該 record 為準 |
+| 派工 | Orchestrator 以同一 worklog identity 續派同一 Executor（agentId `a9f372411c0f54099`）作 targeted correction |
+| 修正 commit | **`8981e9d32d4fb2f1c13dd4909243b88114af06a2`**（`8981e9d`），父 commit `881fd7a`。只改 `src/moto_copilot/contracts/validate.py` 與 `tests/test_contracts.py` |
+| Binding（自我觀測） | 同一 agent 至 worklog 更新前：(`claude-opus-5-5`, `high`) 153 則，集合只有一個元素；派工者仍須自行核對（第 2 節） |
+| 範圍 | 只處理 R1-F1 的 Required fix：本票新增或修改的四個 numeric 欄位 `short_stop_time_s`、`stop_ratio`、`margin_coeff`（契約 3 表頭與契約 4 表頭）、`stop_allow_s`。沒有改 schema、fixture、`ingest/`、`pace/`、`routes/`、`conftest.py`、`pyproject.toml`；沒有新增或改動任何 xfail；沒有修改 R1 record |
+
+### 9.1 對應 R1-F1 的修改
+
+| # | 修改（`validate.py`） | 對應 Required fix 的哪一句 |
+| --- | --- | --- |
+| F-1 | 新增 `_non_finite_errors`：四個欄位的值是 NaN、+inf 或 −inf 時，回報 `<label>[<i>]: <field> is not a finite number (<value>)`。在 `validate_derived_segments`（`short_stop_time_s`）、`validate_pace_table`（表頭 `margin_coeff`、類別 `stop_ratio`）、`validate_eta_output`（表頭 `margin_coeff`、路段列 `stop_allow_s`）的 schema 檢查之後、不變條件之前執行 | 「在……不變條件運算前，明確將非有限值記為 violation」；涵蓋四個欄位；NaN／正負 infinity 都拒絕 |
+| F-2 | 不變條件的運算只接受有限值：契約 1 不變條件 6 的 `short_stop_time_s`、契約 3 不變條件 6 的 `margin_coeff` 改用 `_is_finite_number`；ETA 迴圈遇到非有限的 `stop_allow_s` 停止算術（F-1 已回報），非有限的 ETA `margin_coeff` 不進入 `eta_safe` 的兩項算術（F-1 已回報） | 「僅讓 `_is_number` 回 False 後略過比較還不充分」：略過只發生在 F-1 已記為 violation 之後；`stop_allow_s` 不再拋 `ValueError` |
+| F-3 | ETA 狀態 `ok` 時，路線所用類別在配速表中的 `stop_ratio` 不是有限值，回報 `stop_allow_s cannot be checked: category <c> has a non-finite stop_ratio (<value>) in the pace table (invariant 8)`。原本「沒有 `stop_ratio`」的訊息與測試不變 | 「無法核對停等比例的資料仍被判定為符合契約」：在只呼叫 `validate_eta_output` 的路徑也不放行 |
+
+保留：合法的 0、nullable 欄位的 null、一秒容差、所有既有訊息與既有測試都不變。非有限值沒有被補成 0 或 null。
+
+### 9.2 Decisions and assumptions（cycle 1）
+
+| # | 決定 | 理由 |
+| --- | --- | --- |
+| D-12 | 非有限值以獨立的訊息回報，不併入 schema 錯誤 | JSON Schema 的 `minimum` 不拒絕 NaN、也不拒絕 +inf；以明確的檢查不依賴 jsonschema 的行為。−inf 會同時有 schema 的下限錯誤與本訊息，兩者都是違反，沒有衝突 |
+| D-13 | 範圍只限 R1-F1 列出的四個欄位；既有欄位（`stopped_time_s`、`typ_seg_time_s`、`break_time_s`、`speed_kmh` 等）的非有限值處理不變 | R1-F1 Required fix 明寫「不要求順帶重寫其他既有畸形輸入處理」。見 9.5 C-6 |
+| D-14 | ETA 的 `typ_seg_time_s` 仍以 `_is_number` 判斷，不改成「非有限即停止」 | 改成停止會把既有欄位的非有限值由「拋例外」變成「無聲放行」（fail open）。既有行為不在本次範圍，不擴大，也不讓它變差 |
+
+沒有需要猜測語義之處：四個欄位在契約中都是 number（JSON 沒有 NaN／infinity），R1-F1 明定要拒絕的值與要保留的行為。
+
+### 9.3 回歸測試（`tests/test_contracts.py`，新增 6 個測試函式、36 個案例，全部 PASSED）
+
+| 測試 | 案例 | 涵蓋 |
+| --- | --- | --- |
+| `test_non_finite_values_in_the_v03_fields_are_rejected` | 18（6 個位置 × NaN／inf／−inf） | 經 `validate_dataset`（不拋例外）：契約 1 `short_stop_time_s`；契約 3 `stop_ratio`、表頭 `margin_coeff`；契約 4 表頭 `margin_coeff`、`ok` 列與 `unknown` 列的 `stop_allow_s`。R1 重現中的四個 false acceptance／例外都在內 |
+| `test_non_finite_short_stops_are_rejected_on_their_own` | 3 | `validate_derived_segments` 單獨呼叫 |
+| `test_non_finite_margin_is_rejected_by_the_pace_table_alone` | 6（`default`／`loo_rule` × 3） | R1 重現中的「pace alone」：`validate_pace_table` 單獨呼叫時 `default`／NaN 被拒絕 |
+| `test_non_finite_stop_ratio_does_not_let_the_eta_pass` | 3 | 只呼叫 `validate_eta_output`（含配速表）時，非有限 `stop_ratio` 不讓 `stop_allow_s` 通過（AC5） |
+| `test_non_finite_eta_values_give_violations_without_a_pace_table` | 3 | 沒有配速表時，非有限 `stop_allow_s` 與 ETA `margin_coeff` 回報違反、不拋例外 |
+| `test_non_finite_literals_parsed_from_json_text_are_rejected` | 3（`NaN`、`Infinity`、`-Infinity`） | 由 JSON 文字經 `json.loads`（契約 CLI 使用的解析方式）進入時同樣被拒絕 |
+
+逐案結果（`pytest -v tests/test_contracts.py -k non_finite`）：
+
+```text
+test_non_finite_values_in_the_v03_fields_are_rejected[derived-short_stop_time_s-derived_segments-derived_segments(public)[0]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[derived-short_stop_time_s-derived_segments-derived_segments(public)[0]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[derived-short_stop_time_s-derived_segments-derived_segments(public)[0]--inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_category-stop_ratio-pace_table-pace_categories[1]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_category-stop_ratio-pace_table-pace_categories[1]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_category-stop_ratio-pace_table-pace_categories[1]--inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_header-margin_coeff-pace_table-pace_header[0]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_header-margin_coeff-pace_table-pace_header[0]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[pace_header-margin_coeff-pace_table-pace_header[0]--inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_header-margin_coeff-eta_output-eta_headers[0]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_header-margin_coeff-eta_output-eta_headers[0]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_header-margin_coeff-eta_output-eta_headers[0]--inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_ok_row-stop_allow_s-eta_output-eta_segments[1]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_ok_row-stop_allow_s-eta_output-eta_segments[1]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_ok_row-stop_allow_s-eta_output-eta_segments[1]--inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_unknown_row-stop_allow_s-eta_output-eta_segments[4]-nan] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_unknown_row-stop_allow_s-eta_output-eta_segments[4]-inf] PASSED
+test_non_finite_values_in_the_v03_fields_are_rejected[eta_unknown_row-stop_allow_s-eta_output-eta_segments[4]--inf] PASSED
+test_non_finite_short_stops_are_rejected_on_their_own[nan] PASSED
+test_non_finite_short_stops_are_rejected_on_their_own[inf] PASSED
+test_non_finite_short_stops_are_rejected_on_their_own[-inf] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[default-nan] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[default-inf] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[default--inf] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[loo_rule-nan] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[loo_rule-inf] PASSED
+test_non_finite_margin_is_rejected_by_the_pace_table_alone[loo_rule--inf] PASSED
+test_non_finite_stop_ratio_does_not_let_the_eta_pass[nan] PASSED
+test_non_finite_stop_ratio_does_not_let_the_eta_pass[inf] PASSED
+test_non_finite_stop_ratio_does_not_let_the_eta_pass[-inf] PASSED
+test_non_finite_eta_values_give_violations_without_a_pace_table[nan] PASSED
+test_non_finite_eta_values_give_violations_without_a_pace_table[inf] PASSED
+test_non_finite_eta_values_give_violations_without_a_pace_table[-inf] PASSED
+test_non_finite_literals_parsed_from_json_text_are_rejected[NaN] PASSED
+test_non_finite_literals_parsed_from_json_text_are_rejected[Infinity] PASSED
+test_non_finite_literals_parsed_from_json_text_are_rejected[-Infinity] PASSED
+```
+
+**R1 record 的重現程式（原文照跑，`.venv/Scripts/python.exe -B -`）在 `8981e9d` 的輸出：** 四個欄位都回報違反，`stop_allow_s` 不再拋例外。
+
+```text
+short_stop_time_s {'derived_segments': ['derived_segments(public)[0]: short_stop_time_s is not a finite number (nan)'], 'route_catalog': [], 'pace_table': [], 'eta_output': []}
+stop_ratio {'derived_segments': [], 'route_catalog': [], 'pace_table': ['pace_categories[1]: stop_ratio is not a finite number (nan)'], 'eta_output': ['eta_segments: P-MOCK-1 seg 1 stop_allow_s cannot be checked: category C2 has a non-finite stop_ratio (nan) in the pace table (invariant 8)', 'eta_segments: P-MOCK-1 seg 2 stop_allow_s cannot be checked: category C2 has a non-finite stop_ratio (nan) in the pace table (invariant 8)']}
+margin_coeff {'derived_segments': [], 'route_catalog': [], 'pace_table': ['pace_header[0]: margin_coeff is not a finite number (nan)'], 'eta_output': ["eta_headers: P-MOCK-1 margin_coeff 0.2 differs from the pace table's nan (invariant 9)", "eta_headers: P-MOCK-2 margin_coeff 0.2 differs from the pace table's nan (invariant 9)"]}
+pace alone ['pace_header[0]: margin_coeff is not a finite number (nan)']
+stop_allow_s {'derived_segments': [], 'route_catalog': [], 'pace_table': [], 'eta_output': ['eta_segments[0]: stop_allow_s is not a finite number (nan)']}
+```
+
+**Mutation（self-verification）。** 以暫存腳本逐一還原修正的四個部分（每次一處，只跑 `-k non_finite`，結束後以 `cmp` 確認原檔逐位元相同），每一項都有回歸測試失敗：
+
+```text
+F1 explicit non-finite check off: 33 failed, 3 passed, 162 deselected in 0.49s
+F2 margin arithmetic guard off: 6 failed, 30 passed, 162 deselected in 0.32s
+F3 stop_allow arithmetic guard off: 6 failed, 30 passed, 162 deselected in 0.32s
+F4 non-finite stop_ratio branch off: 6 failed, 30 passed, 162 deselected in 0.30s
+```
+
+### 9.4 E-1：CL-B1-8 的檢查（在 `8981e9d` 重跑，工作目錄乾淨）
+
+**結果陳述：`229 passed, 6 xfailed`（依 `decision-20261117-issue7-spike-tests`）。** 不是「全數通過」。比 cycle 0 多的 36 個 passed 恰為 9.3 的回歸案例；xfail 仍是同樣 6 個（S-1～S-6）。
+
+| CL-B1-8 §3.3 | 判定 |
+| --- | --- |
+| 1. exit code 0 | 成立（輸出 C1-1） |
+| 2. 只有 `passed` 與 `xfailed` | 成立 |
+| 3. `xfailed` 數＝標記數，各對應 S-1～S-6 | 成立（輸出 C1-2；K-1：`grep -rn "xfail\|skip" tests/` 仍是同樣 6 處 strict xfail，沒有 skip，`test_contracts.py` 沒有標記） |
+| 4. `--runxfail` 只失敗那 6 個，且只涉及 v0.3 缺口 | 成立（輸出 C1-3）。輸出與 cycle 0 的輸出 3 除執行秒數外逐行相同（`diff`）；第 6 節輸出 4 的暫存腳本重跑結果與 cycle 0 逐行相同 |
+| 5、6 | 本節與 9.1–9.3 |
+
+K-5：`git diff --name-only ff04966 -- src/moto_copilot/ingest src/moto_copilot/pace src/moto_copilot/routes tests/conftest.py pyproject.toml` 沒有輸出。契約 CLI 對 fixture：四份契約都是 OK，exit 0。
+
+**輸出 C1-1：`.venv/Scripts/python.exe -m pytest -q`**
+
+```text
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+..........................................................x........x.... [ 91%]
+.........x....x.xx.                                                      [100%]
+229 passed, 6 xfailed in 0.47s
+exit=0
+```
+
+**輸出 C1-2：`.venv/Scripts/python.exe -m pytest -q -rxX`**
+
+```text
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+..........................................................x........x.... [ 91%]
+.........x....x.xx.                                                      [100%]
+=========================== short test summary info ===========================
+XFAIL tests/test_ingest.py::test_rows_conform_to_the_contract_in_both_versions__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; build_rows does not write short_stop_time_s yet
+XFAIL tests/test_ingest.py::test_points_with_a_repeated_time_are_dropped__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; build_rows does not write short_stop_time_s yet
+XFAIL tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+XFAIL tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks - v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; compute_eta does not write stop_allow_s yet
+229 passed, 6 xfailed in 0.49s
+exit=0
+```
+
+**輸出 C1-3：`PYTHONUTF8=1 .venv/Scripts/python.exe -m pytest -q --runxfail tests/test_ingest.py tests/test_routes_pace_eta.py`**
+
+```text
+....F........F.............F....F.FF.                                    [100%]
+================================== FAILURES ===================================
+______ test_rows_conform_to_the_contract_in_both_versions__v03_contract _______
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; "
+                                           "build_rows does not write short_stop_time_s yet")
+    def test_rows_conform_to_the_contract_in_both_versions__v03_contract():
+        private, _ = rows_of(straight(12_000))
+        public = to_public(private)
+>       assert validate_derived_segments(private, "private") == []
+E       assert ['derived_seg...roperty', ...] == []
+E         
+E         Left contains 8 more items, first extra item: "derived_segments(private)[0] schema: (record): 'short_stop_time_s' is a required property"
+E         Use -v to get more diff
+
+tests\test_ingest.py:74: AssertionError
+_________ test_points_with_a_repeated_time_are_dropped__v03_contract __________
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; "
+                                           "build_rows does not write short_stop_time_s yet")
+    def test_points_with_a_repeated_time_are_dropped__v03_contract():
+        pts = straight(12_000)
+        pts[200:200] = [TrackPoint(pts[200].lat, pts[200].lon, pts[199].time)] * 3
+        rows, _ = rows_of(pts)
+>       assert validate_derived_segments(rows, "private") == []
+E       assert ['derived_seg...roperty', ...] == []
+E         
+E         Left contains 8 more items, first extra item: "derived_segments(private)[0] schema: (record): 'short_stop_time_s' is a required property"
+E         Use -v to get more diff
+
+tests\test_ingest.py:168: AssertionError
+___________ test_pace_table_matches_the_mock_fixture__v03_contract ____________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; "
+                                           "build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet")
+    def test_pace_table_matches_the_mock_fixture__v03_contract(data):
+        header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="user-01",
+                                              min_segments=2, built_at=NOW)
+>       assert validate_pace_table(header, categories, data["derived_segments"]) == []
+E       assert ['pace_header...red property'] == []
+E         
+E         Left contains 5 more items, first extra item: "pace_header[0] schema: (record): 'margin_coeff' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:122: AssertionError
+_____________ test_eta_reproduces_the_mock_fixture__v03_contract ______________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_reproduces_the_mock_fixture__v03_contract(data):
+        header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
+>       assert rows == [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
+E       AssertionError: assert [{'plan_id': ...: 600.0, ...}] == [{'plan_id': ...s': 0.0, ...}]
+E         
+E         At index 0 diff: {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'} != {'plan_id': 'P-MOCK-1', 'seg_index': 0, 'typ_seg_time_s': 180.0, 'stop_allow_s': 0.0, 'break_time_s': 0.0, 'eta_typ': '2026-11-21T07:03:00+08:00', 'eta_safe': '2026-11-21T07:03:36+08:00'}
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:163: AssertionError
+________ test_eta_is_unknown_when_a_category_has_no_pace__v03_contract ________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
+        header, rows = eta_for(data, "R02", "P-MOCK-2", [])
+        data["eta_headers"], data["eta_segments"] = [header], rows
+>       assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                   data["pace_header"], data["pace_categories"]) == []
+E       assert ['eta_segment...red property'] == []
+E         
+E         Left contains 2 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E         Use -v to get more diff
+
+tests\test_routes_pace_eta.py:178: AssertionError
+_________ test_eta_output_passes_the_contract_with_and_without_breaks _________
+
+data = {'_meta': {'mock': True, 'contract_version': '0.2', 'note': 'MOCK FIXTURE. Every number, time and coordinate here is i...ngth_m': 13500.0, ...}, {'route_id': 'R02', 'name': '示範路線乙（模擬）', 'n_segments': 2, 'total_length_m': 5000.0, ...}], ...}
+
+    @pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                           "compute_eta does not write stop_allow_s yet")
+    def test_eta_output_passes_the_contract_with_and_without_breaks(data):
+        for plan_id, breaks in (("P-A", []), ("P-B", [{"after_checkpoint_id": "R01-CP04", "duration_s": 900.0}])):
+            header, rows = eta_for(data, "R01", plan_id, breaks)
+>           assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
+                                       data["pace_header"], data["pace_categories"]) == []
+E           assert ['eta_segment...status is ok'] == []
+E             
+E             Left contains 5 more items, first extra item: "eta_segments[0] schema: (record): 'stop_allow_s' is a required property"
+E             Use -v to get more diff
+
+tests\test_routes_pace_eta.py:187: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_ingest.py::test_rows_conform_to_the_contract_in_both_versions__v03_contract
+FAILED tests/test_ingest.py::test_points_with_a_repeated_time_are_dropped__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_pace_table_matches_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_reproduces_the_mock_fixture__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_is_unknown_when_a_category_has_no_pace__v03_contract
+FAILED tests/test_routes_pace_eta.py::test_eta_output_passes_the_contract_with_and_without_breaks
+6 failed, 31 passed in 0.23s
+exit=1
+```
+
+**契約 CLI：`PYTHONPATH=src .venv/Scripts/python.exe -m moto_copilot.contracts tests/fixtures/contract_v02/mock_dataset.json`**
+
+```text
+data contracts v0.2: tests\fixtures\contract_v02\mock_dataset.json
+  derived_segments: OK
+  route_catalog: OK
+  pace_table: OK
+  eta_output: OK
+exit=0
+```
+
+### 9.5 E-4、E-5 與 concerns（cycle 1）
+
+- **E-4**：沒有修改任何既有測試；只在 `test_contracts.py` 新增 `import json` 與 9.3 的 6 個測試函式。
+- **E-3**：回歸測試只用 mock fixture 與字面的 NaN／infinity，沒有新增座標、時間或行程。
+- **E-5（self-verification，不是 audit）**：H-4，缺漏與無法核對的路徑不再放行，非有限值不補值，例外改為回傳違反（9.1、9.3）。H-3，結果陳述照實寫出 xfail 數，mutation 與重現都附輸出。H-2（依 `decision-20261117-issue7-h2` 已補標），本次沒有修改 schema 的欄位清單、fixture 或公開版的產生；`git ls-files` 的私有資料樣式計數仍為 0。
+- **C-6（記錄，不屬 R1-F1）**：本票沒有修改的既有欄位如果是非有限值，仍依 v0.2 的行為處理：`stopped_time_s` 等可能無聲通過，`typ_seg_time_s` 可能在 ETA 算術拋例外。R1-F1 明寫不要求處理這部分（D-13、D-14）。是否另開工作由有權角色決定。
