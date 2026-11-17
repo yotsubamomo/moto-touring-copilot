@@ -1,10 +1,17 @@
-"""GPX track -> Derived Segment Table rows (data contract v0.2, contract 1).
+"""GPX track -> Derived Segment Table rows (contract 1, with the stop fields of SPEC-B1).
 
-Pre-Spec Technical Spike (M1-A). Every threshold lives in IngestParams and is provisional; the
-values are identified by `ingest_version` and `category_scheme` in the output.
+Started as the Pre-Spec Technical Spike (M1-A); the stop events follow SPEC-B1 (Issue #9). Every
+threshold lives in IngestParams; the values are identified by `ingest_version` and
+`category_scheme` in the output.
 
-Pipeline: drop unusable points -> drop GPS jumps -> trim both ends -> split time into moving and
-stopped -> cut into segments by distance -> curvature -> category.
+Pipeline: drop unusable points -> drop GPS jumps -> trim both ends -> split the steps into moving
+and stopped -> cut into segments by distance -> join consecutive stopped steps into stop events
+and classify each event by its whole length -> curvature -> category.
+
+Stop events (SPEC-RESOLUTION-001 1.1): an event shorter than `false_stop_max_s` is a suspected
+GPS false stop and counts as moving time without adding distance; an event from `false_stop_max_s`
+to under `long_stop_min_s` is a short stop; a longer one is a long stop. `stopped_time_s` holds the
+short and long stops, `short_stop_time_s` only the short ones.
 """
 from __future__ import annotations
 
@@ -27,12 +34,14 @@ class IngestParams:
     gap_s: float = 10.0             # a longer step between points is a recording gap
     gap_move_m: float = 50.0        # a gap that covers more than this was ridden, not a stop
     stop_kmh: float = 3.0           # slower than this counts as stopped
+    false_stop_max_s: float = 3.0   # a stop event shorter than this is a suspected GPS false stop (moving time)
+    long_stop_min_s: float = 180.0  # a stop event this long or longer is a long stop; in between is a short stop
     segment_m: float = 1000.0       # target segment length
     min_last_m: float = 300.0       # a shorter tail is merged into the previous segment
     resample_m: float = 20.0        # spacing used to measure heading changes
     c1_max_deg_per_km: float = 80.0   # C1 below this
     c2_max_deg_per_km: float = 250.0  # C2 below this, C3 from here on
-    ingest_version: str = "ingest-spike-0.2"
+    ingest_version: str = "ingest-b1-1"
 
     @property
     def category_scheme(self) -> str:
@@ -59,6 +68,7 @@ class TripReport:
     segments: int = 0
     quality: dict = field(default_factory=lambda: {"ok": 0, "suspect": 0, "invalid": 0})
     categories: dict = field(default_factory=lambda: {"C1": 0, "C2": 0, "C3": 0, "null": 0})
+    stop_events: dict = field(default_factory=lambda: {"false": 0, "short": 0, "long": 0})
     note: str | None = None
 
 
@@ -196,6 +206,45 @@ def _category(curvature: float | None, params: IngestParams) -> str | None:
     return "C2" if curvature < params.c2_max_deg_per_km else "C3"
 
 
+def stop_kind(duration_s: float, params: IngestParams) -> str:
+    """The class of a whole stop event: "false" (suspected GPS false stop), "short" or "long"."""
+    if duration_s < params.false_stop_max_s:
+        return "false"
+    return "short" if duration_s < params.long_stop_min_s else "long"
+
+
+def allocate_stop_events(steps: list[tuple[int, bool, float]], params: IngestParams,
+                         counts: dict | None = None) -> dict[int, dict[str, float]]:
+    """Seconds of each kind of stop per segment.
+
+    `steps` lists every step of the trimmed track in order as (segment key, is_stopped, seconds).
+    Consecutive stopped steps form one stop event; a moving step ends it. The event is classified
+    by its whole length, and each of its steps gives its seconds to the segment the step lies in,
+    so an event that crosses a segment boundary is split by time but classified once (SPEC-B1
+    CL-B1-3 item 2). `counts`, when given, gets the number of events of each kind added to it.
+    """
+    out: dict[int, dict[str, float]] = {}
+    run: list[tuple[int, float]] = []
+
+    def close() -> None:
+        if not run:
+            return
+        kind = stop_kind(sum(seconds for _, seconds in run), params)
+        if counts is not None:
+            counts[kind] += 1
+        for key, seconds in run:
+            out.setdefault(key, {"false": 0.0, "short": 0.0, "long": 0.0})[kind] += seconds
+        run.clear()
+
+    for key, stopped, seconds in steps:
+        if stopped:
+            run.append((key, seconds))
+        else:
+            close()
+    close()
+    return out
+
+
 def build_rows(points: list[TrackPoint], *, trip_id: str, trip_role: str, route_id: str | None,
                params: IngestParams = IngestParams()) -> tuple[list[dict], TripReport]:
     """Return the private rows (with start_time) of one trip and a count-only report."""
@@ -210,38 +259,54 @@ def build_rows(points: list[TrackPoint], *, trip_id: str, trip_role: str, route_
         return [], report
 
     # Split every step into moving or stopped, and close a segment when it has enough distance.
+    # Stopped steps only add time here; they are joined into stop events after the cut.
+    def new_segment(first: int, start: TrackPoint) -> dict:
+        return {"key": len(made), "first": first, "length": 0.0, "moving": 0.0, "suspect": False, "path": [start]}
+
+    made: list[dict] = []
     raw: list[dict] = []
-    current = {"first": 0, "length": 0.0, "moving": 0.0, "stopped": 0.0, "suspect": False, "path": [pts[0]]}
+    steps: list[tuple[int, bool, float]] = []   # (segment key, is_stopped, seconds), in order
+    current = new_segment(0, pts[0])
+    made.append(current)
     for i in range(1, len(pts)):
         a, b = pts[i - 1], pts[i]
         step_s, step_m = (b.time - a.time).total_seconds(), _dist(a, b)
         if i in after_jump:
             current["suspect"] = True
         if step_s > params.gap_s:
-            if step_m < params.gap_move_m:
-                current["stopped"] += step_s           # paused while standing still
-            else:
-                current["moving"] += step_s            # ridden without a recording
-                current["length"] += step_m
+            stopped = step_m < params.gap_move_m       # paused while standing still
+            if not stopped:                            # ridden without a recording
                 current["suspect"] = True
-                current["path"].append(b)
-        elif step_m / step_s * 3.6 < params.stop_kmh:
-            current["stopped"] += step_s
         else:
+            stopped = step_m / step_s * 3.6 < params.stop_kmh
+        steps.append((current["key"], stopped, step_s))
+        if not stopped:
             current["moving"] += step_s
             current["length"] += step_m
             current["path"].append(b)
         if current["length"] >= params.segment_m:
             raw.append(current)
-            current = {"first": i, "length": 0.0, "moving": 0.0, "stopped": 0.0, "suspect": False, "path": [b]}
+            current = new_segment(i, b)
+            made.append(current)
+    merged_into: dict[int, int] = {}
     if current["length"] >= params.min_last_m or (current["length"] > 0 and not raw):
         raw.append(current)
     elif raw:  # short tail: merge into the previous segment
         last = raw[-1]
-        for key in ("length", "moving", "stopped"):
+        for key in ("length", "moving"):
             last[key] += current[key]
         last["suspect"] = last["suspect"] or current["suspect"]
         last["path"].extend(current["path"][1:])
+        merged_into[current["key"]] = last["key"]
+
+    # Stop events: classify each whole event, then give its seconds to the segments of its steps.
+    steps = [(merged_into.get(key, key), stopped, seconds) for key, stopped, seconds in steps]
+    stops = allocate_stop_events(steps, params, report.stop_events)
+    for seg in raw:
+        kinds = stops.get(seg["key"], {"false": 0.0, "short": 0.0, "long": 0.0})
+        seg["moving"] += kinds["false"]                # false stops count as moving time, no distance
+        seg["short"] = kinds["short"]
+        seg["stopped"] = kinds["short"] + kinds["long"]
 
     report.trimmed_length_m = round(sum(s["length"] for s in raw), 1)
     if report.trimmed_length_m < params.min_trip_m:
@@ -265,6 +330,7 @@ def build_rows(points: list[TrackPoint], *, trip_id: str, trip_role: str, route_
             "length_m": round(seg["length"], 1),
             "moving_time_s": round(seg["moving"], 1) if valid else None,
             "stopped_time_s": round(seg["stopped"], 1),
+            "short_stop_time_s": round(seg["short"], 1),
             "curvature_deg_per_km": round(curvature, 1) if curvature is not None else None,
             "seg_category": category,
             "quality": quality,
