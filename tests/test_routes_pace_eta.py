@@ -107,10 +107,13 @@ def test_route_segments_use_the_same_category_rule_as_ingest():
 
 # --- pace --------------------------------------------------------------------
 def test_pace_table_matches_the_mock_fixture(data):
+    """From the fixture's derived rows. Since #10 the pace table recomputes the category thresholds
+    (SPEC-B1 CL-B1-4): the timed curvatures 15, 20, 140, 150, 420 give curv-tercile-20-150, so C1 is
+    {15}, C2 is {20, 140} and C3 is {150, 420}. The fixture's own pace table keeps the v0.2 categories."""
     header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="pace-mock-1",
                                           min_segments=2, built_at=NOW)
     assert [(c["seg_category"], c["speed_kmh"], c["n_segments"]) for c in categories] == \
-        [("C1", 60.0, 2), ("C2", 45.0, 2), ("C3", None, 1)]
+        [("C1", None, 1), ("C2", 52.5, 2), ("C3", 40.5, 2)]
     assert header["method"] == "median_unweighted" and header["n_trips"] == 2
 
 
@@ -131,11 +134,14 @@ def test_holdout_trip_is_refused(data):
 
 def test_suspect_and_invalid_rows_do_not_change_the_pace(data):
     rows = data["derived_segments"]
+    ok_rows = [row for row in rows if row["quality"] == "ok"]
     for row in rows:
         if row["quality"] == "suspect":
             row["moving_time_s"] = 1.0  # an absurd speed that must be ignored
-    _, categories = build_pace_table(rows, ["T001", "T002"], pace_version="p", min_segments=2, built_at=NOW)
-    assert categories[0]["speed_kmh"] == 60.0
+    header, categories = build_pace_table(rows, ["T001", "T002"], pace_version="p", min_segments=2, built_at=NOW)
+    assert (header, categories) == build_pace_table(ok_rows, ["T001", "T002"], pace_version="p", min_segments=2,
+                                                    built_at=NOW)
+    assert categories[1]["speed_kmh"] == 52.5
 
 
 def test_method_comparison_reports_both_medians(data):
