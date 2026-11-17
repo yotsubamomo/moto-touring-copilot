@@ -1,4 +1,4 @@
-"""Tests for the data contracts v0.2 (DESIGN.md §5).
+"""Tests for the data contracts v0.2 with the v0.3 stop-allowance fields of contracts 1, 3, 4 (DESIGN.md §5).
 
 These tests check the validators against a mock fixture and against deliberately broken copies
 of it. They say nothing about real rides: no GPX has been ingested yet.
@@ -297,9 +297,9 @@ def test_at_most_one_break_per_checkpoint(data):
 @pytest.mark.parametrize("checkpoint_id, expected", [
     ("R01-CP01", ("2026-11-21T07:00:00+08:00", "2026-11-21T07:00:00+08:00")),  # c = 0: departure
     ("R01-CP02", ("2026-11-21T07:00:00+08:00", "2026-11-21T07:00:00+08:00")),  # station at the start
-    ("R01-CP03", ("2026-11-21T07:05:00+08:00", "2026-11-21T07:06:00+08:00")),  # c = 2: row 1, before its own break
-    ("R01-CP04", ("2026-11-21T07:19:00+08:00", "2026-11-21T07:20:48+08:00")),  # c = 3: row 2, after the break
-    ("R01-CP05", ("2026-11-21T07:25:00+08:00", "2026-11-21T07:28:00+08:00")),  # c = n: last row
+    ("R01-CP03", ("2026-11-21T07:05:09+08:00", "2026-11-21T07:06:11+08:00")),  # c = 2: row 1, before its own break
+    ("R01-CP04", ("2026-11-21T07:19:27+08:00", "2026-11-21T07:21:20+08:00")),  # c = 3: row 2, after the break
+    ("R01-CP05", ("2026-11-21T07:25:27+08:00", "2026-11-21T07:28:32+08:00")),  # c = n: last row
 ])
 def test_checkpoint_arrival_uses_row_c_minus_one(data, checkpoint_id, expected):
     header = data["eta_headers"][0]
@@ -338,7 +338,7 @@ def test_ok_plan_needs_every_time(data):
 
 
 def test_eta_must_follow_the_formula(data):
-    data["eta_segments"][2]["eta_typ"] = "2026-11-21T07:09:00+08:00"  # as if the break were not counted
+    data["eta_segments"][2]["eta_typ"] = "2026-11-21T07:09:27+08:00"  # as if the break were not counted
     assert_violation(eta_violations(data), "eta_typ is not departure + cumulative time + break_time_s")
     data["eta_segments"][3]["eta_safe"] = "2026-11-21T07:25:30+08:00"
     assert_violation(eta_violations(data), "eta_safe is not eta_typ + margin_coeff x cumulative time")
@@ -356,3 +356,267 @@ def test_eta_keeps_its_references(data):
     assert_violation(eta_violations(data), "catalog_version differs")
     data["eta_headers"][1]["pace_version"] = "pace-other"
     assert_violation(eta_violations(data), "pace_version differs")
+
+
+# --- v0.3 stop allowance (Issue #7; SPEC-RESOLUTION-001 1.4) -----------------
+def ok_rows(d: dict) -> list[dict]:
+    return [s for s in d["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
+
+
+# contract 1: short_stop_time_s
+def test_short_stops_cannot_exceed_all_stops(data):
+    row = by_id(data["derived_segments"], "stopped_time_s", 12.0)
+    row["short_stop_time_s"] = 12.5
+    assert_violation(validate_derived_segments(data["derived_segments"]), "short_stop_time_s is greater than stopped_time_s")
+
+
+def test_short_stops_may_equal_all_stops(data):
+    row = by_id(data["derived_segments"], "stopped_time_s", 12.0)
+    assert row["short_stop_time_s"] == row["stopped_time_s"]
+    assert validate_derived_segments(data["derived_segments"]) == []
+
+
+def test_short_stops_above_zero_stops_are_rejected(data):
+    data["derived_segments"][0]["short_stop_time_s"] = 3.0  # stopped_time_s is 0
+    assert_violation(validate_derived_segments(data["derived_segments"]), "short_stop_time_s is greater than stopped_time_s")
+
+
+@pytest.mark.parametrize("value", [-1.0, None, "0"])
+def test_short_stop_time_is_a_non_negative_number(data, value):
+    data["derived_segments"][0]["short_stop_time_s"] = value
+    assert_violation(validate_derived_segments(data["derived_segments"]), "short_stop_time_s")
+
+
+@pytest.mark.parametrize("visibility", ["public", "private"])
+def test_short_stop_time_is_required_in_both_versions(data, private_rows, visibility):
+    rows = data["derived_segments"] if visibility == "public" else private_rows
+    del rows[0]["short_stop_time_s"]
+    assert_violation(validate_derived_segments(rows, visibility), "'short_stop_time_s' is a required property")
+
+
+# contract 3: stop_ratio, margin_coeff, margin_basis, pace_version
+def test_stop_ratio_must_be_null_when_speed_is_null(data):
+    by_id(data["pace_categories"], "seg_category", "C3")["stop_ratio"] = 0.1
+    assert_violation(pace_violations(data), "C3 stop_ratio must be null exactly when speed_kmh is null")
+
+
+def test_stop_ratio_must_have_a_value_when_speed_has_one(data):
+    by_id(data["pace_categories"], "seg_category", "C2")["stop_ratio"] = None
+    assert_violation(pace_violations(data), "C2 stop_ratio must be null exactly when speed_kmh is null")
+
+
+def test_stop_ratio_may_be_zero(data):
+    assert by_id(data["pace_categories"], "seg_category", "C1")["stop_ratio"] == 0.0
+    assert pace_violations(data) == []
+
+
+@pytest.mark.parametrize("value", [-0.01, "0.1"])
+def test_stop_ratio_is_a_non_negative_number(data, value):
+    by_id(data["pace_categories"], "seg_category", "C1")["stop_ratio"] = value
+    assert_violation(pace_violations(data), "stop_ratio")
+
+
+def test_stop_ratio_is_required(data):
+    del by_id(data["pace_categories"], "seg_category", "C1")["stop_ratio"]
+    assert_violation(pace_violations(data), "'stop_ratio' is a required property")
+
+
+@pytest.mark.parametrize("basis", ["LOO_RULE", "loo", "fixed", None, ""])
+def test_margin_basis_has_two_values_only(data, basis):
+    data["pace_header"]["margin_basis"] = basis
+    assert_violation(pace_violations(data), "margin_basis")
+
+
+@pytest.mark.parametrize("field", ["margin_coeff", "margin_basis"])
+def test_margin_fields_are_required(data, field):
+    del data["pace_header"][field]
+    assert_violation(pace_violations(data), f"'{field}' is a required property")
+
+
+@pytest.mark.parametrize("coeff", [0.05, 0.25, 0.15, 0.3])
+def test_default_margin_must_be_0_20(data, coeff):
+    data["pace_header"]["margin_coeff"] = coeff
+    data["eta_headers"][0]["margin_coeff"] = data["eta_headers"][1]["margin_coeff"] = coeff
+    assert_violation(pace_violations(data), "margin_basis is default but margin_coeff")
+
+
+@pytest.mark.parametrize("coeff", [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.45, 0.55, 0.7, 1.15, 2.0])
+def test_loo_rule_margin_accepts_multiples_of_0_05(data, coeff):
+    data["pace_header"].update(margin_basis="loo_rule", margin_coeff=coeff)
+    assert pace_violations(data) == []
+
+
+@pytest.mark.parametrize("coeff, fragment", [
+    (0.12, "not a multiple of 0.05"),
+    (0.149, "not a multiple of 0.05"),
+    (0.051, "not a multiple of 0.05"),
+    (0.04, "margin_coeff"),   # below the lower bound (schema)
+    (0.0, "margin_coeff"),
+    (-0.05, "margin_coeff"),
+])
+def test_loo_rule_margin_rejects_other_values(data, coeff, fragment):
+    data["pace_header"].update(margin_basis="loo_rule", margin_coeff=coeff)
+    assert_violation(pace_violations(data), fragment)
+
+
+@pytest.mark.parametrize("coeff", ["0.2", None, True])
+def test_margin_coeff_is_a_number(data, coeff):
+    data["pace_header"]["margin_coeff"] = coeff
+    assert_violation(pace_violations(data), "margin_coeff")
+
+
+@pytest.mark.parametrize("version", ["research-01", "user-01", "user-10", "research-007", "user-12345"])
+def test_pace_version_pattern_accepts_research_and_user(data, version):
+    data["pace_header"]["pace_version"] = version
+    for rec in data["pace_categories"]:
+        rec["pace_version"] = version
+    assert validate_pace_table(data["pace_header"], data["pace_categories"], data["derived_segments"]) == []
+
+
+@pytest.mark.parametrize("version", [
+    "pace-mock-1", "user-1", "user-", "research", "User-01", "RESEARCH-01", "user_01", "user01",
+    "user-01a", "user-0x1", " user-01", "user-01 ", "user-01\n", "user-\uff10\uff11", "frozen-01", "user-01-02",
+])
+def test_pace_version_pattern_rejects_other_strings(data, version):
+    data["pace_header"]["pace_version"] = version
+    for rec in data["pace_categories"]:
+        rec["pace_version"] = version
+    assert_violation(pace_violations(data), "(invariant 7)")
+
+
+# contract 4: stop_allow_s and invariants 6, 8, 9
+def test_stop_allow_is_stop_ratio_times_typical_time(data):
+    ok_rows(data)[1]["stop_allow_s"] = 20.0  # C2: 0.075 x 120 = 9
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 1 stop_allow_s is not stop_ratio x typ_seg_time_s")
+
+
+@pytest.mark.parametrize("allowance, rejected", [(9.5, False), (8.5, False), (10.5, True), (7.5, True)])
+def test_stop_allow_tolerates_one_second(data, allowance, rejected):
+    ok_rows(data)[1]["stop_allow_s"] = allowance
+    found = [v for v in eta_violations(data) if "stop_allow_s is not stop_ratio" in v]
+    assert bool(found) is rejected, found
+
+
+def test_eta_without_stop_allowance_is_rejected(data):
+    """A v0.2-style ETA (no allowance in the times) cannot pass as v0.3 by writing stop_allow_s = 0."""
+    for row, (typ, safe) in zip(ok_rows(data), [("07:03:00", "07:03:36"), ("07:05:00", "07:06:00"),
+                                               ("07:19:00", "07:20:48"), ("07:25:00", "07:28:00")]):
+        row.update(stop_allow_s=0.0, eta_typ=f"2026-11-21T{typ}+08:00", eta_safe=f"2026-11-21T{safe}+08:00")
+    violations = eta_violations(data)
+    assert_violation(violations, "P-MOCK-1 seg 1 stop_allow_s is not stop_ratio x typ_seg_time_s")
+    assert_violation(violations, "P-MOCK-1 seg 2 stop_allow_s is not stop_ratio x typ_seg_time_s")
+
+
+def test_eta_typ_steps_follow_typical_time_allowance_and_new_breaks(data):
+    """Each eta_typ is within one second of its own target, but the step between them is two seconds off."""
+    rows = ok_rows(data)
+    rows[1]["eta_typ"] = "2026-11-21T07:05:10+08:00"   # +1 s
+    rows[2]["eta_typ"] = "2026-11-21T07:19:26+08:00"   # -1 s
+    violations = eta_violations(data)
+    assert_violation(violations, "P-MOCK-1 seg 2 eta_typ minus the previous eta_typ is not")
+    assert not any("eta_typ is not departure" in v for v in violations), violations
+
+
+def test_eta_typ_step_counts_a_new_break_once(data):
+    """Row 2 starts after the 600 s break; dropping the break from rows 2 and 3 breaks the step at row 2."""
+    rows = ok_rows(data)
+    rows[2]["eta_typ"], rows[2]["eta_safe"] = "2026-11-21T07:09:27+08:00", "2026-11-21T07:11:20+08:00"
+    rows[3]["eta_typ"], rows[3]["eta_safe"] = "2026-11-21T07:15:27+08:00", "2026-11-21T07:18:32+08:00"
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 2 eta_typ minus the previous eta_typ is not")
+
+
+def test_eta_safe_margin_covers_the_allowance(data):
+    """The margin is applied to typ_seg_time_s + stop_allow_s, not to typ_seg_time_s alone."""
+    rows = ok_rows(data)
+    rows[2]["eta_safe"] = "2026-11-21T07:21:15+08:00"  # 0.2 x 540 = 108 s after eta_typ: allowance left out
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 2 eta_safe - eta_typ is not margin_coeff x cumulative")
+
+
+def test_eta_safe_margin_tolerates_one_second(data):
+    rows = ok_rows(data)
+    rows[2]["eta_safe"] = "2026-11-21T07:21:21+08:00"  # 114 s after eta_typ; 0.2 x 567 = 113.4
+    assert not any("eta_safe - eta_typ" in v for v in eta_violations(data))
+    rows[2]["eta_safe"] = "2026-11-21T07:21:22+08:00"  # 115 s
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 2 eta_safe - eta_typ is not")
+
+
+def test_ok_plan_needs_a_stop_allowance(data):
+    ok_rows(data)[1]["stop_allow_s"] = None
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 1 has a null time although status is ok")
+
+
+@pytest.mark.parametrize("value", [-1.0, "9"])
+def test_stop_allow_is_a_non_negative_number(data, value):
+    ok_rows(data)[1]["stop_allow_s"] = value
+    assert_violation(eta_violations(data), "stop_allow_s")
+
+
+def test_stop_allow_is_required(data):
+    del ok_rows(data)[0]["stop_allow_s"]
+    assert_violation(eta_violations(data), "'stop_allow_s' is a required property")
+
+
+@pytest.mark.parametrize("value", [0.0, 9.0])
+def test_unknown_plan_must_not_carry_a_stop_allowance(data, value):
+    """No partial estimate when the ETA is unknown: not even an allowance of 0."""
+    row = next(s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-2")
+    row["stop_allow_s"] = value
+    assert_violation(eta_violations(data), "P-MOCK-2 seg 0 carries a time although status is unknown")
+
+
+def test_unknown_plan_with_every_time_null_passes(data):
+    rows = [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-2"]
+    assert all(r["stop_allow_s"] is None and r["eta_typ"] is None and r["eta_safe"] is None for r in rows)
+    assert not any("P-MOCK-2" in v for v in eta_violations(data))
+
+
+def test_stop_allow_needs_the_category_stop_ratio(data):
+    """If the pace table has no stop_ratio for a category the ETA uses, stop_allow_s is not accepted unchecked."""
+    by_id(data["pace_categories"], "seg_category", "C2")["stop_ratio"] = None
+    assert_violation(eta_violations(data), "P-MOCK-1 seg 1 stop_allow_s cannot be checked: category C2 has no stop_ratio")
+
+
+def test_eta_without_a_pace_table_checks_the_times_only(data):
+    """stop_allow_s = stop_ratio x typ_seg_time_s needs the pace table; the time invariants do not."""
+    args = (data["eta_headers"], data["eta_segments"], data["routes"], data["route_segments"], data["checkpoints"])
+    assert validate_eta_output(*args) == []
+    ok_rows(data)[1]["stop_allow_s"] = 20.0
+    violations = validate_eta_output(*args)
+    assert not any("stop_ratio" in v for v in violations)
+    assert_violation(violations, "P-MOCK-1 seg 1 eta_typ is not departure + cumulative time + break_time_s")
+
+
+@pytest.mark.parametrize("plan", [0, 1])
+def test_eta_margin_must_equal_the_pace_table_margin(data, plan):
+    data["eta_headers"][plan]["margin_coeff"] = 0.25
+    assert_violation(eta_violations(data), f"{data['eta_headers'][plan]['plan_id']} margin_coeff 0.25 differs from "
+                                           f"the pace table's 0.2 (invariant 9)")
+
+
+def test_eta_margin_is_checked_against_the_pace_table_in_the_dataset(data):
+    data["pace_header"].update(margin_basis="loo_rule", margin_coeff=0.15)
+    report = validate_dataset(data)
+    assert report["pace_table"] == []
+    assert_violation(report["eta_output"], "P-MOCK-1 margin_coeff 0.2 differs from the pace table's 0.15")
+
+
+def test_eta_margin_against_a_pace_table_without_margin_is_rejected(data):
+    del data["pace_header"]["margin_coeff"]
+    assert_violation(eta_violations(data), "differs from the pace table's None (invariant 9)")
+
+
+@pytest.mark.parametrize("coeff", [0.0, 0.04, -0.2])
+def test_eta_margin_is_at_least_0_05(data, coeff):
+    data["eta_headers"][1]["margin_coeff"] = coeff
+    args = (data["eta_headers"], data["eta_segments"], data["routes"], data["route_segments"], data["checkpoints"])
+    assert_violation(validate_eta_output(*args), "eta_headers[1] schema: margin_coeff")
+
+
+def test_eta_margin_of_0_05_is_allowed(data):
+    data["pace_header"].update(margin_basis="loo_rule", margin_coeff=0.05)
+    for header in data["eta_headers"]:
+        header["margin_coeff"] = 0.05
+    rows = ok_rows(data)
+    for row, safe in zip(rows, ["07:03:09", "07:05:24", "07:19:55", "07:26:13"]):
+        row["eta_safe"] = f"2026-11-21T{safe}+08:00"
+    assert eta_violations(data) == []

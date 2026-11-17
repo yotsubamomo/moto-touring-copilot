@@ -1,4 +1,7 @@
-"""Validation of the minimal data contracts v0.2 (DESIGN.md §5).
+"""Validation of the minimal data contracts (DESIGN.md §5).
+
+Contract v0.2 plus the approved v0.3 stop-allowance fields and invariants of contracts 1, 3 and 4
+(Issue #7); see schemas.py for what is not covered yet.
 
 Every validate_* function returns a list of violation messages; an empty list means the data
 conforms. Nothing here computes pace or ETA: it only checks data that some producer wrote.
@@ -6,6 +9,8 @@ conforms. Nothing here computes pace or ETA: it only checks data that some produ
 from __future__ import annotations
 
 import datetime as dt
+import math
+import re
 from collections import defaultdict
 from typing import Any, Iterable
 
@@ -14,8 +19,15 @@ import jsonschema
 from . import schemas as S
 
 # ETA timestamps are ISO strings, so recomputed times are compared with a tolerance.
-# The contract does not fix a rounding rule; one second is assumed here.
+# Contract 4 invariant 8 (v0.3) allows one second.
 ETA_TOLERANCE_S = 1.0
+# Contract 3 (v0.3): pace_version is research- or user- followed by two or more ASCII digits.
+PACE_VERSION_PATTERN = re.compile(r"(research|user)-[0-9]{2,}")
+# Contract 3 invariant 6 (v0.3): margin_coeff is 0.20 for a default basis, and a multiple of
+# 0.05 for a loo_rule basis. The tolerance only absorbs binary floating-point error.
+DEFAULT_MARGIN_COEFF = 0.20
+MARGIN_STEP = 0.05
+MARGIN_FLOAT_TOLERANCE = 1e-9
 # cum_length_m is a running sum of length_m written by the same producer.
 LENGTH_TOLERANCE_M = 1e-6
 
@@ -43,6 +55,15 @@ def _duplicates(keys: Iterable[Any]) -> list[Any]:
 
 def _contiguous(indices: list[int]) -> bool:
     return sorted(indices) == list(range(len(indices)))
+
+
+def _is_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _is_multiple_of_step(value: float) -> bool:
+    steps = value / MARGIN_STEP
+    return math.isfinite(steps) and abs(steps - round(steps)) <= MARGIN_FLOAT_TOLERANCE
 
 
 def _time(value: Any) -> dt.datetime | None:
@@ -90,6 +111,9 @@ def validate_derived_segments(rows: Rows, visibility: str = "public") -> list[st
             out.append(f"derived_segments[{i}]: quality is invalid but moving_time_s has a value (invariant 3)")
         if not invalid and not has_time:
             out.append(f"derived_segments[{i}]: moving_time_s is null but quality is not invalid (invariant 3)")
+        short, stopped = r.get("short_stop_time_s"), r.get("stopped_time_s")
+        if _is_number(short) and _is_number(stopped) and short > stopped:
+            out.append(f"derived_segments[{i}]: short_stop_time_s is greater than stopped_time_s (invariant 6)")
     return out
 
 
@@ -163,9 +187,20 @@ def validate_route_catalog(routes: Rows, segments: Rows, checkpoints: Rows) -> l
 def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | None = None) -> list[str]:
     out = _schema_errors("pace_header", [header], S.PACE_HEADER) + _schema_errors("pace_categories", categories, S.PACE_CATEGORY)
     version = header.get("pace_version")
+    if isinstance(version, str) and not PACE_VERSION_PATTERN.fullmatch(version):
+        out.append(f"pace_header: pace_version {version!r} is not research- or user- followed by "
+                   f"two or more digits (invariant 7)")
     for rec in categories:
         if rec.get("pace_version") != version:
             out.append(f"pace_categories: {rec.get('seg_category')} belongs to another pace_version")
+
+    basis, coeff = header.get("margin_basis"), header.get("margin_coeff")
+    if _is_number(coeff):
+        if basis == "default" and abs(coeff - DEFAULT_MARGIN_COEFF) > MARGIN_FLOAT_TOLERANCE:
+            out.append(f"pace_header: margin_basis is default but margin_coeff is {coeff}, not 0.20 (invariant 6)")
+        if basis == "loo_rule" and not (coeff >= MARGIN_STEP - MARGIN_FLOAT_TOLERANCE and _is_multiple_of_step(coeff)):
+            out.append(f"pace_header: margin_basis is loo_rule but margin_coeff {coeff} is not a multiple of 0.05 "
+                       f"of at least 0.05 (invariant 6)")
 
     present = [rec.get("seg_category") for rec in categories]
     for category in S.CATEGORIES:
@@ -184,6 +219,10 @@ def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | Non
                 out.append(f"pace_categories: {rec.get('seg_category')} has speed_kmh with fewer than min_segments segments")
             if n >= minimum and speed is None:
                 out.append(f"pace_categories: {rec.get('seg_category')} has enough segments but speed_kmh is null")
+    for rec in categories:
+        if "stop_ratio" in rec and (rec.get("stop_ratio") is None) != (rec.get("speed_kmh") is None):
+            out.append(f"pace_categories: {rec.get('seg_category')} stop_ratio must be null exactly when "
+                       f"speed_kmh is null (invariant 4)")
 
     if derived_rows is not None:
         roles = {r.get("trip_id"): r.get("trip_role") for r in derived_rows}
@@ -254,6 +293,9 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
             out.append(f"eta_headers: {pid} catalog_version differs from the route catalog")
         if pace_header is not None and h.get("pace_version") != pace_header.get("pace_version"):
             out.append(f"eta_headers: {pid} pace_version differs from the pace table")
+        if pace_header is not None and h.get("margin_coeff") != pace_header.get("margin_coeff"):
+            out.append(f"eta_headers: {pid} margin_coeff {h.get('margin_coeff')} differs from the pace table's "
+                       f"{pace_header.get('margin_coeff')} (invariant 9)")
 
         n = route["n_segments"]
         rows = sorted((s for s in eta_segments if s.get("plan_id") == pid), key=lambda s: s.get("seg_index", -1))
@@ -281,7 +323,7 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
 
         if status == "unknown":
             for s in rows:
-                if any(s.get(col) is not None for col in ("typ_seg_time_s", "eta_typ", "eta_safe")):
+                if any(s.get(col) is not None for col in ("typ_seg_time_s", "stop_allow_s", "eta_typ", "eta_safe")):
                     out.append(f"eta_segments: {pid} seg {s['seg_index']} carries a time although status is unknown (invariant 6)")
             continue
 
@@ -289,14 +331,28 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
         if categories & null_speed:
             out.append(f"eta_headers: {pid} is ok but the route uses a category without pace: {sorted(categories & null_speed)} (invariant 7)")
 
+        # cumulative is the running sum of typ_seg_time_s + stop_allow_s (the typical ride time).
         departure, margin = _time(h.get("departure_time")), h.get("margin_coeff", 0)
+        category_of = {s.get("seg_index"): s.get("seg_category") for s in route_segments if s.get("route_id") == rid}
+        stop_ratio = ({c.get("seg_category"): c.get("stop_ratio") for c in pace_categories}
+                      if pace_categories is not None else None)
         cumulative, previous = 0.0, None
         for s in rows:
             k, typ, safe = s["seg_index"], _time(s.get("eta_typ")), _time(s.get("eta_safe"))
-            if s.get("typ_seg_time_s") is None or typ is None or safe is None:
+            typical, allowance = s.get("typ_seg_time_s"), s.get("stop_allow_s")
+            if typical is None or allowance is None or typ is None or safe is None:
                 out.append(f"eta_segments: {pid} seg {k} has a null time although status is ok")
                 break
-            cumulative += s["typ_seg_time_s"]
+            if not (_is_number(typical) and _is_number(allowance)):
+                break  # already reported by the schema; the arithmetic below would be meaningless
+            if stop_ratio is not None:  # invariant 8: needs the pace table
+                ratio = stop_ratio.get(category_of.get(k))
+                if not _is_number(ratio):
+                    out.append(f"eta_segments: {pid} seg {k} stop_allow_s cannot be checked: category "
+                               f"{category_of.get(k)} has no stop_ratio in the pace table (invariant 8)")
+                elif abs(allowance - ratio * typical) > ETA_TOLERANCE_S:
+                    out.append(f"eta_segments: {pid} seg {k} stop_allow_s is not stop_ratio x typ_seg_time_s (invariant 8)")
+            cumulative += typical + allowance
             if departure is not None and breaks_ok:
                 expected = departure + dt.timedelta(seconds=cumulative + s["break_time_s"])
                 if abs((typ - expected).total_seconds()) > ETA_TOLERANCE_S:
@@ -304,11 +360,21 @@ def validate_eta_output(headers: Rows, eta_segments: Rows, routes: Rows, route_s
                 expected_safe = expected + dt.timedelta(seconds=margin * cumulative)
                 if abs((safe - expected_safe).total_seconds()) > ETA_TOLERANCE_S:
                     out.append(f"eta_segments: {pid} seg {k} eta_safe is not eta_typ + margin_coeff x cumulative time")
+            if _is_number(margin) and abs((safe - typ).total_seconds() - margin * cumulative) > ETA_TOLERANCE_S:
+                out.append(f"eta_segments: {pid} seg {k} eta_safe - eta_typ is not margin_coeff x cumulative "
+                           f"(typ_seg_time_s + stop_allow_s) (invariant 8)")
+            break_time = s.get("break_time_s")
+            if previous is not None and breaks_ok and _is_number(break_time) and _is_number(previous[1]):
+                step = (typ - previous[0]).total_seconds()
+                expected_step = typical + allowance + break_time - previous[1]
+                if abs(step - expected_step) > ETA_TOLERANCE_S:
+                    out.append(f"eta_segments: {pid} seg {k} eta_typ minus the previous eta_typ is not "
+                               f"typ_seg_time_s + stop_allow_s + the new break time (invariant 8)")
             if safe < typ:
                 out.append(f"eta_segments: {pid} seg {k} eta_safe is earlier than eta_typ (invariant 5)")
-            if previous is not None and typ < previous:
+            if previous is not None and typ < previous[0]:
                 out.append(f"eta_segments: {pid} seg {k} eta_typ goes back in time (invariant 5)")
-            previous = typ
+            previous = (typ, break_time)
     return out
 
 

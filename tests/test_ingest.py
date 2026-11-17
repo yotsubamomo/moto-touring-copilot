@@ -62,10 +62,17 @@ def test_straight_ride_gives_valid_low_curvature_segments():
 def test_rows_conform_to_the_contract_in_both_versions():
     private, _ = rows_of(straight(12_000))
     public = to_public(private)
-    assert validate_derived_segments(private, "private") == []
-    assert validate_derived_segments(public, "public") == []
     assert validate_public_private_pair(public, private) == []
     assert all("start_time" not in r for r in public)
+
+
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; "
+                                       "build_rows does not write short_stop_time_s yet")
+def test_rows_conform_to_the_contract_in_both_versions__v03_contract():
+    private, _ = rows_of(straight(12_000))
+    public = to_public(private)
+    assert validate_derived_segments(private, "private") == []
+    assert validate_derived_segments(public, "public") == []
 
 
 def test_circle_has_the_curvature_of_its_radius():
@@ -149,6 +156,14 @@ def test_points_with_a_repeated_time_are_dropped():
     kept, _ = clean_points(pts, IngestParams(), report)
     assert report.dropped_non_increasing_time == 3
     assert all(b.time > a.time for a, b in zip(kept, kept[1:]))
+    rows, _ = rows_of(pts)
+
+
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #9; "
+                                       "build_rows does not write short_stop_time_s yet")
+def test_points_with_a_repeated_time_are_dropped__v03_contract():
+    pts = straight(12_000)
+    pts[200:200] = [TrackPoint(pts[200].lat, pts[200].lon, pts[199].time)] * 3
     rows, _ = rows_of(pts)
     assert validate_derived_segments(rows, "private") == []
 

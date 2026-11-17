@@ -109,10 +109,17 @@ def test_route_segments_use_the_same_category_rule_as_ingest():
 def test_pace_table_matches_the_mock_fixture(data):
     header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="pace-mock-1",
                                           min_segments=2, built_at=NOW)
-    assert validate_pace_table(header, categories, data["derived_segments"]) == []
     assert [(c["seg_category"], c["speed_kmh"], c["n_segments"]) for c in categories] == \
         [("C1", 60.0, 2), ("C2", 45.0, 2), ("C3", None, 1)]
     assert header["method"] == "median_unweighted" and header["n_trips"] == 2
+
+
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #10; "
+                                       "build_pace_table does not write stop_ratio, margin_coeff or margin_basis yet")
+def test_pace_table_matches_the_mock_fixture__v03_contract(data):
+    header, categories = build_pace_table(data["derived_segments"], ["T001", "T002"], pace_version="user-01",
+                                          min_segments=2, built_at=NOW)
+    assert validate_pace_table(header, categories, data["derived_segments"]) == []
 
 
 def test_holdout_trip_is_refused(data):
@@ -147,6 +154,12 @@ def eta_for(data, route_id, plan_id, breaks):
 def test_eta_reproduces_the_mock_fixture(data):
     header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
     assert header == data["eta_headers"][0]
+
+
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                       "compute_eta does not write stop_allow_s yet")
+def test_eta_reproduces_the_mock_fixture__v03_contract(data):
+    header, rows = eta_for(data, "R01", "P-MOCK-1", [{"after_checkpoint_id": "R01-CP03", "duration_s": 600.0}])
     assert rows == [s for s in data["eta_segments"] if s["plan_id"] == "P-MOCK-1"]
 
 
@@ -155,10 +168,19 @@ def test_eta_is_unknown_when_a_category_has_no_pace(data):
     assert header["status"] == "unknown" and "C3" in header["unknown_reason"]
     assert all(r["typ_seg_time_s"] is None and r["eta_typ"] is None and r["eta_safe"] is None for r in rows)
     data["eta_headers"], data["eta_segments"] = [header], rows
+
+
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                       "compute_eta does not write stop_allow_s yet")
+def test_eta_is_unknown_when_a_category_has_no_pace__v03_contract(data):
+    header, rows = eta_for(data, "R02", "P-MOCK-2", [])
+    data["eta_headers"], data["eta_segments"] = [header], rows
     assert validate_eta_output([header], rows, data["routes"], data["route_segments"], data["checkpoints"],
                                data["pace_header"], data["pace_categories"]) == []
 
 
+@pytest.mark.xfail(strict=True, reason="v0.3 producer gap (decision-20261117-issue7-spike-tests): restored by #11; "
+                                       "compute_eta does not write stop_allow_s yet")
 def test_eta_output_passes_the_contract_with_and_without_breaks(data):
     for plan_id, breaks in (("P-A", []), ("P-B", [{"after_checkpoint_id": "R01-CP04", "duration_s": 900.0}])):
         header, rows = eta_for(data, "R01", plan_id, breaks)

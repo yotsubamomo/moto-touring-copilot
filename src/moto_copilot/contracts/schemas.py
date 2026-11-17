@@ -1,4 +1,8 @@
-"""JSON Schemas for the minimal data contracts v0.2 (DESIGN.md §5).
+"""JSON Schemas for the minimal data contracts (DESIGN.md §5).
+
+This is contract v0.2 plus the approved v0.3 stop-allowance fields of contracts 1, 3 and 4
+(Issue #7). The v0.3 ID rules and the contract 2 changes are not here yet, so CONTRACT_VERSION
+stays "0.2" until they are (SPEC-B1 CL-B1-2).
 
 One schema per record type. Rules that span several records (invariants) are in validate.py.
 """
@@ -17,6 +21,10 @@ _NAME = {"type": "string", "minLength": 1}
 _POSITIVE = {"type": "number", "exclusiveMinimum": 0}
 _NON_NEGATIVE = {"type": "number", "minimum": 0}
 _CATEGORY = {"enum": CATEGORIES}
+# Safety margin coefficient, no unit. The multiple-of-0.05 rule and the value of a `default`
+# basis are checked in validate.py (JSON Schema multipleOf is unreliable for decimal fractions).
+_MARGIN_COEFF = {"type": "number", "minimum": 0.05}
+MARGIN_BASES = ["loo_rule", "default"]
 
 
 def _nullable(schema: dict) -> dict:
@@ -42,6 +50,7 @@ _DERIVED_PUBLIC = {
     "length_m": _POSITIVE,
     "moving_time_s": _nullable(_POSITIVE),  # a number must be > 0; null when no valid moving time
     "stopped_time_s": _NON_NEGATIVE,
+    "short_stop_time_s": _NON_NEGATIVE,  # v0.3: the stops of 3 s to under 180 s; never above stopped_time_s
     "curvature_deg_per_km": _nullable(_NON_NEGATIVE),
     "seg_category": _nullable(_CATEGORY),
     "quality": {"enum": ["ok", "suspect", "invalid"]},
@@ -81,6 +90,7 @@ CHECKPOINT = _record({
 })
 
 # --- Contract 3: Pace Table -------------------------------------------------
+# pace_version must be research-NN or user-NN (two or more digits); checked in validate.py.
 PACE_HEADER = _record({
     "pace_version": _NAME,
     "method": {"enum": ["median_unweighted"]},  # another method needs a Change Log entry first (DC-10)
@@ -89,12 +99,15 @@ PACE_HEADER = _record({
     "min_segments": {"type": "integer", "minimum": 1},
     "n_trips": {"type": "integer", "minimum": 0},
     "trip_ids": {"type": "array", "items": _TRIP_ID, "uniqueItems": True},
+    "margin_coeff": _MARGIN_COEFF,           # v0.3
+    "margin_basis": {"enum": MARGIN_BASES},  # v0.3
     "built_at": _DATETIME,
 })
 PACE_CATEGORY = _record({
     "pace_version": _NAME,
     "seg_category": _CATEGORY,
     "speed_kmh": _nullable(_POSITIVE),
+    "stop_ratio": _nullable(_NON_NEGATIVE),  # v0.3: null exactly when speed_kmh is null
     "n_segments": {"type": "integer", "minimum": 0},
 })
 
@@ -106,7 +119,7 @@ ETA_HEADER = _record({
     "departure_time": _DATETIME,
     "status": {"enum": ["ok", "unknown"]},
     "unknown_reason": _nullable(_NAME),
-    "margin_coeff": _NON_NEGATIVE,
+    "margin_coeff": _MARGIN_COEFF,  # v0.3: lower bound 0.05; equals the pace table's value
     "breaks": {"type": "array", "items": _BREAK},
     "pace_version": _NAME,
     "catalog_version": _NAME,
@@ -116,6 +129,7 @@ ETA_SEGMENT = _record({
     "plan_id": _NAME,
     "seg_index": {"type": "integer", "minimum": 0},
     "typ_seg_time_s": _nullable(_POSITIVE),
+    "stop_allow_s": _nullable(_NON_NEGATIVE),  # v0.3: stop_ratio x typ_seg_time_s; null when unknown
     "break_time_s": _NON_NEGATIVE,
     "eta_typ": _nullable(_DATETIME),
     "eta_safe": _nullable(_DATETIME),
