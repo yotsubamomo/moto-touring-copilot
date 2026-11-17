@@ -323,6 +323,71 @@ def test_a_count_that_cannot_be_added_up_is_a_violation(data, value):
     assert_violation(pace_violations(data), "n_segments cannot be added up, a value is not a whole number (invariant 3)")
 
 
+# CL-B1-15: the min_segments checks run for every integer form that the schema accepts.
+def speed_with_too_few_float(d):          # (i)
+    by_id(d["pace_categories"], "seg_category", "C3").update(n_segments=1.0, speed_kmh=30.0, stop_ratio=0.0)
+
+
+def speed_with_too_few_min_float(d):      # (ii)
+    by_id(d["pace_categories"], "seg_category", "C3").update(speed_kmh=30.0, stop_ratio=0.0)
+    d["pace_header"]["min_segments"] = 2.0
+
+
+def no_speed_with_enough_float(d):        # (iii)
+    by_id(d["pace_categories"], "seg_category", "C2").update(n_segments=2.0, speed_kmh=None, stop_ratio=None)
+
+
+@pytest.mark.parametrize("round_trip", [False, True])   # (iv)
+@pytest.mark.parametrize("change, fragment", [
+    (speed_with_too_few_float, "C3 has speed_kmh with fewer than min_segments"),
+    (speed_with_too_few_min_float, "C3 has speed_kmh with fewer than min_segments"),
+    (no_speed_with_enough_float, "C2 has enough segments but speed_kmh is null"),
+])
+def test_min_segments_checks_count_whole_number_floats(data, change, fragment, round_trip):
+    change(data)
+    if round_trip:
+        data = json_round_trip(data)
+    assert_violation(pace_violations(data), fragment)
+
+
+@pytest.mark.parametrize("round_trip", [False, True])
+def test_a_correct_table_with_float_counts_passes_the_min_segments_checks(data, round_trip):   # (v)
+    data["pace_header"]["min_segments"] = 2.0
+    for rec in data["pace_categories"]:
+        rec["n_segments"] = float(rec["n_segments"])
+    if round_trip:
+        data = json_round_trip(data)
+    violations = pace_violations(data)
+    assert not any("min_segments" in v or "enough segments" in v for v in violations), violations
+    assert violations == []
+
+
+@pytest.mark.parametrize("field, value", [("n_segments", 1.5), ("n_segments", True), ("n_segments", None),
+                                          ("n_segments", "1"), ("n_segments", float("nan")),
+                                          ("min_segments", 2.5), ("min_segments", True), ("min_segments", None),
+                                          ("min_segments", "2"), ("min_segments", float("nan"))])
+def test_a_count_the_min_segments_checks_cannot_use_is_still_a_violation(data, field, value):   # (vi)
+    by_id(data["pace_categories"], "seg_category", "C3").update(speed_kmh=30.0, stop_ratio=0.0)
+    if field == "n_segments":
+        by_id(data["pace_categories"], "seg_category", "C3")["n_segments"] = value
+    else:
+        data["pace_header"]["min_segments"] = value
+    assert pace_violations(data) != []
+
+
+@pytest.mark.parametrize("round_trip", [False, True])
+@pytest.mark.parametrize("indices, gap", [([0.0, 1.0, 7.0], True), ([0.0, 1.0, 2.0], False)])
+def test_seg_index_gaps_are_found_with_float_indices(data, indices, gap, round_trip):   # (vii)
+    rows = [r for r in data["derived_segments"] if r["trip_id"] == "T001"]
+    for row, index in zip(sorted(rows, key=lambda r: r["seg_index"]), indices):
+        row["seg_index"] = index
+    if round_trip:
+        data = json_round_trip(data)
+    found = [v for v in validate_derived_segments(data["derived_segments"], "public")
+             if "T001 seg_index is not 0..n-1 without gaps" in v]
+    assert bool(found) is gap, found
+
+
 @pytest.mark.parametrize("speed", [0, -10.0])
 def test_speed_must_be_positive(data, speed):
     by_id(data["pace_categories"], "seg_category", "C1")["speed_kmh"] = speed

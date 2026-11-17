@@ -6,7 +6,8 @@ Contract v0.2 plus the approved v0.3 stop-allowance fields and invariants of con
 Every validate_* function returns a list of violation messages; an empty list means the data
 conforms. Nothing here computes pace or ETA: it only checks data that some producer wrote.
 Contract 3 invariant 3 is checked as a total count of eligible rows, and per category only when the
-derived rows carry the pace table's category_scheme (SPEC-B1 CL-B1-12).
+derived rows carry the pace table's category_scheme (SPEC-B1 CL-B1-12). Counts that JSON Schema's
+integer accepts as whole-number floats (3.0) are checked like ints (CL-B1-15).
 """
 from __future__ import annotations
 
@@ -124,8 +125,8 @@ def validate_derived_segments(rows: Rows, visibility: str = "public") -> list[st
     for r in rows:
         by_trip[r.get("trip_id")].append(r)
     for trip_id, trip_rows in by_trip.items():
-        indices = [r.get("seg_index") for r in trip_rows]
-        if all(isinstance(i, int) for i in indices) and not _contiguous(indices):
+        indices = [_whole_count(r.get("seg_index")) for r in trip_rows]  # CL-B1-15: 3.0 counts as 3
+        if all(i is not None for i in indices) and not _contiguous(indices):
             out.append(f"derived_segments: trip {trip_id} seg_index is not 0..n-1 without gaps")
         if len({r.get("trip_role") for r in trip_rows}) > 1:
             out.append(f"derived_segments: trip {trip_id} has more than one trip_role (invariant 1)")
@@ -244,10 +245,10 @@ def validate_pace_table(header: dict, categories: Rows, derived_rows: Rows | Non
     if header.get("n_trips") != len(trip_ids):
         out.append("pace_header: n_trips does not equal the number of trip_ids (invariant 2)")
 
-    minimum = header.get("min_segments")
+    minimum = _whole_count(header.get("min_segments"))  # CL-B1-15: whole-number floats are counts too
     for rec in categories:
-        n, speed = rec.get("n_segments"), rec.get("speed_kmh")
-        if isinstance(n, int) and isinstance(minimum, int):
+        n, speed = _whole_count(rec.get("n_segments")), rec.get("speed_kmh")
+        if n is not None and minimum is not None:
             if n < minimum and speed is not None:
                 out.append(f"pace_categories: {rec.get('seg_category')} has speed_kmh with fewer than min_segments segments")
             if n >= minimum and speed is None:
