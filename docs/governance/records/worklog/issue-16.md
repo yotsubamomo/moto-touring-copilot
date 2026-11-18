@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。worklog 在另一個 record-only commit |
+| 狀態 | **Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 **#16 新的 implementation subject**（取代 `7cb4b0c`）。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -17,6 +17,7 @@
   - `decision-20261118-issue14-c141.md`：CL-R1-14（正規化取位）、CL-R1-16、**CL-R1-17**、**CL-R1-19**（第 7.2 節：採用的檢查以原值判定；`request` 的經緯度是浮點數；`fetched_at` 不晚於實際收到回應）。
   - `decision-20261118-issue14-qalt1.md`：CL-R1-20、**CL-R1-21**（不依成因分辨或攔下 `SnapshotIntegrityError`；只經三個選取函式取得快照；`put` 與建構的錯誤向上傳遞）。
   - `decision-20261118-issue15-c151.md`：**CL-R1-24**（目標 GPX 原樣帶出、不重算、不套用引擎路線的處理、錯誤原樣傳出）。
+  - `decision-20261118-issue16-c161.md`（2026-11-18，HEAD `2c0f662` 時已 commit）：**CL-R1-25**（真實 HTTPS 傳輸層在 `routing/http_transport.py`，只用 `http.client` 與 `ssl`；第 2.3～2.6 節的要求、可修改檔案的封閉清單、測試 T-1～T-10 與 evidence）、**CL-R1-26**（確認 `map_data_date` 的讀法）、**CL-R1-27**（道路屬性回應的警告使國道檢查無法驗證）、第 4.1～4.4 節（接受 D-16-8、D-16-17 的做法）、TI-C16-2、TI-C16-3。這是 DA 依治理 §5.3 第 2 類的 clarification，不是 Executor 的決定。
 - **規格來源**：`docs/spec/SPEC-001-plan-schema.md` §2（ID、雜湊與正規化、隱私）；4.12（跨欄位規則、國道檢查的用語）；4.13（六個代碼）；4.14（RouteSnapshot、RouteLeg）；5.4（30 天、200 m、2%）；7.11 第 1～8 項；第 9 節 S15、S17、S23、S24、S30、S35、S38、S39、S40、S68、S69、S70。
 - **高風險類別**：`decision-20261117-high-risk-categories.md` §3.1、§3.2、§3.4、§5；R1-4 標為 H-1、H-2、H-4（第 6 節 E-6）。
 - **參考原始碼**（CL-R1-1，只讀、沒有執行）：`experiments/cr01_checks/routing_client.py`、`experiments/cr01_checks/routing_c4_snapshots.py`。只以 Read 指定這兩個完整路徑；沒有搜尋、列出或讀取 `experiments/` 的其他檔案，也沒有跟隨它們引用的 `data/` 路徑。
@@ -45,27 +46,29 @@
 
 | # | 決定 | 依據 |
 | --- | --- | --- |
-| D-16-1 | 傳輸層由呼叫者傳入：`transport(url, body_bytes, headers) -> HttpResponse`，沒有回應時拋 `TransportError`。client 負責 URL（端點＋`/route`、`/trace_attributes`、`/status`）、JSON 內容與 header（`Content-Type`、`User-Agent`），三種請求都是 POST。**本 Ticket 沒有提供真實的 HTTP 傳輸層**（C-16-1） | 範圍 (a)「傳輸層可替換，測試不連網」；CL-R1-9 |
+| D-16-1 | 傳輸層由呼叫者傳入：`transport(url, body_bytes, headers) -> HttpResponse`，沒有回應時拋 `TransportError`。client 負責 URL（端點＋`/route`、`/trace_attributes`、`/status`）、JSON 內容與 header（`Content-Type`、`User-Agent`），三種請求都是 POST。**（`f6810d2` 起，依 CL-R1-25）真實的 HTTPS 傳輸層是 `routing/http_transport.py` 的 `https_transport`，`valhalla_client()` 建立使用它的 client；`routing/` 的其他模組（含 `__init__.py`）不 import 它。** 先前（`7cb4b0c`）沒有提供真實傳輸層（C-16-1） | 範圍 (a)「傳輸層可替換，測試不連網」；CL-R1-9；CL-R1-25 |
 | D-16-2 | 端點：模組常數 `https://valhalla1.openstreetmap.de`（與 `routing_client.py` 相同）。可以由呼叫者以 `endpoint=` 明確傳入，但只接受 `https://` 加主機（可帶埠），不可帶路徑、查詢、帳號或結尾換行。程式中沒有讀取任何環境變數的程式碼 | CL-R1-9「常數或明確傳入的設定值」；H-1 |
 | D-16-3 | User-Agent 是 `route-client/1.0`。`routing_client.py` 的 `route-snapshot-check/0.1 (course project; low volume)` 帶有「course project」的描述，這裡不用 | CL-R1-9「通用的名稱，不含姓名、email 或專案名稱」 |
 | D-16-4 | 路線請求只送 `locations`（每個位置只有 `lat`、`lon`、`type`）與 `routing_params()`；代號、角色與地名不送出。起點與終點的 `type` 是 `break`，中間位置是 `via`（不分段、允許迴轉），所以一個方向的回應應只有一個 leg、一條 shape；不是剛好一個 leg 時不採用（`response_malformed`）。**這是依 Valhalla API 文件的位置型態所作的選擇，真實伺服器的行為 NOT VERIFIED**（沒有真實請求，CL-R1-1） | CL-R1-5；4.14 的 `shape`（一個方向一條折線） |
 | D-16-5 | `routing_params` ＝ `{"costing": "motorcycle", "costing_options": {"motorcycle": {"use_highways": 0}}, "units": "kilometers"}`，它就是快照的 `routing_params` 與 `request_key` 的 `routing_params`（R1-4 自己計算 `request_key`，呼叫者不能給不同的參數）。沒有 `exclude_*`、沒有高度 | CL-R1-5；P-1；Q-3 第 7 項；4.14「快照記錄實際送出的值」 |
 | D-16-6 | RouteLeg 的 `request` ＝ `{"locations": [{ref_id, role, lat, lon, type}...], "routing_params": ...}`，依這個方向的順序；經緯度是 `float` | 4.14 `request`；CL-R1-5；CL-R1-19 第 2 項 |
 | D-16-7 | 道路屬性查詢只送 `encoded_polyline`（引擎自己回傳的 shape）、`costing`、`shape_match: walk_or_snap`、`filters`（`edge.names`、`edge.length`、`edge.road_class`）。與 C4 的做法相同 | 7.11 第 5 項「只送出引擎自己回傳的折線」 |
-| D-16-8 | 國道訊號（任一個就是 `fail`）：trip 或 leg summary 的 `has_highway` 為 true（或是非布林的真值）；任何轉向的 `highway` 不是 `None`／`False`；道路屬性任何一段的 `road_class` 是 `motorway`（只要出現，不論長度）；轉向的 `begin_street_names`／`street_names` 或道路屬性的 `names` 中有名稱符合 `國道\|高速公路\|freeway`（不分大小寫）。比字面略嚴：`Freeway` 不分大小寫、motorway 以出現判定（S39「含 `motorway` 路段」）、leg summary 的旗標也算。都是 fail closed 方向 | 7.11 第 5 項；修正 B（訊號矛盾時 fail closed）；H-4 |
+| D-16-8 | 國道訊號（任一個就是 `fail`）：trip 或 leg summary 的 `has_highway` 為 true（或是非布林的真值）；任何轉向的 `highway` 不是 `None`／`False`；道路屬性任何一段的 `road_class` 是 `motorway`（只要出現，不論長度）；轉向的 `begin_street_names`／`street_names` 或道路屬性的 `names` 中有名稱符合 `國道\|高速公路\|freeway`（不分大小寫）。比字面略嚴：`Freeway` 不分大小寫、motorway 以出現判定（S39「含 `motorway` 路段」）、leg summary 的旗標也算。都是 fail closed 方向。**DA 接受：`decision-20261118-issue16-c161.md` 第 4.1～4.3 節** | 7.11 第 5 項；修正 B（訊號矛盾時 fail closed）；H-4 |
 | D-16-9 | 無法驗證（沒有訊號時不產生 `freeway_check`）：trip summary 沒有布林值的 `has_highway`；道路屬性查詢 HTTP 不是 200、沒有回應、`edges` 不是非空清單、任何一段的 `length` 不是非負有限數、`road_class` 不是字串、`names` 不是字串清單；長度不符；路線回應中檢查需要的欄位讀不到（`response_malformed`） | 7.11 第 5 項；4.14 `has_highway`、`freeway_check` |
 | D-16-10 | 2% 的判定：`|Σ edge.length − trip.summary.length| ≤ trip.summary.length × 0.02`，全部以 `Decimal(repr(x))` 精確計算，不用浮點數、不用存入快照的整數公尺（CL-R1-19 第 1 項） | 7.11 第 5 項第 (1) 款；CL-R1-19 |
-| D-16-11 | 警告：回應最上層或 `trip` 中的 `warnings` 有任何項目（形式正確與否），或不是清單，就不採用。道路屬性查詢回應中的警告不算 7.11 第 7 項的「回應的警告」（第 7 項與 4.14 `warnings` 指路線回應） | 7.11 第 7 項；4.14 `warnings` |
+| D-16-11 | 警告：回應最上層或 `trip` 中的 `warnings` 有任何項目（形式正確與否），或不是清單，就不採用。**（`f6810d2` 起，依 CL-R1-27）道路屬性查詢回應最上層的 `warnings` 存在而且不是空清單（含不是清單的任何值）時，國道檢查無法驗證（原因 `trace_warnings`），沒有國道訊號時是 `routing_unavailable`；同一回應中的國道訊號照樣收集，有訊號時是 `highway_in_route`；`null`、不存在、空清單沒有影響；它不寫入 RouteLeg 的 `warnings`；狀態回應的警告不影響採用。`FREEWAY_CHECK_METHOD` 改為 `valhalla-trace_attributes-v2`，文字加上「a road attribute reply without warnings」。** 先前（`7cb4b0c`）：道路屬性回應的警告不算（DA 不接受） | 7.11 第 5、7 項；CL-R1-27 |
 | D-16-12 | 偏移（CL-R1-7）：起點、終點用 haversine（`ingest.segments.haversine_m`，地球半徑 6,371,000 m）到折線的第一點、最後一點；中間位置是到每個線段的最近點，在以該位置為中心的局部平面上計算（點到線段），最近點相同時取第一個線段；沿線里程＝之前各段的 haversine 長度加上最近線段的比例。判定 `≤ 200 m`（以計算出的原值），沿線里程**嚴格**遞增 | CL-R1-7；CL-R1-19 第 1 項；7.11 第 8 項 |
 | D-16-13 | `distance_m` ＝ `trip.summary.length`（km）×1000、`engine_time_s` ＝ `trip.summary.time`，都以最短十進位表示 `ROUND_HALF_UP` 取整數；`road_names` 依 CL-R1-6（每個轉向的 `begin_street_names` 再 `street_names`，第一次出現的順序、去重複；空字串略過，不是字串時 `response_malformed`） | 4.14；CL-R1-6；CL-R1-18 的取整原則（同一種「四捨五入」） |
 | D-16-14 | `fetched_at` ＝ client 在傳輸層回傳之後立刻讀取的時鐘，轉成 +08:00、捨去到秒（`replace(microsecond=0)`），是路線回應（不是道路屬性查詢）的收到時間 | CL-R1-19 第 3 項；4.14 `fetched_at` |
 | D-16-15 | 請求次數與順序（CL-R1-5、CL-R1-8）：每個方向送一次路線請求；回應有可解碼的 shape 時，**即使其他檢查已不通過**也送一次道路屬性查詢，以取得全部國道訊號。來回行程的兩個方向都送出並檢查；只有在某個請求完全沒有回應（`TransportError`）時停止後續的請求，其餘方向記為 `not_sent`。不重試。兩個方向都通過之後才送一次狀態請求，然後組成快照並存檔 | CL-R1-5；CL-R1-8 |
-| D-16-16 | 引擎資訊（DD-R1-2）：`engine_name` ＝ `Valhalla`；`engine_version` ＝ 狀態回應的 `version`（非空字串），沒有回報、HTTP 錯誤、不是 JSON 或沒有回應時 ＝ `unreported`；`map_data_date` ＝ 狀態回應的 `tileset_last_modified`（Unix 秒，整數）在 +08:00 的日期，沒有回報或格式不對時 ＝ `null`，不以取得日期代替。**`tileset_last_modified` 是否等於 4.14 的「圖資日期」請 DA 確認（C-16-2）** | DD-R1-2；4.14 `map_data_date`；C4 記錄的欄位 |
-| D-16-17 | 取得順序（範圍 (e)）：Snapshot Mode（`snapshot_mode=True`）只呼叫 `select_snapshot_mode`，或在給了凍結清單時只呼叫 `select_strict`，不使用 client；一般模式先 `find_reusable`，沒有時才呼叫引擎；引擎失敗或任何方向不通過時回傳 `RouteFailure`，不改用任何快照。凍結清單只能與 `snapshot_mode=True` 一起給，否則 `ValueError`（不在一般模式下默默忽略清單） | 7.11 第 3 項；CL-R1-4；lead 寫定「指定了凍結清單就是嚴格模式」 |
+| D-16-16 | 引擎資訊（DD-R1-2）：`engine_name` ＝ `Valhalla`；`engine_version` ＝ 狀態回應的 `version`（非空字串），沒有回報、HTTP 錯誤、不是 JSON 或沒有回應時 ＝ `unreported`；`map_data_date` ＝ 狀態回應的 `tileset_last_modified`（Unix 秒，整數）在 +08:00 的日期，沒有回報或格式不對時 ＝ `null`，不以取得日期代替。這個日期是引擎回報的「圖磚最後修改日期」，不是 OpenStreetMap 資料的擷取日期。**DA 確認：CL-R1-26**，程式不需要修改 | DD-R1-2；4.14 `map_data_date`；C4 記錄的欄位；CL-R1-26 |
+| D-16-17 | 取得順序（範圍 (e)）：Snapshot Mode（`snapshot_mode=True`）只呼叫 `select_snapshot_mode`，或在給了凍結清單時只呼叫 `select_strict`，不使用 client；一般模式先 `find_reusable`，沒有時才呼叫引擎；引擎失敗或任何方向不通過時回傳 `RouteFailure`，不改用任何快照。凍結清單只能與 `snapshot_mode=True` 一起給，否則 `ValueError`（不在一般模式下默默忽略清單）。**DA 接受：`decision-20261118-issue16-c161.md` 第 4.4 節** | 7.11 第 3 項；CL-R1-4；lead 寫定「指定了凍結清單就是嚴格模式」 |
 | D-16-18 | 存放的例外都不攔下（CL-R1-17、CL-R1-21）：`find_reusable`、`select_snapshot_mode`、`select_strict`、`SnapshotStore.put` 的例外原樣向上傳遞；只有 `put` 成功後才回傳路線，回傳的是 `put` 回來的快照（內容相同時是既有檔案，保留它自己的 `fetched_at`）。從已驗證的快照解碼 shape 失敗時拋 `SnapshotIntegrityError`（訊息只含 `snapshot_id`），不是路線錯誤代碼 | CL-R1-17；CL-R1-21；7.11 第 1、3 項 |
 | D-16-19 | 共用介面（範圍 (f)）：`AdoptedRoute(route_id, route_source, trip_type, snapshot_id, target_gpx_ref, turnaround_m, turnaround_source, legs)`，`AdoptedLeg(direction, points, distance_m, road_names)`；`RouteFailure(code, case, reasons)`，`reasons` 只是 `方向:代碼` 的字串。`routing`：幾何是各方向自己的 shape 解碼後的點（不反轉）、里程是快照的整數公尺。`target_gpx`：原樣帶出 R1-3 的結果（點是同一組物件、長度是 `length_m` 原值、道路名稱是空的 tuple、`snapshot_id` 是 `None`），錯誤的 `code`、`case` 原樣，`TripTypeRequiredError`、`ValueError`、`TypeError` 照原樣傳出 | 範圍 (f)；CL-R1-24 |
-| D-16-20 | 一般模式在開始時就檢查請求位置：方向的集合必須剛好是行程型態的方向，每個方向至少兩個位置，每個位置的代號、角色是非空字串，經緯度是有限的數字且在 ±90／±180 內。錯誤訊息不含座標。位置與 `request_key` 的地點（`origin`、`destination`、`via`）是否對應不檢查（C-16-3） | CL-R1-5；CL-R1-9 |
-| D-16-21 | 新模組不 log、不 `print`，不 import 網路模組；原始碼不含 `environ`／`getenv`（#14 的既有測試也掃描整個 `routing/` 的頂層模組） | CL-R1-9；H-1、H-2 |
+| D-16-20 | 一般模式在開始時就檢查請求位置：方向的集合必須剛好是行程型態的方向，每個方向至少兩個位置，每個位置的代號、角色是非空字串，經緯度是有限的數字且在 ±90／±180 內。錯誤訊息不含座標。位置與 `request_key` 的地點（`origin`、`destination`、`via`）是否對應不檢查（C-16-3；DA 維持，列為 TI-C16-3） | CL-R1-5；CL-R1-9 |
+| D-16-21 | 新模組不 log、不 `print`；原始碼不含 `environ`／`getenv`。只有 `http_transport.py` import `http.client` 與 `ssl`（`f6810d2` 起），其他模組不 import 任何網路模組（修改後的 #14 靜態測試以遞迴掃描證明） | CL-R1-9；H-1、H-2；CL-R1-25 |
+| D-16-22 | （`f6810d2`）傳輸層的逾時 `TIMEOUT_S = 30.0` 秒（模組常數，傳給 `HTTPSConnection`，同時用於連線與每次讀取）。理由：公開伺服器的路線請求在 C4 的參考原始碼中以 90 秒為上限；本專案每次規劃最多五個請求，30 秒足以涵蓋正常回應而不讓介面長時間等待；不從環境或設定檔讀取 | CL-R1-25 第 2 項 (e) |
+| D-16-23 | （`f6810d2`）傳輸層的 URL 檢查：`https://` 加主機（規則同 `valhalla.py` 的 `_ENDPOINT`）、可選的埠（1～65535）加 `/route`、`/trace_attributes` 或 `/status`，以 `re.fullmatch` 判定；不符合時在建立連線之前 `ValueError`。header 必須是 `Content-Type`、`User-Agent` 的子集，值是字串；本文必須是 `bytes`。所有失敗在 `except` 區塊之外以 `from None` 拋出，`__cause__`、`__context__` 都是 `None` | CL-R1-25 第 2 項 (c)、第 3、4 項 |
 
 ## 5. Artifacts
 
@@ -171,7 +174,7 @@
 **H-1（判定 3.1 第 2 項：決定請求端點的方式；沒有憑證）**
 - 端點是 `valhalla.py` 的常數；唯一的另一個來源是 `ValhallaClient(endpoint=...)` 明確傳入的值，並限制為 `https://` 加主機。程式中沒有 `environ`／`getenv`（兩個靜態測試）；在新的直譯器中設定 11 個與端點、代理有關的環境變數，送出的 URL 仍是常數（子行程測試）。
 - 沒有憑證、header 中沒有金鑰；diff 中沒有任何金鑰字串；`git ls-files` 不含 `.env`、`*.key`（0 筆）。
-- 限制：**真實傳輸層不存在（C-16-1）**，所以「不跟隨 HTTP 轉址」「不使用環境變數中的代理」這兩項屬於傳輸層的轉向風險，目前 NOT VERIFIED；client 層無法轉向已由測試證明。
+- （`7cb4b0c` 時的限制，已由 `f6810d2` 解決）先前真實傳輸層不存在（C-16-1），「不跟隨 HTTP 轉址」「不使用環境變數中的代理」當時 NOT VERIFIED。`f6810d2` 起由 T-1～T-4、T-7 證明，見第 10.6 節。
 
 **H-2（判定 3.2 第 3 項：送往第三方的內容與 User-Agent）**
 - 路線請求每個位置只有 `lat`、`lon`、`type`；代號、角色、地名不送出；道路屬性查詢只送引擎自己回傳的 shape。User-Agent 是 `route-client/1.0`，不含姓名、email、`@` 或專案名稱（測試列舉 `moto`、`copilot`、`touring`、`nchu`、`aiot`、`course`、`project`）。
@@ -218,11 +221,11 @@
 
 | # | 內容 | 建議的 owner／authority | 狀態 |
 | --- | --- | --- | --- |
-| **C-16-1**（blocking，範圍 (a) 的一部分） | **真實的 HTTP 傳輸層沒有實作。** 範圍 (a) 是「公開 Valhalla 伺服器的 client（…；傳輸層可替換，測試不連網）」。#14 的既有測試 `test_the_routing_package_imports_no_network_or_environment_modules`（`tests/test_routing_store.py`，派工禁止修改）對 `routing/` 的每一個頂層 `.py` 禁止 import `socket`、`http`、`urllib`、`requests`、`httpx`、`ssl`、`subprocess`；任何真實的 HTTP 傳輸都需要其中之一。契約沒有寫真實傳輸層是否屬於本 Ticket，也沒有寫它的位置。可行的做法：(i) 放在 `routing/` 的子套件（例如 `routing/transport/http.py`）：該測試的 `glob("*.py")` 不遞迴，所以不會掃到；但這等於繞過那個測試的字面，Executor 不自行採用；(ii) 修改 #14 的測試，明定只有一個指名的傳輸模組可以 import 網路模組（需要修改 #14 測試的授權）；(iii) 放在 `routing/` 以外的套件（超出派工可修改的範圍）；(iv) 判定真實傳輸層屬之後的整合 Ticket（與 R1-3 的「CLI 的接線」同類），R1-4 只交付可替換傳輸層的 client。無論哪一種，真實傳輸層都要：不跟隨 HTTP 轉址、不使用環境變數中的代理（H-1「不可被轉向」）、設定逾時、把連線失敗轉成 `TransportError`、錯誤訊息不含請求內容 | Design Authority（契約的範圍與位置；若選 (ii)，DA 判定是否需要其他授權） | 待裁決；其餘範圍已完成，不受影響 |
-| **C-16-2**（需要確認） | `map_data_date` 取自 Valhalla 狀態回應的 `tileset_last_modified`（圖磚建置的時間，Unix 秒）在 +08:00 的日期（D-16-16）。另一種合理讀法是 Valhalla 沒有回報「圖資日期」本身，所以一律 `null`。這個值在快照的雜湊範圍內，決定 `snapshot_id`；目前沒有任何已存的快照，改變不影響既有資料 | Design Authority | 待確認；改動只在 `source.py` 的 `_engine_info` 與一個測試 |
-| C-16-3（tracked item 建議） | R1-4 不檢查各方向的請求位置與 `request_key` 的地點（`origin`、`destination`、`via` 的代號）是否對應：組成規則屬 G-RREQ（7.11 第 2 項的去程／回程組成、公路的進入端與另一端）。呼叫者若給了不一致的兩者，快照會存在不對應的鍵下，之後被一般模式或 Snapshot Mode 重用（H-4 的重用風險）。建議 G-RREQ 的 derivation 決定由哪一層核對 | Design Authority（G-RREQ 的 derivation） | 知悉 |
-| C-16-4（知悉） | D-16-8 的三處比字面嚴格（`Freeway` 不分大小寫、`motorway` 以出現判定、leg summary 的旗標也算），以及 D-16-11（道路屬性回應的警告不算第 7 項的警告）、D-16-17（凍結清單必須與 `snapshot_mode=True` 一起給）。都不放寬任何條件 | Design Authority | 知悉 |
-| NV-1 | 真實 Valhalla 伺服器的行為：`via` 型態是否只回傳一個 leg、警告出現的位置、`trace_attributes` 的 `edges` 欄位、狀態回應的欄位。全部依 API 文件與 C4 的參考原始碼寫成合成回應，沒有真實請求（CL-R1-1；本 run 沒有網路授權） | acceptor（真實請求的授權）；之後的整合驗收 | **NOT VERIFIED／NOT RUN** |
+| **C-16-1**（blocking，範圍 (a) 的一部分） | **真實的 HTTP 傳輸層沒有實作。** 範圍 (a) 是「公開 Valhalla 伺服器的 client（…；傳輸層可替換，測試不連網）」。#14 的既有測試 `test_the_routing_package_imports_no_network_or_environment_modules`（`tests/test_routing_store.py`，派工禁止修改）對 `routing/` 的每一個頂層 `.py` 禁止 import `socket`、`http`、`urllib`、`requests`、`httpx`、`ssl`、`subprocess`；任何真實的 HTTP 傳輸都需要其中之一。契約沒有寫真實傳輸層是否屬於本 Ticket，也沒有寫它的位置。可行的做法：(i) 放在 `routing/` 的子套件（例如 `routing/transport/http.py`）：該測試的 `glob("*.py")` 不遞迴，所以不會掃到；但這等於繞過那個測試的字面，Executor 不自行採用；(ii) 修改 #14 的測試，明定只有一個指名的傳輸模組可以 import 網路模組（需要修改 #14 測試的授權）；(iii) 放在 `routing/` 以外的套件（超出派工可修改的範圍）；(iv) 判定真實傳輸層屬之後的整合 Ticket（與 R1-3 的「CLI 的接線」同類），R1-4 只交付可替換傳輸層的 client。無論哪一種，真實傳輸層都要：不跟隨 HTTP 轉址、不使用環境變數中的代理（H-1「不可被轉向」）、設定逾時、把連線失敗轉成 `TransportError`、錯誤訊息不含請求內容 | Design Authority（契約的範圍與位置；若選 (ii)，DA 判定是否需要其他授權） | **已裁決：CL-R1-25**（做法 (ii)，`decision-20261118-issue16-c161.md` 第 2 節）；`f6810d2` 實作（第 10 節） |
+| **C-16-2**（需要確認） | `map_data_date` 取自 Valhalla 狀態回應的 `tileset_last_modified`（圖磚建置的時間，Unix 秒）在 +08:00 的日期（D-16-16）。另一種合理讀法是 Valhalla 沒有回報「圖資日期」本身，所以一律 `null`。這個值在快照的雜湊範圍內，決定 `snapshot_id`；目前沒有任何已存的快照，改變不影響既有資料 | Design Authority | **已確認：CL-R1-26**（第 3 節）；程式與測試不需修改，只改 docstring |
+| C-16-3（tracked item 建議） | R1-4 不檢查各方向的請求位置與 `request_key` 的地點（`origin`、`destination`、`via` 的代號）是否對應：組成規則屬 G-RREQ（7.11 第 2 項的去程／回程組成、公路的進入端與另一端）。呼叫者若給了不一致的兩者，快照會存在不對應的鍵下，之後被一般模式或 Snapshot Mode 重用（H-4 的重用風險）。建議 G-RREQ 的 derivation 決定由哪一層核對 | Design Authority（G-RREQ 的 derivation） | **TI-C16-3**（第 5 節）；不要求 #16 修改 |
+| C-16-4（知悉） | D-16-8 的三處比字面嚴格（`Freeway` 不分大小寫、`motorway` 以出現判定、leg summary 的旗標也算），以及 D-16-11（道路屬性回應的警告不算第 7 項的警告）、D-16-17（凍結清單必須與 `snapshot_mode=True` 一起給）。都不放寬任何條件 | Design Authority | 第 4.1～4.4 節接受；D-16-11 不接受，改為 **CL-R1-27**（第 4.5 節），`f6810d2` 實作 |
+| NV-1 | 真實 Valhalla 伺服器的行為：`via` 型態是否只回傳一個 leg、警告出現的位置、`trace_attributes` 的 `edges` 欄位、狀態回應的欄位。全部依 API 文件與 C4 的參考原始碼寫成合成回應，沒有真實請求（CL-R1-1；本 run 沒有網路授權） | acceptor（真實請求的授權）；之後的整合驗收（`decision-20261118-issue16-c161.md` 第 2.7 節：不在 R1-4，也不在 SPEC-R1） | **NOT VERIFIED／NOT RUN**（`f6810d2` 後維持） |
 
 ## 8. Audit status
 
@@ -231,7 +234,152 @@
 
 ## 9. Remaining work
 
-1. **C-16-1**：Design Authority 裁決真實傳輸層的範圍與位置；依裁決實作（或記錄為之後的 Ticket），再補 E-1、E-6 的 H-1 證據。
-2. **C-16-2**：Design Authority 確認 `map_data_date` 的讀法；若改為一律 `null`，修改 `_engine_info` 與 `test_dd_r1_2_engine_version_and_map_data_date`。
-3. 之後：Orchestrator 核對本 Executor 的 binding，派 R1。#16 的結案與 SPEC-R1 SIA 以 #14、#15 的最終 subject 為準（CL-R1-21 第 7 項、CL-R1-24）。
-4. C-16-3、C-16-4 由 Design Authority 決定是否列為 tracked item。
+1. （`f6810d2` 後）Orchestrator 核對本 Executor 的 binding，派 R1；R1 的派工內容依 `decision-20261118-issue16-c161.md` 第 7 節末段須含該 record 與 `decision-20261118-issue14-c141.md`、`decision-20261118-issue14-qalt1.md`、`decision-20261118-issue15-c151.md`。
+2. #16 的結案與 SPEC-R1 SIA 以 #14、#15 的最終 subject 為準（CL-R1-21 第 7 項、CL-R1-24）；SIA 以 #16 的最終 subject 核對 R1-2 的「不需要網路」，因為 #14 的那個靜態測試在 #16 中被修改（`decision-20261118-issue16-c161.md` 第 8 節）。
+3. 不在本 Ticket：TI-C16-2、TI-C16-3（Design Authority）；NV-1 與第一次真實請求（之後的整合驗收，需要 acceptor 的授權）；RV-12～RV-14（文件同步）。
+4. 先前的 C-16-1、C-16-2 已由 CL-R1-25、CL-R1-26 處理（第 7 節），C-16-3、C-16-4 已有 disposition。
+
+## 10. CL-R1-25、CL-R1-27 的實作（`decision-20261118-issue16-c161.md`；subject `f6810d2`）
+
+### 10.1 Contract reference、角色與 binding
+
+- 依據：`decision-20261118-issue16-c161.md`（v1，HEAD `2c0f662`）第 2.3～2.6 節（CL-R1-25）、第 3 節（CL-R1-26）、第 4.5 節（CL-R1-27）、第 7 節（對 #16 的要求）。Orchestrator 於同一 Executor 派工中以訊息轉達，要求全文閱讀，特別是第 2.4～2.6 節與第 8 節；已全文閱讀。
+- 角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`）。Executor 自行觀測（`f6810d2` 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 168 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。** 沒有使用 bounded assignments，沒有派工任何 subagent。
+
+### 10.2 Work performed
+
+1. 新建 `src/moto_copilot/routing/http_transport.py`（CL-R1-25 第 1～5 項）：`https_transport(url, body, headers)`、`valhalla_client(*, endpoint=VALHALLA_ENDPOINT, clock=None)`、`TIMEOUT_S`、`PATHS`、`ALLOWED_HEADERS`。只 import `http.client`、`re`、`ssl`、`collections.abc`、`datetime` 與 `.valhalla`。
+2. `adoption.py`（CL-R1-27）：`_trace_facts` 加上道路屬性回應 `warnings` 的檢查（新原因 `trace_warnings`，列入無法驗證的原因）；`FREEWAY_CHECK_METHOD` 改為 v2 並加上條件；模組說明中第 (1) 款與 7.11 第 7 項的描述。
+3. `valhalla.py`、`source.py`：只改 docstring（第 2.4 節第 5、6 列）。
+4. `tests/test_routing_store.py`：只改 `test_the_routing_package_imports_no_network_or_environment_modules` 一個函式（第 10.5 節）。
+5. `tests/test_routing_engine.py`：`NEW_MODULES` 加入 `http_transport`，靜態測試對它只放寬 `http`、`ssl`；`FREEWAY_CHECK_METHOD` 的文字檢查加上新條件；新增 CL-R1-27 的 5 個測試函式（12 個案例）。
+6. 新建 `tests/test_routing_transport.py`（19 個測試函式，63 個案例；T-1～T-9）。
+7. 自我驗證：全套 pytest、33 個突變檢查（第 10.7 節）、相對 `7cb4b0c` 的 diff 範圍。
+8. 依 SA-1 本機 commit `f6810d2`；暫存的只有上列 7 個檔案。沒有 push、沒有碰 GitHub；沒有讀取、列出或搜尋 `data/`；沒有讀 `.env`；沒有執行 `experiments/`；沒有發出任何網路請求。
+
+### 10.3 Artifacts（`7cb4b0c` → `f6810d2`）
+
+| 檔案 | 變更 | 封閉清單（第 2.4 節） |
+| --- | --- | --- |
+| `src/moto_copilot/routing/http_transport.py` | 新檔 | 第 1 列 |
+| `tests/test_routing_store.py` | 一個函式（一個 diff hunk） | 第 2 列 |
+| `tests/test_routing_engine.py`、`tests/test_routing_transport.py`（新檔） | 測試 | 第 3 列 |
+| `src/moto_copilot/routing/adoption.py` | CL-R1-27 | 第 4 列 |
+| `src/moto_copilot/routing/source.py` | 只有 docstring（`_engine_info` 引用 CL-R1-26 與「圖磚最後修改日期」；`get_route` 引用第 4.4 節） | 第 5 列 |
+| `src/moto_copilot/routing/valhalla.py` | 只有模組說明的「Transport」段 | 第 6 列 |
+
+沒有修改 `canonical.py`、`request_key.py`、`snapshot.py`、`store.py`、`target_gpx.py`、`__init__.py`、`contracts/`、`ingest/`、`tests/routing_synthetic.py`、`tests/test_routing_snapshot.py`、`tests/test_target_gpx.py`、`pyproject.toml`。
+
+### 10.4 E-1 pytest（subject `f6810d2`）
+
+`.venv/Scripts/python.exe -m pytest -q`，在 commit 之後、工作目錄乾淨時執行，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 22%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 41%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 82%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 97%]
+..............................................                           [100%]
+1918 passed in 42.16s
+```
+
+`1843`（`7cb4b0c`）＋ `12`（CL-R1-27）＋ `63`（傳輸層）＝ `1918`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。
+
+### 10.5 E-2、E-4、E-5
+
+**E-2 新增的列**（測試檔：`tests/test_routing_transport.py`，除非另寫）
+
+| AC／條文 | 測試 | 結果 |
+| --- | --- | --- |
+| 範圍 (a) 真實傳輸層；T-1 轉址 | `test_t1_a_redirect_is_returned_as_it_is_and_not_followed[301/302/303/307/308]`（真實 `http.client` 寫入記憶體中的 socket；一個連線、一個請求、主機不變）、`test_t1_a_redirected_route_request_is_routing_unavailable_with_no_snapshot` | PASS |
+| T-2 代理與環境變數 | `test_t2_proxies_and_endpoint_variables_do_not_change_the_connection`（新的直譯器；8 個代理變數（大小寫）與 5 個端點類變數；主機是 `valhalla1.openstreetmap.de`、埠是預設、沒有 `set_tunnel`） | PASS |
+| T-3 TLS | `test_t3_tls_verification_is_on`、`test_t3_the_transport_has_no_switch_for_tls_or_proxies` | PASS |
+| T-4 逾時 | `test_t4_the_timeout_is_the_fixed_constant`、`test_t4_a_timeout_is_a_transport_error` | PASS |
+| T-5 失敗的轉換 | `test_t5_every_failure_is_a_transport_error_without_content`（建構、`request`、`getresponse`、`read` × `OSError`、`ConnectionRefusedError`、`ssl.SSLError`、`RemoteDisconnected`、`IncompleteRead` ＝ 20 個案例；錯誤訊息本身含合成座標字串，traceback 中沒有它；`__cause__`、`__context__` 都是 `None`；一個連線、已關閉）、`test_t5_a_failure_through_the_client_keeps_positions_out_of_the_message` | PASS |
+| T-6 內容與 header | `test_t6_the_wire_request_is_a_post_with_the_given_body_and_only_the_listed_headers[/route,/trace_attributes,/status]`（線上的位元組：`POST <path> HTTP/1.1`；header 只有 `Host`、`Accept-Encoding`、`Content-Length`、`Content-Type`、`User-Agent`；本文相同）、`test_t6_the_client_requests_reach_the_wire_unchanged`、`test_t6_headers_outside_the_closed_list_are_refused_before_connecting`、`test_t6_the_body_must_be_bytes` | PASS |
+| T-7 URL 的拒絕 | `test_t7_urls_other_than_the_three_actions_are_refused_before_connecting`（13 種）、`test_t7_an_explicit_port_is_used` | PASS |
+| T-8 HTTP 錯誤狀態 | `test_t8_http_error_statuses_are_replies_not_exceptions`（400、404、429、500、503） | PASS |
+| T-9 建立方式 | `test_t9_valhalla_client_uses_the_real_transport_and_the_default_endpoint`、`test_t9_a_round_trip_through_the_real_transport_equals_the_fake_engine`（結果與兩個存放目錄的檔案位元組都與 `FakeEngine` 相同）、`test_importing_the_routing_package_does_not_load_the_transport` | PASS |
+| T-10 靜態 | `tests/test_routing_store.py::test_the_routing_package_imports_no_network_or_environment_modules`、`tests/test_routing_engine.py::test_the_new_modules_do_not_read_env_log_print_or_import_network_modules` | PASS |
+| 「另加：端點不受環境變數影響」 | 第 6 節 E-2 原列，加上 T-1～T-4、T-7 | PASS |
+| 「另加：請求的 User-Agent 與內容不含個人識別資訊」 | 第 6 節 E-2 原列，加上 T-5、T-6 | PASS |
+| CL-R1-27（`tests/test_routing_engine.py`） | `test_cl_r1_27_a_road_attribute_reply_with_warnings_is_unverifiable`（一筆、多筆、形式不正確、字串、物件、空物件；`routing_unavailable`、不產生 `freeway_check`、沒有快照、請求次數不變）、`test_cl_r1_27_warnings_with_a_freeway_signal_are_still_highway_in_route`（`motorway`、國道名稱）、`test_cl_r1_27_empty_or_null_warnings_in_the_road_attribute_reply_change_nothing`、`test_cl_r1_27_warnings_only_in_the_return_road_attribute_reply_store_nothing`、`test_cl_r1_27_status_reply_warnings_do_not_affect_adoption` | PASS |
+| DD-R1-2 | 第 6 節 E-2 原列，改為引用 CL-R1-26（讀法確認，程式與測試不變） | PASS |
+
+**E-4。** 傳輸層的測試以替身取代 `http.client.HTTPSConnection`：`Scripted`（記錄建構參數、`request`、`set_tunnel`、`close`，依腳本回答或在指定階段拋出）與 `Wire`（真實的 `HTTPSConnection`，只替換 `connect`，讓 `http.client` 自己把請求寫進記憶體中的 socket 並解析預先寫好的回應）。本檔 autouse fixture 照 E-4 封鎖 `socket.socket`、`socket.create_connection`、`socket.getaddrinfo`。T-2 與套件載入測試的子行程以替身連線執行。沒有任何網路請求。
+
+**E-5（`tests/test_routing_store.py` 的修改，`decision-20261118-issue16-c161.md` 第 2.2、2.4 節）。** 只改 `test_the_routing_package_imports_no_network_or_environment_modules` 一個函式（名稱保留）：
+1. `glob("*.py")` 改為 `rglob("*.py")`：子套件不能繞過（理由：第 2.2 節不採用做法 (i)）。
+2. 只有路徑恰為 `routing/http_transport.py` 的檔案可以 import `http` 與 `ssl`；它仍不得 import `socket`、`urllib`、`requests`、`httpx`、`subprocess`；其他檔案照舊全部禁止（理由：CL-R1-25 第 1 項）。
+3. 斷言 `http_transport.py` 存在，並且在掃描的清單中（豁免不能指向不存在的檔案）。
+4. 斷言其他檔案沒有 import `http_transport`：`import ...http_transport`、`from .http_transport import …`、`from . import http_transport`、絕對路徑，以及字串參數含 `http_transport` 的 `__import__`／`import_module` 呼叫。
+5. `environ`／`getenv` 的禁止照舊適用於全部檔案，含 `http_transport.py`。
+該檔的其他測試沒有改（`git diff 7cb4b0c f6810d2 -- tests/test_routing_store.py` 只有一個 hunk）。R1-2 AC「快照與 `request_key` 的計算不需要網路」仍由這個測試（更嚴的形式）與 `test_hashing_storage_and_selection_need_no_network`（執行期封鎖 socket）證明；另有 `test_importing_the_routing_package_does_not_load_the_transport` 證明 `import moto_copilot.routing` 不載入傳輸層。
+
+### 10.6 E-6
+
+**H-1（第 2.3 節第 2 項）**
+
+| 項目 | 實作 | 測試 |
+| --- | --- | --- |
+| (a) 不跟隨轉址 | 每次呼叫一個 `HTTPSConnection`、一個 `request`；3xx 原樣回傳；client 不採用非 200 | T-1（含經 `get_route` 的 `routing_unavailable`） |
+| (b) 不使用代理 | 不呼叫 `set_tunnel`；沒有讀環境變數的程式；不用 `urllib.request` | T-2、T-3（`tunnel is None`）、T-10 |
+| (c) 只連到 URL 指定的主機 | `_target` 以 `re.fullmatch` 再檢查 URL，主機與埠只來自它；不符合時在建立連線之前 `ValueError` | T-7、T-2、T-1 |
+| (d) TLS 驗證不得關閉 | `ssl.create_default_context()`；沒有任何關閉驗證或換憑證的參數 | T-3 |
+| (e) 逾時 | `TIMEOUT_S = 30.0`，傳給 `HTTPSConnection`；不重試 | T-4、T-5（一個連線） |
+
+`git ls-files` 不含 `.env`、`*.key`、`data/`、`.gpx`、`.fit`（0 筆）；diff 中沒有金鑰字串。
+
+**H-2**：T-5（錯誤訊息與 traceback 不含合成座標字串與請求本文）、T-6（本文原樣、header 只有封閉清單加 `http.client` 自動的三項）。diff 中的座標全部是第 6 節 E-3 的合成值；新測試用的主機名稱是 `.invalid` 保留網域或 `engine.example`。
+
+**H-4**：3xx（T-1）、傳輸失敗（T-5）與 CL-R1-27 的道路屬性警告都不被採用；國道訊號在 CL-R1-27 的情形下仍優先（`test_cl_r1_27_warnings_with_a_freeway_signal_are_still_highway_in_route`）。
+
+### 10.7 突變檢查（第 2.6 節第 8 項）
+
+腳本 `mutate16b.py`（session scratchpad）在記憶體中替換原始碼字串後執行 `tests/test_routing_engine.py`、`tests/test_routing_transport.py`、`tests/test_routing_store.py`，在 `finally` 中**以原本的位元組**寫回（不以 git 還原）；N8 移動檔案到子套件後再移回並刪除子套件。結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同（`sources restored: True`），之後 `git status --short` 只有本次尚未 commit 的修改。33 個突變全部被抓到：
+
+| # | 突變 | 失敗 |
+| --- | --- | --- |
+| N1 | 改用 `urllib.request.urlopen` | 39 |
+| N2a | `check_hostname = False` | 2 |
+| N2b | `check_hostname = False` 加 `CERT_NONE` | 2 |
+| N3 | 3xx 時再送一次請求到另一主機 | 6 |
+| N4 | 失敗後重試一次 | 22 |
+| N5 | 例外不加 `from None`，訊息含本文 | 20 |
+| N6 | `source.py` import `http_transport` | 2 |
+| N7 | `__init__.py` import `http_transport` | 2 |
+| N8 | `http_transport.py` 移到子套件 `routing/transport/` | 2 個 collection error（其他測試檔 import 它）；另以只執行該靜態測試確認：`assert transport.is_file()` 失敗 |
+| N9 | 忽略道路屬性回應的警告（CL-R1-27） | 9 |
+| M1～M23 | 第 6 節 E-6 的 23 個突變，在新程式上重跑 | 全部被抓到（每個 1～10） |
+
+### 10.8 Diff 與未執行的項目
+
+- 相對 `7cb4b0c` 的 diff 只含第 10.3 節的 7 個檔案，內容符合封閉清單（`valhalla.py`、`source.py` 只有 docstring；`test_routing_store.py` 只有一個函式）。
+- **真實請求：NOT RUN。** NV-1 維持 NOT VERIFIED／NOT RUN（`decision-20261118-issue16-c161.md` 第 2.7 節：不在 R1-4，也不在 SPEC-R1）。真實伺服器上 TLS、轉址與回應形狀的實際行為沒有觀測。
+- Python 3.13 以後的直譯器：NOT RUN（本機只有 3.11.2／3.12）。
+
+### 10.9 Audit status
+
+同第 8 節：R1 必要，尚未派工；本節的 self-verification 不是 audit。
