@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 **#16 cycle 2 的 implementation subject（cycle 2 R1 的受審 subject）**。worklog 在另外的 record-only commits |
+| 狀態 | **Cycle 2 R1（`audit/issue-16-c2-r1.md`）BLOCKING 的 targeted correction 與 CL-R1-28 已完成（`a4f0cd9`、`ecddc57`，第 13 節），pytest `2220 passed`；C2R1-F2 中狀態回應 `version` 的處置回報 `NEEDS_DA`（C-16-5），其餘部分待 cycle 2 R2。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 #16 cycle 2 R1 的受審 implementation subject。Cycle 2 的 targeted correction commit **`a4f0cd9cee4e577f4f9046db5b5df152dcfbde0b`**（`a4f0cd9`，C2R1-F1、F2、F4，父 commit 是 DA record 的 `b3b0c14`）與 CL-R1-28 commit **`ecddc57c0a3bd4dda94a62b3f5281ed70bb7068f`**（`ecddc57`，C2R1-F3）；**`ecddc57` 是目前的最終 implementation subject**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -583,3 +583,138 @@ Scratchpad 的 `probe_c2.py` 把 `git show 65aa00c:src/moto_copilot/routing/adop
 - NV-1（真實伺服器是否會回傳這類數值、真實回應的形狀）：**NOT VERIFIED／NOT RUN**（ruling 第 6 節）。只在 Python 3.11.2 執行；`math.isfinite` 對過大 `int` 的行為在其他版本沒有實測（NV-4）。
 - 範圍界定：`valhalla.py:104`、`canonical.py:45`、`target_gpx.py:166`、`:173` 的 `math.isfinite` 不在本 rework 範圍（ruling 第 3.2 節），沒有修改，也不作判斷。
 - 下一步：Orchestrator 核對本 Executor 的 binding，派 cycle 2 R1（受審 subject `022f629`，完整 audit；pack 含 ruling 與 cycle 1 的三份 audit records）。第 9 節第 2～3 項不變。
+
+## 13. Cycle 2 的 targeted correction（`audit/issue-16-c2-r1.md`；FA Addendum A；CL-R1-28；subjects `a4f0cd9`、`ecddc57`）
+
+### 13.1 Findings、範圍與契約
+
+- Cycle 2 R1（Claude path：Codex 當次 usage limit，R-PR 替代；`diversity_lost` 記於 run record）：`Verdict: BLOCKING (C2R1-F1, C2R1-F2)`；C2R1-F3（Low，non-blocking，DA routing）；C2R1-F4（Low，non-blocking，隨 C2R1-F1）。R2-F1 與 R1-F1 記為已解決、沒有再出現。
+- FA Addendum A（`ruling-20261118-issue16-c1.md` 末段，HEAD `3385cbd`）：第 3.2 節的封閉清單只約束 R2-F1 的 rework；C2R1-F1、F2、F4 的 targeted correction 依治理 §4.4 進行，可以修改 `valhalla.py`、`adoption.py`、`source.py`、`tests/test_routing_engine.py`（必要時 `tests/test_routing_transport.py`）；不得修改 `canonical.py`、`request_key.py`、`snapshot.py`、`store.py`、`target_gpx.py`、`routing/__init__.py`、`contracts/`、`ingest/` 與其他測試檔；需要新語義時 route 至 DA。
+- CL-R1-28（`decision-20261118-issue16-c2r1f3.md`，HEAD `b3b0c14`）：TLS context 以 `ssl.SSLContext(PROTOCOL_TLS_CLIENT)` 明確建立；模組說明改寫；T-11、T-12；5 個突變；獨立的 commit。TI-C2R1F3-1（`SSL_CERT_FILE`／`SSL_CERT_DIR`／`OPENSSL_CONF`）屬 DA。
+- 以上三份 record 已全文閱讀。角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`）。Executor 自行觀測（兩個 commit 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 299 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。** 沒有使用 bounded assignments，沒有派工任何 subagent。
+
+### 13.2 Commit A：C2R1-F1、C2R1-F2（道路名稱）、C2R1-F4（`b3b0c14` → `a4f0cd9`）
+
+| # | 決定 | 依據 |
+| --- | --- | --- |
+| D-16-28 | `decode_polyline6`（`valhalla.py`，所有 shape 共用的解碼路徑：路線回應的 200 與非 200、兩個方向、`_from_snapshot`）：位置在除以 `1e6` **之前**以整數判定（`|lat| > 90 000 000` 或 `|lon| > 180 000 000` → `PolylineError`），並在一個值的 zigzag 整數超過 `2**31` 時立即 `PolylineError`（那一步超過 1000 度，之後的位置一定超出範圍；避免累積極大的整數）。效果：只會拋 `PolylineError`。接受的 shape 與解出的點不變：以 20 萬個隨機字串（字母表加 `~`、`_`、`?`、`@`、空白、孤立 surrogate；長度 1～30）比對 `b3b0c14` 與新版，結果（點或 `PolylineError`）全部相同；只有舊版的 `OverflowError` 改為 `PolylineError`。`adoption.py` 與 `source.py` 原本就把 `PolylineError` 記為讀不到／`SnapshotIntegrityError`，所以不需要修改呼叫處 | C2R1-F1、C2R1-F4；CL-R1-8；CL-R1-17 |
+| D-16-29 | 轉向的道路名稱（`begin_street_names`、`street_names`）不能以 UTF-8 寫出（孤立 surrogate）時：國道名稱的比對照做（訊號照樣收集），然後記 `response_malformed`、不放進 `road_names`。該方向因此不採用、不存快照、沒有國道訊號時 `freeway_check` 不產生值。道路屬性回應的名稱不寫入快照，不受影響（R1 record 的對照列，行為不變） | C2R1-F2 的 required fix（道路名稱）；CL-R1-6；CL-R1-8 |
+| — | 模組說明（`adoption.py`）補上「不能解出範圍內位置的 shape、不是合法 Unicode 文字的轉向名稱也是讀不到」 | 陳述與行為一致 |
+
+**C2R1-F4 的狀態：已隨 C2R1-F1 消失**（`_from_snapshot` 只捕捉 `PolylineError`，而解碼器現在只拋它）；以測試證明（第 13.4 節）。`source.py` 沒有修改。
+
+### 13.3 Commit B：CL-R1-28（`a4f0cd9` → `ecddc57`）
+
+- `http_transport.py`：新增私有函式 `_tls_context()`：`ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)`、`verify_mode = ssl.CERT_REQUIRED`、`check_hostname = True`、`load_default_certs(ssl.Purpose.SERVER_AUTH)`；`https_transport` 中建立 context 的那一行改為呼叫它。沒有呼叫 `create_default_context()`，沒有設定 `keylog_filename`，沒有 `load_verify_locations`、`load_cert_chain`、`set_ciphers`，沒有改 `minimum_version`、`options`、`verify_flags`。其他程式碼不變。
+- 模組說明（CL-R1-28 第 4 項）：不再寫「nothing reads process settings or env variables」；改為「本模組不讀環境變數，沒有任何環境變數改變主機、埠、代理或轉址」；context 以明確設定建立、不是 `create_default_context()`，所以不參考 `SSLKEYLOGFILE`、不寫 TLS 秘密；預設信任來源的載入讓 OpenSSL 參考 `SSL_CERT_FILE`、`SSL_CERT_DIR`，它們只能增加根憑證，不改變主機與埠（TI-C2R1F3-1）。
+- `tests/test_routing_transport.py`：只新增 T-11、T-12（29 行，沒有刪改既有測試；T-3 照舊）。
+- `git diff --stat a4f0cd9 ecddc57`：只有 `http_transport.py`（20／5）與 `tests/test_routing_transport.py`（29／0）。
+
+### 13.4 E-2：新測試
+
+`tests/test_routing_engine.py`（Commit A，70 個案例）：
+
+| 情形 | 測試 | 結果 |
+| --- | --- | --- |
+| 解碼器只拋 `PolylineError` | `test_c2r1_f1_the_decoder_raises_only_polyline_error`（3 種會溢位的 shape：`"~"*210+"??"`、`"??"+"~"*300+"?"`、`"}"*400+"@?"`） | PASS |
+| 合法與邊界的 shape 不變 | `test_c2r1_f1_the_decoder_still_decodes_valid_and_boundary_shapes`（±90／±180 接受；90.000001、−180.000001 拒收；以 0 延續的值仍是 0） | PASS |
+| 溢位的 shape × 去程、回程 × HTTP 200、302、400、429、500、503 × 有、無 `has_highway`（經 `get_route` 的來回行程） | `test_c2r1_f1_an_overflowing_shape_is_unreadable_and_signals_still_count`（48 個案例）：沒有例外；代碼依訊號；200 是 `response_malformed`、非 200 是 `engine_error`；沒有路線、沒有快照；請求序列（去程：`route, route, trace_attributes`；回程：`route, trace_attributes, route`）——兩個方向都送出，不以讀不到或錯誤回應的 shape 查詢，沒有重試、沒有狀態請求 | PASS |
+| R1 record 表的最後一列（去程 200 有訊號、回程 shape 溢位） | `test_c2r1_f1_an_outbound_signal_survives_an_overflowing_return_shape` → `highway_in_route` | PASS |
+| 單方向 | `test_c2r1_f1_evaluate_direction_gives_no_freeway_check_value`（3 例） | PASS |
+| C2R1-F4 | `test_c2r1_f4_a_stored_shape_that_overflows_stops_snapshot_mode_with_an_integrity_error`（訊息只含 `snapshot_id`、不含 shape，`from None`）、`test_c2r1_f4_the_same_snapshot_stops_normal_reuse_and_strict_mode_without_calling_the_engine` | PASS |
+| C2R1-F2 道路名稱 × 去程、回程 × 有、無訊號 × `\ud800`、`\udfff`（本文以 `\u` 跳脫的 ASCII JSON 送出） | `test_c2r1_f2_a_road_name_that_is_not_unicode_text_is_unreadable`（8 例：沒有例外、`response_malformed`、沒有路線與快照、沒有狀態請求）、`test_c2r1_f2_a_one_way_route_with_such_a_name_is_routing_unavailable`、`test_c2r1_f2_a_freeway_name_with_a_lone_surrogate_is_still_a_signal`、`test_c2r1_f2_valid_names_are_still_stored`、`test_c2r1_f2_a_lone_surrogate_in_a_road_attribute_name_does_not_stop_adoption` | PASS |
+
+`tests/test_routing_transport.py`（Commit B，2 個案例）：
+
+| # | 測試 | 結果 |
+| --- | --- | --- |
+| T-11 | `test_t11_the_context_is_not_weaker_than_the_standard_default`：`SSLKEYLOGFILE` 移除後，傳給替身連線的 context 與 `ssl.create_default_context()` 的 `check_hostname`、`verify_mode`、`verify_flags`、`options`、`minimum_version`、`maximum_version`、`protocol`、`hostname_checks_common_name`、`post_handshake_auth`、`security_level`、`cert_store_stats()` 逐項相等；`keylog_filename` 是 `None` | PASS |
+| T-12 | `test_t12_sslkeylogfile_has_no_effect`：`SSLKEYLOGFILE` 設為 `tmp_path` 下的合成檔名，送出 `/route`、`/trace_attributes`、`/status` 各一次：三個 context 的 `keylog_filename` 都是 `None`，檔案不存在 | PASS |
+
+R1-F1（`test_r1_f1_*`）與 R2-F1（`test_r2_f1_*`）的回歸測試與其他既有測試全部保留並通過；`tests/` 只有新增行（`git diff --numstat b3b0c14 ecddc57 -- tests`：163／0、29／0）。E-3：新案例只用既有的合成產生器（`route_body`、`trace_body`、`tests/routing_synthetic.py` 的 `leg`、`snapshot`）、合成的 shape 字串與孤立 surrogate 字元；沒有新的座標來源。E-4：兩個測試檔的 autouse socket 封鎖、`FakeEngine` 與替身連線；沒有網路請求。E-5：無。
+
+### 13.5 E-1 pytest（最終 subject `ecddc57`）
+
+`.venv/Scripts/python.exe -m pytest -q`，在兩個 commit 之後、工作目錄乾淨時執行，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 84%]
+........................................................................ [ 87%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 97%]
+............................................................             [100%]
+2220 passed in 44.68s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`，exit 0，摘要：
+
+```text
+............................................................             [100%]
+2220 passed in 40.36s
+```
+
+`2148`（`022f629`）＋ `70`（Commit A）＋ `2`（Commit B）＝ `2220`。在 `a4f0cd9` 上（Commit B 之前）：`2218 passed`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。`git ls-files` 不含 `data/`、`.gpx`、`.fit`、`.env`、`*.key`（0 筆）。
+
+### 13.6 突變（原文以原本的位元組寫回，結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同）
+
+Scratchpad 的 `mutate16d.py`（新）與 `mutate16b.py`（既有），每個突變跑 `tests/test_routing_engine.py`、`tests/test_routing_transport.py`、`tests/test_routing_store.py`：
+
+| # | 突變 | 結果 |
+| --- | --- | --- |
+| A1 | 恢復 cycle 2 R1 受審時的解碼器（先除以 `1e6` 再檢查範圍、沒有提前的上界） | **KILLED**，31 failed |
+| A2 | 只拿掉提前的上界（整數範圍檢查保留） | SURVIVED：**等價突變**。整數的範圍檢查單獨就使任何值都不會溢位，上界只避免累積極大的整數（效能），不改變結果 |
+| A3 | 只把範圍檢查改回浮點除法（提前的上界保留） | SURVIVED：**等價突變**。上界使每一步的值不超過 `2**31`，而每個被接受的點都在範圍內，所以除法不可能溢位。兩道防線各自足夠；同時拿掉（A1）被抓到 |
+| A4 | 不是 Unicode 文字的道路名稱照樣接受 | **KILLED**，10 failed |
+| A5 | 這類名稱被丟掉而不標記讀不到 | **KILLED**，10 failed |
+| A6 | `_from_snapshot` 不轉換解碼錯誤 | **KILLED**，2 failed |
+| B1 | 改回 `ssl.create_default_context()`（Commit B 之前的程式） | **KILLED**，1 failed（T-12） |
+| B2 | `create_default_context()` 之後再設 `keylog_filename = None` | **KILLED**，1 failed（T-12 的檔案不存在斷言） |
+| B3 | 拿掉 `load_default_certs` | **KILLED**，1 failed（T-11 的 `cert_store_stats`） |
+| B4 | `verify_mode = CERT_OPTIONAL` | **KILLED**，2 failed（T-3、T-11） |
+| B5 | `check_hostname = False` | **KILLED**，3 failed |
+| 既有 | 第 10.7、11.5、12.6 節的 39 個突變在最終程式上重跑 | 37 個 **KILLED**；N2a、N2b 為 SKIPPED（它們替換的 `ssl.create_default_context()` 一行已依 CL-R1-28 不存在），由 B4、B5 取代 |
+
+### 13.7 E-6
+
+- **H-4**：C2R1-F1：shape 不論內容為何（可由 `_parse_json` 解析出的任何字串），`evaluate_direction`／`get_route` 都不拋未捕捉例外，記為讀不到；國道訊號照樣收集；兩個方向照樣送出並檢查；非 200 永不採用。C2R1-F4：存放的 shape 解不出時一律 `SnapshotIntegrityError`（CL-R1-17）。C2R1-F2：轉向名稱不是合法 Unicode 文字時，該方向不採用、不存快照，訊號照樣優先。**例外：狀態回應的 `version` 含孤立 surrogate 時，`build_snapshot` 仍拋未捕捉的 `SnapshotValidationError`（C-16-5，NEEDS_DA）**；在 DA 裁決並實作之前，本 worklog 不宣稱「引擎回應的字串內容不會使 `get_route` 拋出例外」。
+- **H-1**（Commit B）：CL-R1-25 第 2 項 (a) 不跟隨轉址：T-1；(b) 不使用代理：T-2、T-3、T-10；(c) 只連到 URL 指定的主機：T-7、T-2、T-1；(d) TLS 驗證不得關閉、CL-R1-28：T-3、T-11、T-12；(e) 逾時：T-4、T-5。`git ls-files` 不含 `.env`、`*.key`；diff 沒有憑證值。
+- **H-2**：送往第三方的內容、header 與 User-Agent 沒有改變（T-5、T-6 照舊通過）；`SSLKEYLOGFILE` 不再寫出可還原請求的 TLS 秘密（T-12）。
+- 第 10.6 節中以 `ssl.create_default_context()` 作為 (d) 證據的敘述，自 `ecddc57` 起改為以 CL-R1-28 與 T-3、T-11、T-12 為準（舊的 T-3 結論仍成立）。
+
+### 13.8 Concerns
+
+| # | 內容 | 建議的 owner／authority | 狀態 |
+| --- | --- | --- | --- |
+| **C-16-5**（blocking 的一部分：C2R1-F2 的狀態版本） | 狀態回應的 `version` 是含孤立 surrogate 的字串時，`_engine_info` 把它當作有回報的版本，`build_snapshot` 在寫出 canonical JSON 時拋 `SnapshotValidationError`，`get_route` 沒有處理它（R1 record 的重現列 4；在 `ecddc57` 仍成立，沒有修改）。可行的做法至少兩種，後果不同：(i) 視為「引擎沒有回報」，記為 `unreported`，路線照常採用；(ii) 使路線不採用（例如 `routing_unavailable`）。(i) 與 D-16-16 對不是字串或空字串的處理一致（cycle 1、cycle 2 R1 都核對過 DD-R1-2），但 DD-R1-2 只寫「引擎沒有回報時」，沒有寫「回報了不能保存的值」；R1 record 與派工都把這個選擇列為契約沒有涵蓋的語義，所以 Executor 不自行決定。它只需要 `source.py` 的 `_engine_info`（封閉清單內）與測試，不需要修改受保護的檔案 | Design Authority | **NEEDS_DA**；其他部分已完成，不受影響 |
+| 觀察（不是 finding） | 呼叫者提供的請求位置的 `ref_id`、`role` 若含孤立 surrogate，`build_snapshot` 也會拋 `SnapshotValidationError`。這是呼叫端的輸入錯誤（CL-R1-24 的同類），不是引擎回應，不在 C2R1-F2 的範圍；本次沒有修改 | Design Authority 知悉（G-RREQ 的輸入檢查） | 知悉 |
+
+### 13.9 NOT VERIFIED 與 remaining work
+
+- NV-1（真實伺服器的 TLS、回應形狀，以及它是否可能回傳這類 shape 或字串）：**NOT VERIFIED／NOT RUN**。只在 Python 3.11.2 執行。TI-C2R1F3-1 屬 DA。
+- 下一步：(1) Design Authority 裁決 C-16-5，依裁決在 `source.py` 實作並補測試與突變（另一個 commit）；(2) Orchestrator 核對本 Executor 的 binding，派 cycle 2 R2（受審 subject 以 C-16-5 處理後的最終 subject 為準；R2 依 CL-R1-28 record 第 3.4 節只就 CL-R1-28 的項目核對 `ecddc57`）。
