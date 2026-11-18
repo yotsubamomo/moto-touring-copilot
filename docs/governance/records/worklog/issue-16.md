@@ -456,7 +456,7 @@
 | 兩方向各一種：去程道路屬性 503 帶 `motorway`、回程路線 500 | `test_r1_f1_a_non_200_trace_with_a_signal_in_one_direction_and_an_error_route_in_the_other` | PASS |
 | 非 200、沒有訊號 → 仍是 `routing_unavailable` | `test_r1_f1_a_non_200_route_reply_without_a_signal_is_routing_unavailable`、`test_r1_f1_a_non_200_route_reply_is_never_adopted`（完整的合成路線本文、狀態 302～503：`leg = None`、`freeway_check = None`、只送一個請求）、`test_r1_f1_a_non_200_road_attribute_reply_without_a_signal_is_routing_unavailable`；既有的 `test_no_request_is_retried_after_an_error_reply`、`test_s35_s38_one_direction_failing_stores_nothing_and_has_no_route`、`test_s39_a_failed_road_attribute_query_is_routing_unavailable_with_no_snapshot` 照常通過 | PASS |
 | 讀不到或不是 JSON 的本文不拋例外 | `test_r1_f1_unreadable_route_bodies_are_routing_unavailable_and_do_not_raise`（11 種本文 × 狀態 200、302、500）、`test_r1_f1_unreadable_non_200_trace_bodies_are_routing_unavailable_and_do_not_raise`（9 種本文 × 狀態 302、500） | PASS |
-| 200 的既有採用與拒收行為不變 | `tests/test_routing_engine.py` 的既有 210 個案例與 `tests/test_routing_transport.py` 的 63 個案例全部照常通過（沒有修改任何既有測試） | PASS |
+| 200 的既有採用與拒收行為不變 | `tests/test_routing_engine.py` 的既有 177 個案例與 `tests/test_routing_transport.py` 的 63 個案例全部照常通過（沒有修改任何既有測試） | PASS |
 
 E-3：新案例的回應全部由既有的合成產生器（`route_body`、`trace_body`）或手寫的位元組組成，沒有新的座標來源。E-4：同一檔的 autouse socket 封鎖與 `FakeEngine` 替身；沒有網路請求。E-5：沒有修改既有測試。
 
