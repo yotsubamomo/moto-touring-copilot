@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #15（SPEC-R1 R1-3），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **R1（`audit/issue-15-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`efbffe8`），待 R2（第 10 節）**：R1-F1 已修正。pytest `1678 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成；C-15-1～C-15-3 已由 `decision-20261118-issue15-c151.md` 裁決（CL-R1-22～CL-R1-24），CL-R1-22 的修改在 `e78cc9f`（第 9 節），待 R1。** pytest `1625 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)、(b) 除一處之外完成，pytest `1607 passed`（第 6 節 E-1）。**C-15-1（blocking）**：騎士指定的合法折返位置落在兩個軌跡點之間時，幾何要怎麼切開，契約有兩種以上合理的讀法（CL-R1-10 第 4 項「沿軌跡 m 公尺處」與 S64「沒有補造的軌跡點」）；這部分停止，程式以專用例外 fail closed，等 Design Authority 裁決。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| 狀態 | **Executor 工作完成；cycle 1 R2 PASS（`audit/issue-15-c1-r2.md`，受審 subject `48ff350`），R1-F1 RESOLVED，沒有未解 blocking finding；仍有 tracked items 與 NOT VERIFIED 項目（第 11 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。** 以下為先前狀態：**R1（`audit/issue-15-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`efbffe8`），待 R2（第 10 節）**：R1-F1 已修正。pytest `1678 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成；C-15-1～C-15-3 已由 `decision-20261118-issue15-c151.md` 裁決（CL-R1-22～CL-R1-24），CL-R1-22 的修改在 `e78cc9f`（第 9 節），待 R1。** pytest `1625 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)、(b) 除一處之外完成，pytest `1607 passed`（第 6 節 E-1）。**C-15-1（blocking）**：騎士指定的合法折返位置落在兩個軌跡點之間時，幾何要怎麼切開，契約有兩種以上合理的讀法（CL-R1-10 第 4 項「沿軌跡 m 公尺處」與 S64「沒有補造的軌跡點」）；這部分停止，程式以專用例外 fail closed，等 Design Authority 裁決。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `201e3e3`（派工時的 HEAD，含已結案的 #9、#13、#14）；實作 commit **`b771d9feabe2984caf8f636b930e0e86798a0bd4`**（`b771d9f`）。CL-R1-22 的修改 commit **`e78cc9f99f7c2f4b4f15f29103a282ee56fd3270`**（`e78cc9f`，父 commit 是 DA record 的 `0e4a93f`），是 #15 的 implementation subject（取代 `b771d9f`）。R1-F1 的 correction commit **`efbffe84ef8d618bd0536df94de2f5e9c2f36a4a`**（`efbffe8`，父 commit 是 R1 record 的 `fa7ae1b`），是 **#15 cycle 1 新的 implementation subject（R2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
@@ -391,3 +391,65 @@ Executor 自行觀測（`e78cc9f` 之後、寫本節之前）：agentId `ae0a2f3
 
 - Executor 自行觀測（`efbffe8` 之後、寫本節之前）：agentId `ae0a2f33f0da61e65`（同一個 agent，以 SendMessage 續派），(`claude-opus-5-5`, `high`) 125 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。**
 - 沒有新的 concern。R1 record 的 NV-BIND（Reviewer 的 binding 核對）屬 dispatcher，不是 Executor 的工作。
+
+## 11. 結案前的紀錄（record-only）
+
+本節只改本 worklog（record-only path，Bindings 第 7 節），不改變受審 subject。
+
+### 11.1 Audit 結果
+
+| Round | Record | 受審 subject | 結果 |
+| --- | --- | --- | --- |
+| R1（cycle 1） | `docs/governance/records/audit/issue-15-c1-r1.md` | `3d49cef` | BLOCKING：R1-F1（未知的 XML encoding 使 `LookupError` 逸出；Medium，owner＝#15 Executor）。沒有其他 finding |
+| R2（cycle 1，closure review） | `docs/governance/records/audit/issue-15-c1-r2.md` | `48ff3502a059cf4652b4b913344886e905d57102`（`48ff350`） | **`Verdict: PASS`**；R1-F1 **RESOLVED**；本次範圍內沒有未解 blocking finding |
+
+- **最終 audit subject**：`48ff350`。Implementation commits：`b771d9f`（初版）、`e78cc9f`（CL-R1-22）、`efbffe8`（R1-F1 的 correction）。`efbffe8` 之後到 `48ff350` 只有 record-only commit（`2e53f0a` worklog、`48ff350` run record）；本節的 commit 也是 record-only。
+- R2 record 的 NV-BIND（R2 Reviewer 的 binding 核對）由 Orchestrator／dispatcher 完成，不是 Executor 的工作；本 worklog 不記為已核對。NV-INTEGRATION（#16 共用介面、CLI／UI、`routes`／RouteSummary／PlanResult／LLM 的整合與 Spec Integration Audit）NOT RUN，owner＝Design Authority（分配與語義）／Orchestrator（派工）。
+- 程序紀錄：`efbffe8` 的 commit message 第一行用了 `[Fix] –`，不符合 `docs/conventions/git-commit-rules.md` 第一行應為 `[Modify] – …` 的規定。依 Orchestrator 的指示不改寫歷史（RB-6）；之後的 commit 照規定。
+
+### 11.2 Tracked items 與 NOT VERIFIED
+
+| 代號 | 內容 | Owner／required authority |
+| --- | --- | --- |
+| TI-C15-1 | 騎士指定的折返位置與實際採用的 `turnaround_m` 不同時，之後組裝 RouteSummary／文字的整合 Spec 決定是否以及如何向騎士顯示；顯示的折返位置必須是實際採用的值（`decision-20261118-issue15-c151.md` 第 7 節） | Design Authority（整合 Spec 的 derivation） |
+| RV-11 | SPEC-001 4.1 `target_gpx_turnaround_km`、§2 ID 列的 `RG-`、7.11 第 2 項 (i) 的文字同步：註明 CL-R1-22（以最接近的可用軌跡點實現、不內插、`RG-` 用該點的整數公尺、兩段共用分界點）（同 record 第 7 節） | Design Authority（文件工作） |
+| CL-R1-22 的已知限制 | 同 record 第 2.4 節：(1) **偏移**：採用的折返點與騎士指定的 m 最多相距所在線段的一半，在起點或終點附近、最近的點不可用時最多一整段；相鄰點最多可相距 1 km，所以稀疏的檔案上偏移可達數百公尺。(2) **整數公尺的解析度**：兩個累計距離取整後相同的分界點（相距不到 1 m），`RG-` 相同而幾何相差不到 1 m。**Spec Integration Audit 不得把這兩項記為已涵蓋** | Design Authority（知悉；顯示方式併入 TI-C15-1） |
+| NV-PRIV | 真實目標 GPX、真實騎乘資料，以及去回同路自動辨識的啟發式門檻（50 m／100 m／90%，沒有以真實資料驗證過）在真實資料上的表現：**NOT VERIFIED**。本 run 沒有私有資料授權；不得以合成測試外推 | acceptor（RB-7） |
+
+不在本 Ticket 的 tracked items（引用以免遺漏）：TI-C13-2、RV-6～RV-9、TI-C14-1、TI-C14-5 與 CL-R1-24（#16 的要求）各依其 record，本 Ticket 沒有動作。
+
+### 11.3 結案前的 pytest
+
+在本節其他內容寫完之後、commit 之前，於 HEAD `4a5050f`（工作目錄只有本 worklog 的修改；測試不讀本檔）執行 `.venv/Scripts/python.exe -m pytest -q`：
+
+exit 0，完整輸出：
+
+```text
+........................................................................ [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 72%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+......................                                                   [100%]
+1678 passed in 36.00s
+```
+
+與 `efbffe8` 的 E-1（第 10.4 節）相同：`1678 passed`，沒有 xfail／skip。
