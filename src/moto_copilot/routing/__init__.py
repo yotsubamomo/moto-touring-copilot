@@ -1,6 +1,9 @@
-"""Route snapshots for routing-engine routes (SPEC-R1 R1-2; SPEC-001 §2, 4.14, 7.11 items 1, 3, 4).
+"""Route sources: snapshots of routing-engine routes and the target route GPX.
 
-This package holds the snapshot model, the canonical hashing, write-once storage and selection.
+- Snapshots (SPEC-R1 R1-2; SPEC-001 §2, 4.14, 7.11 items 1, 3, 4): the snapshot model, the
+  canonical hashing, write-once storage and selection.
+- Target route GPX (SPEC-R1 R1-3; SPEC-001 7.11 item 2; CL-R1-10): `target_gpx`.
+
 Calling the routing engine, the freeway check and the offsets are not here (R1-4).
 """
 from .canonical import CanonicalError, canonical_bytes, canonical_json, sha256_hex
@@ -31,6 +34,20 @@ from .store import (
     select_snapshot_mode,
     select_strict,
 )
+from .target_gpx import (
+    TARGET_GPX_INVALID,
+    TARGET_GPX_NOT_ROUND_TRIP,
+    TargetGpxError,
+    TargetGpxLeg,
+    TargetGpxRoute,
+    TripTypeRequiredError,
+    TurnaroundSplitUndecidedError,
+    detect_out_and_back,
+    target_gpx_route,
+    target_gpx_route_from_bytes,
+    target_gpx_route_id,
+    turnaround_m_from_km,
+)
 
 __all__ = [
     "CanonicalError",
@@ -47,11 +64,19 @@ __all__ = [
     "SnapshotStoreError",
     "SnapshotValidationError",
     "StrictModeStop",
+    "TARGET_GPX_INVALID",
+    "TARGET_GPX_NOT_ROUND_TRIP",
+    "TargetGpxError",
+    "TargetGpxLeg",
+    "TargetGpxRoute",
+    "TripTypeRequiredError",
+    "TurnaroundSplitUndecidedError",
     "acquired_at",
     "build_snapshot",
     "canonical_bytes",
     "canonical_json",
     "compute_snapshot_id",
+    "detect_out_and_back",
     "find_reusable",
     "hash_scope",
     "is_compatible",
@@ -62,5 +87,9 @@ __all__ = [
     "select_snapshot_mode",
     "select_strict",
     "sha256_hex",
+    "target_gpx_route",
+    "target_gpx_route_from_bytes",
+    "target_gpx_route_id",
+    "turnaround_m_from_km",
     "validate_snapshot",
 ]
