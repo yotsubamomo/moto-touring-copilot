@@ -7,9 +7,10 @@ or env variables, so the endpoint cannot be redirected from outside the program.
 Identification (CL-R1-9; H-2): `USER_AGENT` is a generic client name. It holds no person's name,
 no email address and no project name.
 
-Transport: the caller gives a `transport` callable that sends one HTTP POST and returns an
-`HttpResponse` (status and body bytes), or raises `TransportError` when no response arrives.
-This module never opens a connection itself; tests replace the transport with doubles.
+Transport: `ValhallaClient` takes a `transport` callable that sends one HTTP POST and returns
+an `HttpResponse` (status and body bytes), or raises `TransportError` when no response arrives.
+The real HTTPS transport is in http_transport.py (CL-R1-25, decision-20261118-issue16-c161);
+this module itself never opens a connection, and tests replace the transport with doubles.
 
 Requests (CL-R1-5):
 - route: only the positions of one direction (latitude, longitude and the location type, in

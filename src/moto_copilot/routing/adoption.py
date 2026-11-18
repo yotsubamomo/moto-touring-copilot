@@ -5,16 +5,19 @@ road attribute query on that shape (CL-R1-5; no retry). It then collects every c
 7.11 items 5, 7 and 8:
 
 - freeway check (item 5): four signals. A direction is `pass` only when all four hold:
-  (1) the road attribute query succeeded and its total length is within 2% of the route length;
+  (1) the road attribute query succeeded, its reply has no warnings (CL-R1-27,
+      decision-20261118-issue16-c161), and its total length is within 2% of the route length;
   (2) no edge has road class `motorway`;
   (3) no edge name and no maneuver street name matches 國道|高速公路|Freeway (case-insensitive),
       and no maneuver is marked highway;
   (4) the engine reported `has_highway` and it is `false`.
   Any freeway signal (2)-(4) makes it `fail`, also when other information disagrees (fail
-  closed). No freeway signal but something that cannot be verified (the query failed, the
-  lengths differ by more than 2%, `has_highway` not reported, a response that cannot be read):
-  no `freeway_check` value at all.
-- warnings (item 7): any warning in the response means the direction is not adopted.
+  closed). No freeway signal but something that cannot be verified (the query failed, its
+  reply has warnings, the lengths differ by more than 2%, `has_highway` not reported, a response
+  that cannot be read): no `freeway_check` value at all.
+- warnings (item 7): any warning in the route response means the direction is not adopted; a
+  warning in the road attribute reply makes the freeway check unverifiable (CL-R1-27), so the
+  direction is not adopted either. The freeway signals of that reply still count.
 - offsets and order (item 8; CL-R1-7): start offset = start position to the first shape point;
   end offset = end position to the last shape point; each intermediate offset = distance to the
   nearest point of the shape (point to segment). Every offset must be at most 200 m, and the
@@ -52,9 +55,10 @@ HIGHWAY_IN_ROUTE = "highway_in_route"
 # The current freeway check method (SPEC-001 4.14 freeway_check_method). Changing the method or
 # a threshold changes this string, so older snapshots are no longer reused or selected.
 FREEWAY_CHECK_METHOD = (
-    "valhalla-trace_attributes-v1: pass needs has_highway reported false, no maneuver marked "
+    "valhalla-trace_attributes-v2: pass needs has_highway reported false, no maneuver marked "
     "highway, no motorway edge, no edge or maneuver name matching 國道|高速公路|Freeway "
-    "(case-insensitive), and a trace length within 2% of the route length"
+    "(case-insensitive), a road attribute reply without warnings, and a trace length within 2% "
+    "of the route length"
 )
 FREEWAY_NAME = re.compile(r"國道|高速公路|freeway", re.IGNORECASE)
 LENGTH_TOLERANCE = Decimal("0.02")  # SPEC-001 5.4 / 7.11 item 5
@@ -67,6 +71,7 @@ RESPONSE_MALFORMED = "response_malformed"   # a field needed for a check cannot 
 WARNINGS = "warnings"
 HAS_HIGHWAY_UNREPORTED = "has_highway_unreported"
 TRACE_FAILED = "trace_failed"
+TRACE_WARNINGS = "trace_warnings"           # the road attribute reply has warnings (CL-R1-27)
 TRACE_LENGTH_MISMATCH = "trace_length_mismatch"
 START_OFFSET = "start_offset"
 END_OFFSET = "end_offset"
@@ -80,7 +85,7 @@ SIGNAL_FREEWAY_NAME = "freeway_name"
 SIGNAL_MOTORWAY_EDGE = "motorway_edge"
 
 # Reasons that leave the freeway check unverifiable (no freeway_check value).
-_UNVERIFIABLE = (RESPONSE_MALFORMED, HAS_HIGHWAY_UNREPORTED, TRACE_FAILED, TRACE_LENGTH_MISMATCH)
+_UNVERIFIABLE = (RESPONSE_MALFORMED, HAS_HIGHWAY_UNREPORTED, TRACE_FAILED, TRACE_WARNINGS, TRACE_LENGTH_MISMATCH)
 
 _DECIMAL = Context(prec=400)
 
@@ -237,9 +242,14 @@ def _trace_facts(body, route_length_km: Decimal | None) -> tuple[list[str], list
     """Freeway signals and reasons from a road attribute query response."""
     signals: list[str] = []
     reasons: list[str] = []
+    # CL-R1-27: warnings that are present and not an empty list (any other value included) make
+    # the query not successful; null, absent or [] change nothing.
+    warnings = body.get("warnings") if isinstance(body, dict) else None
+    if warnings is not None and (not isinstance(warnings, list) or warnings):
+        reasons.append(TRACE_WARNINGS)
     edges = body.get("edges") if isinstance(body, dict) else None
     if not isinstance(edges, list) or not edges:
-        return signals, [TRACE_FAILED]
+        return signals, reasons + [TRACE_FAILED]
     total = Decimal(0)
     readable = True
     for edge in edges:

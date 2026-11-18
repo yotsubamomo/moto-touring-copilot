@@ -32,7 +32,7 @@ import pytest
 import moto_copilot.routing as routing
 from moto_copilot.contracts.schemas import ROUTE_ID_PATTERN, SNAPSHOT_ID_PATTERN
 from moto_copilot.ingest.segments import EARTH_RADIUS_M, haversine_m
-from moto_copilot.routing import adoption, source, store as store_module, valhalla
+from moto_copilot.routing import adoption, http_transport, source, store as store_module, valhalla
 from moto_copilot.routing import (
     ENGINE_NAME,
     ENGINE_VERSION_UNREPORTED,
@@ -70,7 +70,7 @@ from moto_copilot.routing.snapshot import TAIPEI
 import routing_synthetic as syn
 
 NOW = datetime(2026, 11, 18, 12, 0, 0, tzinfo=TAIPEI)
-NEW_MODULES = (valhalla, adoption, source)
+NEW_MODULES = (valhalla, adoption, source, http_transport)
 
 
 @pytest.fixture(autouse=True)
@@ -376,8 +376,11 @@ def test_an_explicitly_passed_endpoint_is_used():
 
 
 def test_the_new_modules_do_not_read_env_log_print_or_import_network_modules():
-    banned = {"logging", "socket", "http", "urllib", "requests", "httpx", "ssl", "subprocess"}
+    """Only http_transport may import http and ssl (CL-R1-25); nothing else is relaxed for it."""
     for module in NEW_MODULES:
+        banned = {"logging", "socket", "http", "urllib", "requests", "httpx", "ssl", "subprocess"}
+        if module is http_transport:
+            banned -= {"http", "ssl"}
         text = Path(module.__file__).read_text(encoding="utf-8")
         assert "environ" not in text and "getenv" not in text
         for node in ast.walk(ast.parse(text)):
@@ -802,12 +805,73 @@ def test_the_freeway_check_runs_even_when_the_offsets_already_fail():
 
 
 def test_the_freeway_check_method_names_the_method_and_thresholds():
-    for text in ("trace_attributes", "has_highway", "motorway", "國道|高速公路|Freeway", "2%"):
+    for text in ("trace_attributes", "has_highway", "motorway", "國道|高速公路|Freeway", "2%",
+                 "a road attribute reply without warnings"):
         assert text in FREEWAY_CHECK_METHOD
     lowered = (adoption.__doc__ + source.__doc__).lower()
     assert "not an independent check against road authority data" in lowered
     for claim in ("verified by the road authority", "independently verified", "official freeway data"):
         assert claim not in Path(adoption.__file__).read_text(encoding="utf-8").lower()
+
+
+# --- CL-R1-27: warnings in the road attribute reply (decision-20261118-issue16-c161 section 4.5) ---
+
+@pytest.mark.parametrize("warnings", [
+    [{"code": 400, "text": "synthetic trace warning"}],
+    [{"code": 1, "text": "a"}, {"code": 2, "text": "b"}],
+    "synthetic warning",
+    {"code": 1},
+    {},
+    ["not an object"],
+])
+def test_cl_r1_27_a_road_attribute_reply_with_warnings_is_unverifiable(store, tmp_path, warnings):
+    trace = dict(trace_body(OUT_POINTS), warnings=warnings)
+    outcome, engine = outcome_of(trace=trace)
+    assert outcome.reasons == ("trace_warnings",) and outcome.signals == ()
+    assert outcome.freeway_check is None and outcome.leg is None
+    assert engine.actions() == ["route", "trace_attributes"]
+    engine = one_way_engine(trace=trace)
+    result = plan(engine, store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:trace_warnings",))
+    assert engine.actions() == ["route", "trace_attributes"]  # one query, no retry, no status
+    assert stored_files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("edges_kw, signal", [
+    ({"road_class": "motorway"}, "motorway_edge"),
+    ({"names": ("國道5號",)}, "freeway_name"),
+])
+def test_cl_r1_27_warnings_with_a_freeway_signal_are_still_highway_in_route(store, tmp_path, edges_kw, signal):
+    trace = dict(trace_body(OUT_POINTS, **edges_kw), warnings=[{"code": 1, "text": "synthetic"}])
+    outcome, _ = outcome_of(trace=trace)
+    assert outcome.freeway_check == "fail" and signal in outcome.signals and "trace_warnings" in outcome.reasons
+    result = plan(one_way_engine(trace=trace), store, engine_request("one_way"))
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert stored_files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("warnings", [[], None])
+def test_cl_r1_27_empty_or_null_warnings_in_the_road_attribute_reply_change_nothing(store, warnings):
+    trace = dict(trace_body(OUT_POINTS), warnings=warnings)
+    outcome, _ = outcome_of(trace=trace)
+    assert outcome.freeway_check == "pass" and outcome.leg is not None
+    assert outcome.leg["warnings"] == []
+    assert isinstance(plan(one_way_engine(trace=trace), store, engine_request("one_way")), AdoptedRoute)
+
+
+def test_cl_r1_27_warnings_only_in_the_return_road_attribute_reply_store_nothing(store, tmp_path):
+    engine = round_trip_engine(back_trace=dict(trace_body(BACK_POINTS), warnings=[{"code": 1, "text": "synthetic"}]))
+    result = plan(engine, store)
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("return:trace_warnings",))
+    assert engine.actions() == ["route", "trace_attributes", "route", "trace_attributes"]
+    assert stored_files(tmp_path) == {}
+
+
+def test_cl_r1_27_status_reply_warnings_do_not_affect_adoption(store):
+    status = reply(dict(STATUS, warnings=[{"code": 1, "text": "synthetic"}]))
+    result = plan(round_trip_engine(statuses=[status]), store)
+    assert isinstance(result, AdoptedRoute)
+    assert store.load(result.snapshot_id)["engine_version"] == STATUS["version"]
 
 
 # --- offsets and order (7.11 item 8; CL-R1-7; S40, S68, S69, S70) ---------------------------------

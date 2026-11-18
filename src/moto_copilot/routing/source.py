@@ -136,7 +136,9 @@ def get_route(
     """The adopted route, or the route error code (see the module docstring).
 
     Engine requests: `store` is required; `client` is required in normal mode. A frozen list
-    (`frozen_entries`, possibly empty) means strict mode and `snapshot_mode` must then be True.
+    (`frozen_entries`, possibly empty) means strict mode and `snapshot_mode` must then be True;
+    a frozen list without Snapshot Mode is refused, never ignored (decision-20261118-issue16-c161
+    section 4.4).
     `now` is the time used for the 30-day reuse window (default: the current time in +08:00).
     """
     if isinstance(request, TargetGpxRequest):
@@ -236,8 +238,9 @@ def _engine_info(client: ValhallaClient) -> tuple[str, str | None]:
     """(engine_version, map_data_date) from the status reply (DD-R1-2).
 
     No version reported: the fixed string `unreported`, nothing guessed. `map_data_date` is the
-    +08:00 date of the reported `tileset_last_modified` (Unix seconds); not reported: None, never
-    the acquisition date.
+    +08:00 date of the reported `tileset_last_modified` (Unix seconds): the engine's reported tile
+    last-modified date (圖磚最後修改日期), not the date the OpenStreetMap data was taken. Not
+    reported: None, never the acquisition date (CL-R1-26, decision-20261118-issue16-c161).
     """
     try:
         reply = client.status()

@@ -530,19 +530,39 @@ def test_hashing_storage_and_selection_need_no_network(store, monkeypatch):
 
 
 def test_the_routing_package_imports_no_network_or_environment_modules():
+    """Only routing/http_transport.py may import `http` and `ssl` (CL-R1-25; changed in Issue #16 as
+    decision-20261118-issue16-c161 sections 2.2 and 2.4 allow). Every other module, at any depth,
+    imports no network module and does not import http_transport; no module reads env variables."""
     package = Path(routing.__file__).parent
     banned = {"socket", "http", "urllib", "requests", "httpx", "ssl", "subprocess"}
-    for source in package.glob("*.py"):
-        tree = ast.parse(source.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
+    transport = package / "http_transport.py"
+    assert transport.is_file()  # the one exemption must point at an existing file
+    sources = sorted(package.rglob("*.py"))  # recursive: a subpackage cannot get around the check
+    assert transport in sources
+    for source in sources:
+        text = source.read_text(encoding="utf-8")
+        allowed = {"http", "ssl"} if source == transport else set()
+        for node in ast.walk(ast.parse(text)):
             if isinstance(node, ast.Import):
                 names = [alias.name.split(".")[0] for alias in node.names]
-            elif isinstance(node, ast.ImportFrom) and node.level == 0:
-                names = [(node.module or "").split(".")[0]]
+                refers = any("http_transport" in alias.name.split(".") for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                names = [(node.module or "").split(".")[0]] if node.level == 0 else []
+                refers = ("http_transport" in (node.module or "").split(".")
+                          or any(alias.name == "http_transport" for alias in node.names))
+            elif isinstance(node, ast.Call):
+                func = node.func
+                name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else ""
+                names = []
+                refers = name in ("__import__", "import_module") and any(
+                    isinstance(arg, ast.Constant) and isinstance(arg.value, str) and "http_transport" in arg.value
+                    for arg in node.args)
             else:
                 continue
-            assert not (set(names) & banned), f"{source.name} imports {names}"
-        assert "environ" not in source.read_text(encoding="utf-8") and "getenv" not in source.read_text(encoding="utf-8")
+            assert not (set(names) & (banned - allowed)), f"{source.name} imports {names}"
+            if source != transport:
+                assert not refers, f"{source.name} imports http_transport"
+        assert "environ" not in text and "getenv" not in text
 
 
 # --- R1-F1 (audit issue-14-c1-r1): a list or object trip_type in a file -----------------------
