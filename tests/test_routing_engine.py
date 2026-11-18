@@ -1048,6 +1048,169 @@ def test_r2_f1_other_invalid_lengths_keep_their_results(store, tmp_path, raw):
     assert stored_files(tmp_path) == {}
 
 
+# --- C2R1-F1, C2R1-F4 (audit issue-16-c2-r1): shapes that decode beyond the float range ----------
+
+# Legal JSON strings in the polyline alphabet whose values are far beyond any position: the decoder
+# used to divide them by 1e6 and raise OverflowError.
+OVERFLOW_SHAPES = ["~" * 210 + "??", "??" + "~" * 300 + "?", "}" * 400 + "@?"]
+C2F_STATUSES = [200, 302, 400, 429, 500, 503]
+
+
+@pytest.mark.parametrize("shape", OVERFLOW_SHAPES)
+def test_c2r1_f1_the_decoder_raises_only_polyline_error(shape):
+    with pytest.raises(valhalla.PolylineError):
+        decode_polyline6(shape)
+
+
+def test_c2r1_f1_the_decoder_still_decodes_valid_and_boundary_shapes():
+    edge = [(90.0, 180.0), (-90.0, -180.0), (0.0, 0.0)]
+    assert decode_polyline6(encode6(edge)) == edge
+    assert decode_polyline6(encode6(OUT_POINTS)) == [(round(a * 1e6) / 1e6, round(b * 1e6) / 1e6) for a, b in OUT_POINTS]
+    for beyond in ([(90.000001, 0.0)], [(0.0, -180.000001)]):
+        with pytest.raises(valhalla.PolylineError):
+            decode_polyline6(encode6(beyond))
+    assert decode_polyline6("_" * 40 + "??") == [(0.0, 0.0)]  # zero chunks that continue stay zero
+
+
+def _with_shape(points, shape, **kwargs):
+    body = route_body(points, **kwargs)
+    body["trip"]["legs"][0]["shape"] = shape
+    return body
+
+
+@pytest.mark.parametrize("shape", OVERFLOW_SHAPES[:2])
+@pytest.mark.parametrize("signal", [False, True], ids=["no_signal", "signal"])
+@pytest.mark.parametrize("status", C2F_STATUSES)
+@pytest.mark.parametrize("direction", ["outbound", "return"])
+def test_c2r1_f1_an_overflowing_shape_is_unreadable_and_signals_still_count(store, tmp_path, direction, status, signal, shape):
+    if direction == "outbound":
+        bad = reply(_with_shape(OUT_POINTS, shape, has_highway=signal), status=status)
+        engine = FakeEngine(routes=[bad, reply(route_body(BACK_POINTS))], traces=[reply(trace_body(BACK_POINTS))])
+        expected = ["route", "route", "trace_attributes"]
+    else:
+        bad = reply(_with_shape(BACK_POINTS, shape, has_highway=signal), status=status)
+        engine = FakeEngine(routes=[reply(route_body(OUT_POINTS)), bad], traces=[reply(trace_body(OUT_POINTS))])
+        expected = ["route", "trace_attributes", "route"]
+    result = plan(engine, store)  # must not raise
+    assert result.code == (HIGHWAY_IN_ROUTE if signal else ROUTING_UNAVAILABLE)
+    assert f"{direction}:{'response_malformed' if status == 200 else 'engine_error'}" in result.reasons
+    assert (f"{direction}:has_highway" in result.reasons) is signal
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    assert engine.actions() == expected  # both directions sent; no query on an unreadable or error shape; no retry
+
+
+def test_c2r1_f1_an_outbound_signal_survives_an_overflowing_return_shape(store, tmp_path):
+    engine = FakeEngine(routes=[reply(route_body(OUT_POINTS, has_highway=True)), reply(_with_shape(BACK_POINTS, OVERFLOW_SHAPES[0]))],
+                        traces=[reply(trace_body(OUT_POINTS))])
+    result = plan(engine, store)
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert {"outbound:has_highway", "return:response_malformed"} <= set(result.reasons)
+    assert stored_files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("shape", OVERFLOW_SHAPES)
+def test_c2r1_f1_evaluate_direction_gives_no_freeway_check_value(shape):
+    outcome, engine = outcome_of(route=_with_shape(OUT_POINTS, shape))
+    assert outcome.reasons == ("response_malformed",) and outcome.signals == ()
+    assert outcome.freeway_check is None and outcome.leg is None
+    assert engine.actions() == ["route"]
+
+
+def _overflow_shape_snapshot(store):
+    legs = [syn.leg(d, shape=OVERFLOW_SHAPES[0], method=FREEWAY_CHECK_METHOD,
+                    fetched_at=(NOW - timedelta(days=1)).isoformat()) for d in ("outbound", "return")]
+    snap = syn.snapshot("round_trip", legs=legs, rkey=the_key(), routing_params=routing_params())
+    store.put(snap)
+    return snap
+
+
+def test_c2r1_f4_a_stored_shape_that_overflows_stops_snapshot_mode_with_an_integrity_error(store):
+    snap = _overflow_shape_snapshot(store)
+    with pytest.raises(SnapshotIntegrityError) as exc:
+        get_route(engine_request(), store=store, client=ValhallaClient(refusing_transport), snapshot_mode=True)
+    assert snap["snapshot_id"] in str(exc.value) and OVERFLOW_SHAPES[0][:20] not in str(exc.value)
+    assert exc.value.__cause__ is None and exc.value.__suppress_context__
+
+
+def test_c2r1_f4_the_same_snapshot_stops_normal_reuse_and_strict_mode_without_calling_the_engine(store):
+    snap = _overflow_shape_snapshot(store)
+    engine = FakeEngine()
+    with pytest.raises(SnapshotIntegrityError):
+        plan(engine, store)
+    assert engine.calls == []
+    entry = {"request_key": the_key(), "snapshot_id": snap["snapshot_id"], "sha256": store.file_sha256(snap["snapshot_id"])}
+    with pytest.raises(SnapshotIntegrityError):
+        get_route(engine_request(), store=store, client=ValhallaClient(refusing_transport), snapshot_mode=True,
+                  frozen_entries=[entry])
+
+
+# --- C2R1-F2 (audit issue-16-c2-r1): road names that are not valid Unicode text -----------------------
+
+LONE = "\ud800"
+
+
+def ascii_reply(body, status=200) -> HttpResponse:
+    """JSON with \\u escapes (json.dumps' default), so a lone surrogate reaches the parser as JSON text."""
+    data = json.dumps(body).encode("ascii")
+    assert b"\\ud800" in data or b"\\udfff" in data
+    return HttpResponse(status, data)
+
+
+def _lone_name_body(points, name=f"Synthetic {LONE} Road", **kwargs):
+    return route_body(points, names=(name, "Synthetic Road 2"), **kwargs)
+
+
+@pytest.mark.parametrize("direction", ["outbound", "return"])
+@pytest.mark.parametrize("signal", [False, True], ids=["no_signal", "signal"])
+@pytest.mark.parametrize("lone", ["\ud800", "\udfff"])
+def test_c2r1_f2_a_road_name_that_is_not_unicode_text_is_unreadable(store, tmp_path, direction, signal, lone):
+    name = f"Synthetic {lone} Road"
+    if direction == "outbound":
+        engine = round_trip_engine()
+        engine.queue["route"][0] = ascii_reply(_lone_name_body(OUT_POINTS, name, has_highway=signal))
+    else:
+        engine = round_trip_engine()
+        engine.queue["route"][1] = ascii_reply(_lone_name_body(BACK_POINTS, name, has_highway=signal))
+    result = plan(engine, store)  # must not raise
+    assert result.code == (HIGHWAY_IN_ROUTE if signal else ROUTING_UNAVAILABLE)
+    assert f"{direction}:response_malformed" in result.reasons
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    assert engine.actions() == ["route", "trace_attributes", "route", "trace_attributes"]  # no status request
+
+
+def test_c2r1_f2_a_one_way_route_with_such_a_name_is_routing_unavailable(store, tmp_path):
+    engine = one_way_engine(route=None)
+    engine.queue["route"][0] = ascii_reply(_lone_name_body(OUT_POINTS))
+    result = plan(engine, store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:response_malformed",))
+    assert stored_files(tmp_path) == {}
+
+
+def test_c2r1_f2_a_freeway_name_with_a_lone_surrogate_is_still_a_signal():
+    engine = FakeEngine(routes=[ascii_reply(_lone_name_body(OUT_POINTS, name=f"國道{LONE}3號"))],
+                        traces=[reply(trace_body(OUT_POINTS))])
+    outcome = evaluate_direction(ValhallaClient(engine, clock=Clock()), "outbound",
+                                 [valhalla.position_from(p) for p in OUT_POSITIONS])
+    assert outcome.freeway_check == "fail" and "freeway_name" in outcome.signals
+    assert "response_malformed" in outcome.reasons and outcome.leg is None
+
+
+def test_c2r1_f2_valid_names_are_still_stored(store):
+    result = plan(round_trip_engine(out=route_body(OUT_POINTS, names=("Synthetic 路 1", "Synthetic Road 2"))), store)
+    assert isinstance(result, AdoptedRoute)
+    assert store.load(result.snapshot_id)["legs"][0]["road_names"] == ["Synthetic 路 1", "Synthetic Road 2"]
+
+
+def test_c2r1_f2_a_lone_surrogate_in_a_road_attribute_name_does_not_stop_adoption(store):
+    """Road attribute names are not written into the snapshot, so they are not affected (unchanged)."""
+    engine = round_trip_engine()
+    engine.queue["trace_attributes"][0] = ascii_reply(trace_body(OUT_POINTS, names=(f"Synthetic {LONE}",)))
+    result = plan(engine, store)
+    assert isinstance(result, AdoptedRoute)
+
+
 # --- CL-R1-27: warnings in the road attribute reply (decision-20261118-issue16-c161 section 4.5) ---
 
 @pytest.mark.parametrize("warnings", [

@@ -17,7 +17,9 @@ road attribute query on that shape (CL-R1-5; no retry). It then collects every c
   that cannot be read): no `freeway_check` value at all. A reply with an HTTP status other than
   200 is never adopted, but the freeway signals readable in its body are still collected. A
   length or time that is not a usable finite number (including an int beyond the float range)
-  is unreadable, on HTTP 200 and on other statuses; it never stops the signal collection.
+  is unreadable, on HTTP 200 and on other statuses; it never stops the signal collection. So is a
+  shape that does not decode to in-range positions, and a maneuver street name that is not valid
+  Unicode text (it could not be stored in a snapshot).
 - warnings (item 7): any warning in the route response means the direction is not adopted; a
   warning in the road attribute reply makes the freeway check unverifiable (CL-R1-27), so the
   direction is not adopted either. The freeway signals of that reply still count.
@@ -154,6 +156,15 @@ class _RouteFacts:
     has_highway: bool | None = None
 
 
+def _is_unicode_text(text: str) -> bool:
+    """True when the string can be written as UTF-8: no lone surrogate (a JSON escape such as u+D800 alone)."""
+    try:
+        text.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def _names_of(maneuver: dict, facts: _RouteFacts, names: list[str]) -> None:
     for key in ("begin_street_names", "street_names"):
         value = maneuver.get(key)
@@ -168,6 +179,11 @@ def _names_of(maneuver: dict, facts: _RouteFacts, names: list[str]) -> None:
                 continue
             if FREEWAY_NAME.search(name):
                 facts.signals.append(SIGNAL_FREEWAY_NAME)
+            if not _is_unicode_text(name):
+                # A name that cannot be stored in a snapshot is unreadable: the direction is not
+                # adopted, and its freeway signals still count (C2R1-F2 of audit issue-16-c2-r1).
+                facts.reasons.append(RESPONSE_MALFORMED)
+                continue
             if name and name not in names:
                 names.append(name)
 

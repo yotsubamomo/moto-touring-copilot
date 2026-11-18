@@ -206,8 +206,24 @@ class PolylineError(ValueError):
     """An encoded shape cannot be decoded. The message never holds the shape."""
 
 
+# Positions are checked as integers (millionths of a degree) before any division, so that no
+# value of the shape can overflow a float (C2R1-F1 of audit issue-16-c2-r1).
+_LAT_LIMIT_E6 = 90_000_000
+_LON_LIMIT_E6 = 180_000_000
+# A zigzag value above this bound is a step of more than 2**30 millionths of a degree (over 1000
+# degrees): the position it leads to is out of range whatever came before, so decoding stops at
+# once instead of building an ever larger integer.
+_VALUE_BOUND = 2 ** 31
+
+
 def decode_polyline6(shape: str) -> list[tuple[float, float]]:
-    """A Valhalla encoded polyline (six decimal places) as [(lat, lon)], in order."""
+    """A Valhalla encoded polyline (six decimal places) as [(lat, lon)], in order.
+
+    Any shape that is not a list of in-range positions raises PolylineError and nothing else: a
+    character outside the alphabet, a value cut off at the end, or a position beyond 90 / 180
+    degrees, including values far too large for a float (C2R1-F1). Shapes accepted before are
+    decoded to the same points.
+    """
     if not isinstance(shape, str) or shape == "":
         raise PolylineError("the shape must be a non-empty string")
     out: list[tuple[float, float]] = []
@@ -225,13 +241,14 @@ def decode_polyline6(shape: str) -> list[tuple[float, float]]:
                     raise PolylineError("the shape holds a character outside the polyline alphabet")
                 result |= (b & 0x1F) << shift
                 shift += 5
+                if result > _VALUE_BOUND:
+                    raise PolylineError("the shape holds a position out of range")
                 if b < 0x20:
                     break
             deltas.append(~(result >> 1) if result & 1 else result >> 1)
         lat += deltas[0]
         lon += deltas[1]
-        point = (lat / 1e6, lon / 1e6)
-        if abs(point[0]) > 90.0 or abs(point[1]) > 180.0:
+        if abs(lat) > _LAT_LIMIT_E6 or abs(lon) > _LON_LIMIT_E6:
             raise PolylineError("the shape holds a position out of range")
-        out.append(point)
+        out.append((lat / 1e6, lon / 1e6))
     return out
