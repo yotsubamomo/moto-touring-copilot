@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #15（SPEC-R1 R1-3），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成；C-15-1～C-15-3 已由 `decision-20261118-issue15-c151.md` 裁決（CL-R1-22～CL-R1-24），CL-R1-22 的修改在 `e78cc9f`（第 9 節），待 R1。** pytest `1625 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)、(b) 除一處之外完成，pytest `1607 passed`（第 6 節 E-1）。**C-15-1（blocking）**：騎士指定的合法折返位置落在兩個軌跡點之間時，幾何要怎麼切開，契約有兩種以上合理的讀法（CL-R1-10 第 4 項「沿軌跡 m 公尺處」與 S64「沒有補造的軌跡點」）；這部分停止，程式以專用例外 fail closed，等 Design Authority 裁決。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `201e3e3`（派工時的 HEAD，含已結案的 #9、#13、#14）；實作 commit **`b771d9feabe2984caf8f636b930e0e86798a0bd4`**（`b771d9f`）。CL-R1-22 的修改 commit **`e78cc9f99f7c2f4b4f15f29103a282ee56fd3270`**（`e78cc9f`，父 commit 是 DA record 的 `0e4a93f`），是 **#15 新的 implementation subject**（取代 `b771d9f`）。worklog 在另外的 record-only commits |
+| 狀態 | **R1（`audit/issue-15-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`efbffe8`），待 R2（第 10 節）**：R1-F1 已修正。pytest `1678 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成；C-15-1～C-15-3 已由 `decision-20261118-issue15-c151.md` 裁決（CL-R1-22～CL-R1-24），CL-R1-22 的修改在 `e78cc9f`（第 9 節），待 R1。** pytest `1625 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)、(b) 除一處之外完成，pytest `1607 passed`（第 6 節 E-1）。**C-15-1（blocking）**：騎士指定的合法折返位置落在兩個軌跡點之間時，幾何要怎麼切開，契約有兩種以上合理的讀法（CL-R1-10 第 4 項「沿軌跡 m 公尺處」與 S64「沒有補造的軌跡點」）；這部分停止，程式以專用例外 fail closed，等 Design Authority 裁決。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `201e3e3`（派工時的 HEAD，含已結案的 #9、#13、#14）；實作 commit **`b771d9feabe2984caf8f636b930e0e86798a0bd4`**（`b771d9f`）。CL-R1-22 的修改 commit **`e78cc9f99f7c2f4b4f15f29103a282ee56fd3270`**（`e78cc9f`，父 commit 是 DA record 的 `0e4a93f`），是 #15 的 implementation subject（取代 `b771d9f`）。R1-F1 的 correction commit **`efbffe84ef8d618bd0536df94de2f5e9c2f36a4a`**（`efbffe8`，父 commit 是 R1 record 的 `fa7ae1b`），是 **#15 cycle 1 新的 implementation subject（R2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -289,3 +289,105 @@
 ### 9.4 Binding
 
 Executor 自行觀測（`e78cc9f` 之後、寫本節之前）：agentId `ae0a2f33f0da61e65`（同一個 agent，以 SendMessage 續派），(`claude-opus-5-5`, `high`) 104 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。**
+
+## 10. R1 的 targeted correction（cycle 1；R1-F1）
+
+依據：`docs/governance/records/audit/issue-15-c1-r1.md` R1-F1（Medium，blocking，owner＝#15 Executor）；Orchestrator 的 correction 派工（HEAD `fa7ae1b`）。R1 沒有其他 finding。
+
+### 10.1 問題的確認
+
+在 `fa7ae1b` 上重現：XML 宣告了 Python 不認得的 encoding 時，`ET.fromstring` 拋 `LookupError`；`ingest/geometry.py` 只捕捉 `ET.ParseError`、`ValueError`，所以原始的解析器例外從 bytes 與 path 兩個入口逸出，沒有回傳 `target_gpx_invalid`。Executor 另以 session scratchpad 的探測（只用合成的 GPX 字串，沒有寫入 repo）對 Python 3.11.2 `encodings` 套件的每一個 codec 名稱、一個不存在的名稱、空字串與 300 字元的名稱作 encoding 宣告，並試了 NUL 位元組、壞掉的 BOM、不合法的 UTF-8、實體展開（billion laughs）、外部實體、未定義的實體與 10 萬層巢狀元素，記錄 `ET.fromstring` 拋出的例外型別：
+
+| 例外 | 例子 | 修正前 |
+| --- | --- | --- |
+| `LookupError` | 不存在的 codec 名稱；非文字的 codec（`hex_codec`、`base64_codec`、`bz2_codec`、`zlib_codec`、`quopri_codec`、`uu_codec`、`rot_13`）；`aliases` | **逸出（R1-F1）** |
+| `ValueError` | 多位元組 codec（`big5`、`cp932`、`gbk`、`euc_jp` 等 28 個） | 已捕捉 |
+| `UnicodeError`、`UnicodeDecodeError`（都是 `ValueError` 的子類別） | `idna`、`undefined`；`punycode` | 已捕捉 |
+| `ET.ParseError` | 不是 well-formed、NUL、壞掉的 BOM、不合法的 UTF-8、空的 encoding 名稱、`cp037` 等 EBCDIC codec；expat 的實體展開上限（「limit on input amplification factor」）、外部實體與未定義的實體 | 已捕捉 |
+| 沒有例外 | 10 萬層巢狀元素（解析成功，之後是 `unreadable` 或沒有點） | — |
+
+逸出這個邊界的只有 `LookupError`。
+
+### 10.2 修改（`fa7ae1b` → `efbffe8`）
+
+1. `src/moto_copilot/ingest/geometry.py`：唯一的 XML 解析呼叫 `ET.fromstring(data)` 捕捉 `_UNPARSEABLE = (ET.ParseError, ValueError, LookupError)`，並說明每一類代表什麼。固定的 `GpxGeometryError(UNREADABLE)` 照舊在 `except` 區塊之外建立，所以沒有解析器的訊息，`__context__`、`__cause__` 都是 `None`。
+   - **選擇與理由**：只保護這一個呼叫，而且是在確認 `data` 是 bytes 之後，所以這裡的 `LookupError` 只可能來自檔案宣告的 encoding（codec 查找），不會吞掉呼叫端的錯誤。**沒有**改成 `except Exception`：`TypeError`、`AttributeError`、`MemoryError`、`RecursionError` 等是程式或資源的錯誤，不是檔案內容的問題，照舊向上傳遞。`LookupError` 也包含 `KeyError`、`IndexError`；在這一行中，它們只可能來自標準函式庫內部對 bytes 的處理，範圍與 codec 查找相同，所以不另外依訊息區分（依訊息區分會依賴解析器的文字，較脆弱）。
+   - 呼叫端型別錯誤的語義不變：`parse_gpx_geometry` 對非 bytes 拋 `TypeError`，`read_gpx_geometry` 對非 `str`／`os.PathLike` 拋 `TypeError`，行程型態照舊拋 `TripTypeRequiredError`／`ValueError`，折返位置不是數字照舊拋 `TypeError`（CL-R1-23 第 5 項；D-15-12）。
+2. `tests/test_target_gpx.py`：新增 7 個測試函式（53 個案例），見第 10.3 節。既有測試沒有修改。
+3. #9 的讀取（`ingest/gpx.py`、`segments.py`、`__init__.py`）與 `routing/` 沒有修改：`git diff fa7ae1b efbffe8 -- src/moto_copilot/ingest/gpx.py src/moto_copilot/ingest/segments.py src/moto_copilot/ingest/__init__.py` 為空；`git diff --stat fa7ae1b efbffe8`：2 files changed（`geometry.py` 12 行、`tests/test_target_gpx.py` 97 行），108 insertions(+), 1 deletion(-)。
+4. 依 SA-1 本機 commit `efbffe8`；暫存的只有這兩個檔案（`git diff --cached --name-only` 確認），不含 `.env`、GPX、FIT 或 `data/`。沒有 push、沒有碰 GitHub；沒有讀取、列出或搜尋 `data/`；沒有讀或執行 `experiments/`；沒有讀 `.env`。
+
+### 10.3 新增的測試（既有測試沒有修改）
+
+`UNPARSEABLE` 是 10 種合成的輸入：
+- 修正前會拋 `LookupError` 的 5 種：不存在的 encoding `SyntheticUnknownEncodingProbe`、`hex_codec`、`rot_13`、`zlib_codec`、`base64_codec`；
+- 以回歸測試保留、本來就拋 `ValueError` 系列的 3 種：`big5`、`idna`、`punycode`；
+- 以回歸測試保留、本來就拋 `ParseError` 的 2 種：實體展開與外部實體。
+
+每一種都用測試中產生的去回 GPX，只換掉 XML 宣告。
+
+| 測試 | 內容 |
+| --- | --- |
+| `test_the_probe_inputs_still_raise_in_the_bare_parser` | 不經本模組時，標準函式庫的 `ET.fromstring` 對未知 encoding 仍拋 `LookupError`：證明測試的輸入確實觸發 R1-F1 |
+| `test_unparseable_bytes_give_a_fixed_unreadable_error_without_a_chain`（10 個案例） | `parse_gpx_geometry`：`reason == "unreadable"`，訊息完全等於固定文字，`__context__`、`__cause__` 都是 `None`，不含 encoding 名稱、「line」「column」「codec」「amplification」「entity」 |
+| `test_unparseable_bytes_through_the_bytes_entry_are_target_gpx_invalid`（10 × 2 種行程型態） | `target_gpx_route_from_bytes`，沒有給與給了折返位置：結果等於 `TargetGpxError('target_gpx_invalid', 'unreadable')`，不是路線；stdout／stderr 為空，沒有 log 紀錄 |
+| `test_unparseable_files_through_the_path_entry_are_target_gpx_invalid`（10 × 2） | 寫在 `tmp_path` 下、目錄名與檔名是可辨認的合成字串的檔案，以 `Path` 與 `str` 呼叫 `target_gpx_route`：結果同上；結果的 `repr` 與欄位不含路徑與檔名；`read_gpx_geometry` 的錯誤的訊息、`repr`、`args` 不含路徑與檔名，例外鏈為空；stdout／stderr 不含路徑，沒有 log 紀錄 |
+| `test_caller_type_errors_are_still_raised_and_not_turned_into_route_errors` | bytes 入口傳入非 bytes、path 入口傳入 `int`、`float`、`bytes`、`None` 仍拋 `TypeError`；沒有行程型態仍拋 `TripTypeRequiredError`（即使內容無法解析）；折返位置是字串仍拋 `TypeError` |
+| `test_a_valid_known_encoding_declaration_is_still_read` | 宣告 `UTF-8`、`utf-8`、`ascii`、`cp1252`、`ISO-8859-1` 的檔案照常得到路線 |
+
+### 10.4 Verification（subject `efbffe8`）
+
+**E-1。** `.venv/Scripts/python.exe -m pytest -q`：exit 0，`1678 passed in 34.91s`。`.venv/Scripts/python.exe -m pytest -q -rxX`：exit 0，完整輸出如下（除了最後一行的執行時間，進度行與 `-q` 的輸出逐字相同，沒有 xfail／xpass 的摘要）：
+
+```text
+........................................................................ [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 72%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 98%]
+......................                                                   [100%]
+1678 passed in 38.26s
+```
+
+`1625`（`e78cc9f`）＋ `53`（新增的案例）＝ `1678`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空；`git ls-files` 沒有 `data/`、`.gpx`、`.fit`、`.env`。
+
+**E-2。** S43（`target_gpx_invalid` 的情形）、S10（不含路徑與檔名）與 CL-R1-23 第 1 項加上第 10.3 節的測試，PASS。其他各列不變，在 `efbffe8` 上重新執行全部 PASS。
+
+**E-5。** 沒有修改既有測試。
+
+**E-6（self-verification；不是 independent audit）。**
+- 突變檢查（session scratchpad 的腳本在記憶體中替換 `geometry.py` 的原始碼字串，跑 `tests/test_target_gpx.py`，在 `finally` 中寫回原文）：
+
+| 突變 | 結果 |
+| --- | --- |
+| 回到修正前的捕捉範圍（沒有 `LookupError`） | 抓到（25 個失敗） |
+| 在 `except` 區塊內拋出（帶例外鏈） | 抓到（31） |
+| 把解析器的訊息接進錯誤 | 抓到（54） |
+| 拿掉呼叫端的 bytes 型別檢查 | 抓到（1） |
+
+- **H-2**：無法解析的檔案經 path 入口時，結果、錯誤、例外鏈、stdout／stderr 與 log 都不含路徑與檔名（第 10.3 節）。新的輸入都是合成的 GPX 字串；外部實體只指向不存在的合成 URI `file:///synthetic-none`，expat 不讀它（ElementTree 不解析外部實體）。真實目標 GPX 的行為仍 **NOT VERIFIED**，required authority = acceptor（RB-7）。
+- **H-4**：內容問題一律回傳明確的 `target_gpx_invalid`，不產生路線，也不拋未預期的例外；呼叫端的錯誤照舊向上傳遞，不被當成路線錯誤代碼。
+- **H-3**：沒有修改說明文字；`test_the_detection_is_described_as_not_validated` 照常通過。
+
+### 10.5 Binding 與 concerns
+
+- Executor 自行觀測（`efbffe8` 之後、寫本節之前）：agentId `ae0a2f33f0da61e65`（同一個 agent，以 SendMessage 續派），(`claude-opus-5-5`, `high`) 125 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。**
+- 沒有新的 concern。R1 record 的 NV-BIND（Reviewer 的 binding 核對）屬 dispatcher，不是 Executor 的工作。
