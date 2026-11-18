@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 **#16 新的 implementation subject**（取代 `7cb4b0c`）。worklog 在另外的 record-only commits |
+| 狀態 | **R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 **#16 cycle 1 新的 implementation subject（R2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -383,3 +383,96 @@
 ### 10.9 Audit status
 
 同第 8 節：R1 必要，尚未派工；本節的 self-verification 不是 audit。
+
+## 11. R1-F1 的 targeted correction（audit `issue-16-c1-r1.md`；subject `65aa00c`）
+
+### 11.1 Finding 與契約
+
+- **R1-F1（Medium，blocking，owner #16 Executor）**：`f6810d2` 的 `adoption.py` 遇到 HTTP 狀態不是 200 的路線回應時，在呼叫 `_route_facts` 之前就回傳沒有訊號的 `engine_error`；遇到不是 200 的道路屬性回應時只加 `trace_failed`，沒有執行 `_trace_facts`。本文中可讀的國道訊號（`has_highway: true`、`motorway`、國道名稱）因此遺失，結果是 `routing_unavailable` 而不是 `highway_in_route`，違反 CL-R1-8「先檢查所有可取得的國道訊號，再決定代碼」。
+- 修正的要求（audit record 第 2 節 Required fix；Orchestrator 派工）：回應是否成功與訊號的收集分開；非 200 仍記 `engine_error`／`trace_failed`、永不採用；決定代碼前收集本文所有可讀的國道訊號；不跟隨轉址、不重試、不採用錯誤回應、不存快照；加入三類回歸案例，確認沒有訊號的非 200 仍是 `routing_unavailable`、200 的既有行為不變；讀不到或不是 JSON 的非 200 本文仍是 `routing_unavailable` 而且不拋例外。
+- 角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`）。Executor 自行觀測（`65aa00c` 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 197 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。** 沒有使用 bounded assignments，沒有派工任何 subagent。
+
+### 11.2 修改（`90efe65` → `65aa00c`；只有 `adoption.py` 與 `tests/test_routing_engine.py`）
+
+| # | 決定 | 依據 |
+| --- | --- | --- |
+| D-16-24 | 路線回應：狀態不是 200 或本文沒有 `trip` 物件時，結果一律是 `engine_error`、`leg = None`（永不採用）。本文是物件而且有 `trip` 物件時（不論狀態），先以 `_route_facts` 收集其中的國道訊號（`has_highway`、轉向的 highway 旗標、轉向的國道名稱），有訊號時 `freeway_check = "fail"`。這個回應不作為任何後續請求的依據：**不以錯誤回應的 shape 送道路屬性查詢**（CL-R1-5 的一次查詢是對可採用的路線回應；錯誤回應的 shape 不是可採用的路線） | CL-R1-8；R1-F1 |
+| D-16-25 | 道路屬性回應：狀態不是 200 時仍記 `trace_failed`（無法驗證）；本文是物件時以 `_trace_facts` 收集其中的國道訊號（`motorway`、國道名稱），它的其他原因（長度、警告）不另外列入，因為查詢已經是失敗 | CL-R1-8；R1-F1；CL-R1-27 不受影響 |
+| D-16-26 | 讀不到的本文（不是 JSON、不是物件、`trip` 或 `edges` 的形狀不對、欄位型別錯誤）只得到 `engine_error`／`trace_failed` 與能讀到的訊號，不拋例外；結果是 `routing_unavailable`（除非讀到國道訊號） | R1-F1 Required fix；H-4 |
+
+模組說明補上「非 200 的回應永不採用，但本文中可讀的國道訊號照樣收集」。`source.py`、`valhalla.py`、`http_transport.py` 與其他檔案沒有修改（`git diff --stat 90efe65 65aa00c`：2 files changed, 128 insertions(+), 3 deletions(-)）。
+
+### 11.3 E-1 pytest（subject `65aa00c`）
+
+`.venv/Scripts/python.exe -m pytest -q`，在 commit 之後、工作目錄乾淨時執行，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+.......................................................................  [100%]
+2015 passed in 38.98s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`，exit 0，摘要：
+
+```text
+.......................................................................  [100%]
+2015 passed in 39.18s
+```
+
+`1918`（`f6810d2`）＋ `97`（R1-F1 的回歸案例）＝ `2015`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。`git ls-files` 不含 `data/`、`.gpx`、`.fit`、`.env`、`*.key`（0 筆）。
+
+### 11.4 E-2：R1-F1 的 coverage（`tests/test_routing_engine.py`）
+
+| 情形 | 測試 | 結果 |
+| --- | --- | --- |
+| 非 200 的路線回應帶 `has_highway: true`、國道名稱、highway 旗標（狀態 302、400、429、500、503） | `test_r1_f1_a_non_200_route_reply_with_a_freeway_signal_is_highway_in_route`（15 個案例；經 `get_route` 的來回行程：`highway_in_route`，reasons 含訊號與 `engine_error`，沒有路線、沒有快照；請求是 `route`、`route`、`trace_attributes`：錯誤回應不送道路屬性查詢、另一方向照送、沒有狀態請求） | PASS |
+| 非 200 的道路屬性回應帶 `motorway`、`Freeway` 名稱、`國道` 名稱（同上 5 種狀態） | `test_r1_f1_a_non_200_road_attribute_reply_with_a_freeway_signal_is_highway_in_route`（15 個案例；reasons 含訊號與 `trace_failed`；沒有重試、沒有狀態請求、沒有快照） | PASS |
+| 兩方向各一種：去程道路屬性 503 帶 `motorway`、回程路線 500 | `test_r1_f1_a_non_200_trace_with_a_signal_in_one_direction_and_an_error_route_in_the_other` | PASS |
+| 非 200、沒有訊號 → 仍是 `routing_unavailable` | `test_r1_f1_a_non_200_route_reply_without_a_signal_is_routing_unavailable`、`test_r1_f1_a_non_200_route_reply_is_never_adopted`（完整的合成路線本文、狀態 302～503：`leg = None`、`freeway_check = None`、只送一個請求）、`test_r1_f1_a_non_200_road_attribute_reply_without_a_signal_is_routing_unavailable`；既有的 `test_no_request_is_retried_after_an_error_reply`、`test_s35_s38_one_direction_failing_stores_nothing_and_has_no_route`、`test_s39_a_failed_road_attribute_query_is_routing_unavailable_with_no_snapshot` 照常通過 | PASS |
+| 讀不到或不是 JSON 的本文不拋例外 | `test_r1_f1_unreadable_route_bodies_are_routing_unavailable_and_do_not_raise`（11 種本文 × 狀態 200、302、500）、`test_r1_f1_unreadable_non_200_trace_bodies_are_routing_unavailable_and_do_not_raise`（9 種本文 × 狀態 302、500） | PASS |
+| 200 的既有採用與拒收行為不變 | `tests/test_routing_engine.py` 的既有 210 個案例與 `tests/test_routing_transport.py` 的 63 個案例全部照常通過（沒有修改任何既有測試） | PASS |
+
+E-3：新案例的回應全部由既有的合成產生器（`route_body`、`trace_body`）或手寫的位元組組成，沒有新的座標來源。E-4：同一檔的 autouse socket 封鎖與 `FakeEngine` 替身；沒有網路請求。E-5：沒有修改既有測試。
+
+### 11.5 E-6 與突變檢查
+
+- H-4：每一種非 200 的情形都是明確的路線錯誤代碼，永不採用、不存快照；國道訊號在非 200 時也優先（CL-R1-8）。H-1、H-2 不受影響（傳輸層與請求內容沒有修改；錯誤回應不觸發任何新的請求）。
+- 突變（`mutate16b.py`，原文以原本的位元組寫回；結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同，`sources restored: True`）：第 10.7 節的 33 個突變加上 4 個新突變，**37 個全部被抓到**。新突變：
+
+| # | 突變 | 失敗 |
+| --- | --- | --- |
+| F1a | 非 200 路線回應的訊號不收集（還原 R1-F1 的缺陷） | 15 |
+| F1b | 非 200 道路屬性回應的訊號不收集（還原 R1-F1 的缺陷） | 16 |
+| F1c | 有 `trip` 的非 200 路線回應被當成成功的回應處理 | 26 |
+| F1d | 對非 200 路線回應送道路屬性查詢 | 34 |
+
+### 11.6 Remaining work
+
+1. Orchestrator 核對本 Executor 的 binding，派 R2（受審 subject `65aa00c`）；R2 重讀 R1 record 與本節的證據。
+2. 第 9 節第 2～3 項不變（#14、#15 的最終 subject；TI-C16-2、TI-C16-3；NV-1 與真實請求 NOT RUN；RV-12～RV-14）。
