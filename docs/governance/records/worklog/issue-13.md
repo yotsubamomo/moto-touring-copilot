@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #13（SPEC-R1 R1-1），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **R1 BLOCKING（R1-F1）的 targeted correction 已完成（`3c065f8`），待 R2（第 9 節）。** 以下為先前狀態：**Executor 工作完成，待 R1。** C-13-1 已由 Design Authority 裁決（`decision-20261118-issue13-c131.md`，CL-R1-12、CL-R1-13），依該 record 第 5 節修正 `build_route`（`6ec1903`），pytest `875 passed`（第 6 節 V-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：`153adca` 時為 NEEDS_DA（`1 failed, 874 passed`）→ DA 裁決 → `6ec1903` |
+| 狀態 | **cycle 1 R2 PASS**（`audit/issue-13-c1-r2.md`，受審 subject `be76a97`），R1-F1 RESOLVED，沒有未解 blocking finding；仍有 open 的 tracked items（第 10 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1 BLOCKING（R1-F1）的 targeted correction 已完成（`3c065f8`），待 R2（第 9 節）。** **Executor 工作完成，待 R1。** C-13-1 已由 Design Authority 裁決（`decision-20261118-issue13-c131.md`，CL-R1-12、CL-R1-13），依該 record 第 5 節修正 `build_route`（`6ec1903`），pytest `875 passed`（第 6 節 V-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：`153adca` 時為 NEEDS_DA（`1 failed, 874 passed`）→ DA 裁決 → `6ec1903` |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `1fd1de3585ea23f80842ac3276fe9305369b51e3`（`1fd1de3`，派工時的 HEAD，含 #10 的最終 commit 與 `_whole_count`）；實作 commit **`153adcadfdf02f3697ba47f8912ac444c1a3f8d3`**（`153adca`）；CL-R1-12 的實作 commit **`6ec1903632a1fbff90405de2627eb9dee5d51950`**（`6ec1903`，父 commit 是 DA record 的 `5c2e0e8`），R1 的受審 subject。R1-F1 的 correction commit **`3c065f8d9d433aa00253078b209dd025d154df2b`**（`3c065f8`，父 commit 是 R1 record 的 `e5dfe5e`），是**最終 implementation subject**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
@@ -370,3 +370,53 @@ data contracts v0.3: tests\fixtures\contract_v02\mock_dataset.json
 | C-13-7 | v0.2 既有的 `route_id`、`checkpoint_id` 主鍵與集合檢查，對不可 hash 的值拋 `TypeError`（BASE `1fd1de3` 已存在）。不在 R1-1 新增的 helper，沒有修改 | Design Authority（是否列為 tracked item 或納入之後的 `contracts` 工作） | open |
 
 **剩餘工作**：Executor 端沒有。下一步由 Orchestrator 對 `3c065f8` 派 R2（治理 §4.4：R1-F1 是否解決、有沒有回歸、修正直接產生或暴露的 blocking defect）。
+
+## 10. R2 結果與結案前的紀錄（record-only）
+
+### 10.1 R2
+
+- Record：`docs/governance/records/audit/issue-13-c1-r2.md`，**`Verdict: PASS`**。R1-F1 **RESOLVED**，沒有新的 blocking 或 non-blocking findings；C-13-7 經 R2 判定不是 correction 直接產生或暴露的缺陷，維持 tracked item。
+- R2 record 自列 **NV-B2**（required authority＝dispatcher／Orchestrator）：採用該 record 前須補記 R2 的 dispatch event 與 binding 核對。這不是 Executor 的工作，本 worklog 不代為記載或宣稱已完成。
+- **最終受審 subject：`be76a977f9b8561b27f28640f180923103f4537b`（`be76a97`）**。Implementation commits：`153adca`（契約 v0.3 的 ID 樣式與契約 2）、`6ec1903`（CL-R1-12，`build_route` 的三個鍵）、`3c065f8`（R1-F1 的型別守衛與 regression tests）。`3c065f8` 之後只有 record-only commits（`docs/governance/records/**`）；`git diff --stat be76a97 89def97` 只含 R2 record 與 run record。
+- 本節的 commit 只修改本 worklog，不改變受審 subject 的 identity（Bindings 第 7 節 record-only paths）。
+
+### 10.2 最終狀態的 pytest
+
+在 HEAD `89def97`（`git status --short` 為空；相對 `be76a97` 只多了 record-only 變更），`PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m pytest -q`，exit code **0**，完整 stdout：
+
+```text
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 49%]
+........................................................................ [ 57%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+........................................................................ [ 81%]
+........................................................................ [ 90%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+879 passed in 17.90s
+```
+
+### 10.3 Open tracked items 與 owner
+
+以下都不是 #13 的剩餘實作，也都不得在沒有對應授權時作為新工作執行（治理 §1.2）。
+
+| # | 內容 | Owner／authority | 依據 |
+| --- | --- | --- | --- |
+| C-13-3 | Executor 一次 `Grep` 的 glob 包含 `experiments/**/*.py`（超出派工的可讀路徑；沒有讀 `data/`、沒有執行腳本） | Orchestrator（紀錄） | run record 事件 61；R1／R2 的 NV-ACCESS（Executor transcript 未由 Reviewer 獨立重查） |
+| C-13-6／NV-EXP | `experiments/` 中呼叫 `build_route` 的腳本，在路線紀錄多出三個鍵後的行為：NOT VERIFIED | 之後執行它們的 work item；需要私有資料時 acceptor | DA record `decision-20261118-issue13-c131.md` §6；R1、R2 的 NV-EXP |
+| TI-C13-2 | `_TRIP_ID`、`_DATETIME` 的樣式在 Python `re` 下接受結尾換行與非 ASCII 數字 | Design Authority | DA record §3.2（CL-R1-13 的同一解讀；在後續 `contracts` derivation 或 acceptor 的 Lightweight 指示下處理） |
+| C-13-7 | v0.2 既有的 `route_id`、`checkpoint_id` 主鍵與集合檢查，對不可 hash 的值拋 `TypeError`（BASE `1fd1de3` 已存在） | Design Authority | worklog §9.3、§9.6；R2 record「Correction 直接產生或暴露缺陷的核對」 |
+| RV-6 | `DESIGN.md` §5（v0.3 前言、契約 2 的 `kind` 列與不變條件 4、5）、§9.1、§9.3 的文字同步 | Design Authority（AB-12 的文件工作；最早在 SPEC-R1 phase acceptance 之後） | DA record §4 |
+| RV-7 | SPEC-001 §2 的 ID 列註記 CL-R1-13 | Design Authority（AB-12） | DA record §4 |
+| NV-PRIV | 真實 GPX、私有路線、保留行程與任何需要私有資料的行為：NOT VERIFIED（本 Ticket 的 AC 只用合成資料） | acceptor（RB-7） | R1、R2 的 NV-PRIV |
+
+### 10.4 Binding
+
+同一個 agent（`a95eaf00e5bb8b468`，`gov-executor`）以 SendMessage 續派；本節只作 record-only 的更新。Binding 的核對由派工者依 Bindings 第 3.6 節進行。
+
+**剩餘工作**：Executor 端沒有。Ticket closure、NV-B2 的 binding 核對與上表 tracked items 的追蹤由各 owner 處理。
