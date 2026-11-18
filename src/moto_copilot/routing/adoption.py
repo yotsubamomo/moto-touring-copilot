@@ -14,7 +14,8 @@ road attribute query on that shape (CL-R1-5; no retry). It then collects every c
   Any freeway signal (2)-(4) makes it `fail`, also when other information disagrees (fail
   closed). No freeway signal but something that cannot be verified (the query failed, its
   reply has warnings, the lengths differ by more than 2%, `has_highway` not reported, a response
-  that cannot be read): no `freeway_check` value at all.
+  that cannot be read): no `freeway_check` value at all. A reply with an HTTP status other than
+  200 is never adopted, but the freeway signals readable in its body are still collected.
 - warnings (item 7): any warning in the route response means the direction is not adopted; a
   warning in the road attribute reply makes the freeway check unverifiable (CL-R1-27), so the
   direction is not adopted either. The freeway signals of that reply still count.
@@ -364,8 +365,12 @@ def evaluate_direction(client: ValhallaClient, direction: str, positions: Sequen
     except TransportError:
         return DirectionOutcome(direction, (), (ENGINE_UNREACHABLE,), None, None, unreachable=True)
     body = reply.body
-    if reply.status != 200 or not isinstance(body, dict) or not isinstance(body.get("trip"), dict):
-        return DirectionOutcome(direction, (), (ENGINE_ERROR,), None, None)
+    has_trip = isinstance(body, dict) and isinstance(body.get("trip"), dict)
+    if reply.status != 200 or not has_trip:
+        # Not adopted, and no further request is based on this reply. Every freeway signal its
+        # body still shows is collected first (CL-R1-8; R1-F1 of audit issue-16-c1-r1).
+        signals = _unique(_route_facts(body).signals) if has_trip else ()
+        return DirectionOutcome(direction, signals, (ENGINE_ERROR,), "fail" if signals else None, None)
 
     facts = _route_facts(body)
     signals, reasons = list(facts.signals), list(facts.reasons)
@@ -381,6 +386,10 @@ def evaluate_direction(client: ValhallaClient, direction: str, positions: Sequen
         else:
             if trace.status != 200:
                 reasons.append(TRACE_FAILED)
+                # The reply is not a successful query, but its readable freeway signals still
+                # count (CL-R1-8; R1-F1 of audit issue-16-c1-r1).
+                if isinstance(trace.body, dict):
+                    signals += _trace_facts(trace.body, facts.length_km)[0]
             else:
                 trace_signals, trace_reasons = _trace_facts(trace.body, facts.length_km)
                 signals += trace_signals

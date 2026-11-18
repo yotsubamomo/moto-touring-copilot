@@ -814,6 +814,122 @@ def test_the_freeway_check_method_names_the_method_and_thresholds():
         assert claim not in Path(adoption.__file__).read_text(encoding="utf-8").lower()
 
 
+# --- R1-F1 (audit issue-16-c1-r1): signals in a reply that is not HTTP 200 (CL-R1-8) ---------------
+
+ERROR_STATUSES = [302, 400, 429, 500, 503]
+
+
+def _error_route(status, **kwargs):
+    return reply(route_body(OUT_POINTS, **kwargs), status=status)
+
+
+@pytest.mark.parametrize("status", ERROR_STATUSES)
+@pytest.mark.parametrize("kwargs, signal", [
+    ({"has_highway": True}, "has_highway"),
+    ({"names": ("國道1號", "Synthetic Road 2")}, "freeway_name"),
+    ({"maneuvers": [{"street_names": ["Synthetic Road 1"], "highway": True}]}, "maneuver_highway"),
+])
+def test_r1_f1_a_non_200_route_reply_with_a_freeway_signal_is_highway_in_route(store, tmp_path, status, kwargs, signal):
+    engine = FakeEngine(routes=[_error_route(status, **kwargs), reply(route_body(BACK_POINTS))],
+                        traces=[reply(trace_body(BACK_POINTS))])
+    result = plan(engine, store)
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert f"outbound:{signal}" in result.reasons and "outbound:engine_error" in result.reasons
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    # No road attribute query is based on an error reply; both directions are still sent; no status.
+    assert engine.actions() == ["route", "route", "trace_attributes"]
+
+
+@pytest.mark.parametrize("status", ERROR_STATUSES)
+def test_r1_f1_a_non_200_route_reply_is_never_adopted(status):
+    engine = FakeEngine(routes=[_error_route(status)])
+    outcome = evaluate_direction(ValhallaClient(engine, clock=Clock()), "outbound",
+                                 [valhalla.position_from(p) for p in OUT_POSITIONS])
+    assert outcome.leg is None and outcome.signals == () and outcome.reasons == ("engine_error",)
+    assert outcome.freeway_check is None
+    assert engine.actions() == ["route"]
+
+
+@pytest.mark.parametrize("status", ERROR_STATUSES)
+@pytest.mark.parametrize("trace_kw, signal", [
+    ({"road_class": "motorway"}, "motorway_edge"),
+    ({"names": ("Synthetic Freeway 9",)}, "freeway_name"),
+    ({"names": ("國道3號",)}, "freeway_name"),
+])
+def test_r1_f1_a_non_200_road_attribute_reply_with_a_freeway_signal_is_highway_in_route(store, tmp_path, status, trace_kw, signal):
+    engine = round_trip_engine(out_trace=None)
+    engine.queue["trace_attributes"][0] = reply(trace_body(OUT_POINTS, **trace_kw), status=status)
+    result = plan(engine, store)
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert f"outbound:{signal}" in result.reasons and "outbound:trace_failed" in result.reasons
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    assert engine.actions() == ["route", "trace_attributes", "route", "trace_attributes"]  # no retry, no status
+
+
+@pytest.mark.parametrize("status", ERROR_STATUSES)
+def test_r1_f1_a_non_200_road_attribute_reply_without_a_signal_is_routing_unavailable(store, tmp_path, status):
+    engine = FakeEngine(routes=[reply(route_body(OUT_POINTS))], traces=[reply(trace_body(OUT_POINTS), status=status)])
+    result = plan(engine, store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:trace_failed",))
+    assert stored_files(tmp_path) == {}
+    engine = FakeEngine(routes=[reply(route_body(OUT_POINTS))], traces=[reply(trace_body(OUT_POINTS), status=status)])
+    outcome = evaluate_direction(ValhallaClient(engine, clock=Clock()), "outbound",
+                                 [valhalla.position_from(p) for p in OUT_POSITIONS])
+    assert outcome.freeway_check is None and outcome.leg is None and outcome.signals == ()
+
+
+@pytest.mark.parametrize("status", ERROR_STATUSES)
+def test_r1_f1_a_non_200_route_reply_without_a_signal_is_routing_unavailable(store, tmp_path, status):
+    engine = FakeEngine(routes=[_error_route(status)])
+    result = plan(engine, store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:engine_error",))
+    assert stored_files(tmp_path) == {}
+
+
+UNREADABLE_ROUTE_BODIES = [
+    b"not json", b"\xff\xfe\x00", b"", b"[]", b"null", b"{\"x\": NaN}", b"{\"trip\": \"x\"}",
+    b"{\"trip\": {}}", b"{\"trip\": {\"summary\": 5, \"legs\": \"bad\"}}",
+    b"{\"trip\": {\"summary\": {\"has_highway\": null}, \"legs\": [7, {\"maneuvers\": [3, {\"street_names\": [1]}]}]}}",
+    b"{\"trip\": {\"legs\": [{\"shape\": 5, \"maneuvers\": [{\"begin_street_names\": \"x\"}]}], \"warnings\": 3}}",
+]
+
+
+@pytest.mark.parametrize("status", [200, 302, 500])
+@pytest.mark.parametrize("body", UNREADABLE_ROUTE_BODIES)
+def test_r1_f1_unreadable_route_bodies_are_routing_unavailable_and_do_not_raise(store, tmp_path, status, body):
+    engine = FakeEngine(routes=[HttpResponse(status, body)], traces=[])
+    result = plan(engine, store, engine_request("one_way"))
+    assert result.code == ROUTING_UNAVAILABLE
+    assert stored_files(tmp_path) == {}
+
+
+UNREADABLE_TRACE_BODIES = [
+    b"not json", b"\xff\xfe", b"", b"[]", b"7", b"{\"edges\": \"bad\"}", b"{\"edges\": [5, null]}",
+    b"{\"edges\": [{\"road_class\": 5, \"names\": \"x\", \"length\": \"y\"}]}",
+    b"{\"edges\": [{\"names\": [1, {}], \"length\": -1}], \"warnings\": 3}",
+]
+
+
+@pytest.mark.parametrize("status", [302, 500])
+@pytest.mark.parametrize("body", UNREADABLE_TRACE_BODIES)
+def test_r1_f1_unreadable_non_200_trace_bodies_are_routing_unavailable_and_do_not_raise(store, tmp_path, status, body):
+    engine = FakeEngine(routes=[reply(route_body(OUT_POINTS))], traces=[HttpResponse(status, body)])
+    result = plan(engine, store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:trace_failed",))
+    assert stored_files(tmp_path) == {}
+
+
+def test_r1_f1_a_non_200_trace_with_a_signal_in_one_direction_and_an_error_route_in_the_other(store, tmp_path):
+    engine = FakeEngine(routes=[reply(route_body(OUT_POINTS)), _error_route(500)],
+                        traces=[reply(trace_body(OUT_POINTS, road_class="motorway"), status=503)])
+    result = plan(engine, store)
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert set(result.reasons) >= {"outbound:motorway_edge", "outbound:trace_failed", "return:engine_error"}
+    assert stored_files(tmp_path) == {}
+
+
 # --- CL-R1-27: warnings in the road attribute reply (decision-20261118-issue16-c161 section 4.5) ---
 
 @pytest.mark.parametrize("warnings", [
