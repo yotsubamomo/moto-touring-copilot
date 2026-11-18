@@ -28,6 +28,15 @@ GPX_NAMESPACES = (
 UNREADABLE = "unreadable"            # the file cannot be opened or is not a GPX document
 MALFORMED_POINT = "malformed_point"  # a point has a missing, non-numeric or out-of-range lat/lon
 
+# What `ET.fromstring` raises for bytes that cannot be decoded or parsed (audit issue-15-c1-r1,
+# R1-F1). Only this one call is guarded, and only after `data` is known to be bytes:
+# - ET.ParseError: not well-formed XML, undefined entities, the expat entity-expansion limit;
+# - ValueError, including UnicodeError and UnicodeDecodeError: a declared multibyte or broken codec;
+# - LookupError: a declared encoding that Python does not know, or a non-text codec (hex, zlib).
+# Other exceptions (TypeError, AttributeError, MemoryError, RecursionError, ...) are not caught:
+# they would be programming or resource errors, not content of the file.
+_UNPARSEABLE = (ET.ParseError, ValueError, LookupError)
+
 
 @dataclass(frozen=True)
 class GeoPoint:
@@ -82,9 +91,10 @@ def parse_gpx_geometry(data: bytes) -> GpxGeometry:
     root = None
     try:
         root = ET.fromstring(data)
-    except (ET.ParseError, ValueError):
+    except _UNPARSEABLE:
         pass
     if root is None:
+        # Raised outside the except block: the parser's message and exception are not attached.
         raise GpxGeometryError(UNREADABLE)
     namespace = _gpx_namespace(root.tag)
     if namespace is None:

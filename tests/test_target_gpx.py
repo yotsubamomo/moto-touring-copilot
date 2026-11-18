@@ -832,6 +832,103 @@ def test_parse_errors_do_not_carry_the_parser_message_or_a_chained_exception():
     assert "line" not in str(caught.value) and "column" not in str(caught.value)
 
 
+# --- R1-F1 (audit issue-15-c1-r1): undecodable or unparseable bytes are target_gpx_invalid --------
+
+def _declared(encoding: str, positions=None) -> bytes:
+    """A synthetic GPX whose XML declaration names `encoding` (the body itself is ASCII)."""
+    body = gpx(out_and_back() if positions is None else positions)
+    return body.replace(b'encoding="UTF-8"', f'encoding="{encoding}"'.encode("ascii"), 1)
+
+
+_BILLION = (b'<?xml version="1.0"?><!DOCTYPE g [<!ENTITY a "aaaaaaaaaa">'
+            + b"".join(f'<!ENTITY {c} "{("&" + p + ";") * 10}">'.encode() for p, c in zip("abcdefg", "bcdefgh"))
+            + f']><gpx xmlns="{GPX11}">&h;</gpx>'.encode())
+
+UNPARSEABLE = {
+    # LookupError from the parser before the fix: an unknown codec name, and non-text codecs.
+    "unknown_encoding": _declared("SyntheticUnknownEncodingProbe"),
+    "hex_codec": _declared("hex_codec"),
+    "rot_13": _declared("rot_13"),
+    "zlib_codec": _declared("zlib_codec"),
+    "base64_codec": _declared("base64_codec"),
+    # ValueError / UnicodeError / UnicodeDecodeError (already caught; kept as regressions).
+    "multibyte_big5": _declared("big5"),
+    "idna": _declared("idna"),
+    "punycode": _declared("punycode"),
+    # ParseError: entity-expansion limit, external and undefined entities.
+    "entity_expansion": _BILLION,
+    "external_entity": (b'<?xml version="1.0"?><!DOCTYPE g [<!ENTITY x SYSTEM "file:///synthetic-none">]>'
+                        + f'<gpx xmlns="{GPX11}">&x;</gpx>'.encode()),
+}
+
+
+def test_the_probe_inputs_still_raise_in_the_bare_parser():
+    import xml.etree.ElementTree as ET
+    with pytest.raises(LookupError):
+        ET.fromstring(UNPARSEABLE["unknown_encoding"])  # what escaped before the fix
+
+
+@pytest.mark.parametrize("name", sorted(UNPARSEABLE))
+def test_unparseable_bytes_give_a_fixed_unreadable_error_without_a_chain(name):
+    with pytest.raises(GpxGeometryError) as caught:
+        parse_gpx_geometry(UNPARSEABLE[name])
+    error = caught.value
+    assert error.reason == "unreadable"
+    assert error.__context__ is None and error.__cause__ is None
+    assert str(error) == "target GPX cannot be read (unreadable)"
+    for leaked in ("Synthetic", "encoding", "line", "column", "codec", "amplification", "entity"):
+        assert leaked not in str(error) + repr(error)
+
+
+@pytest.mark.parametrize("trip_type", ["one_way", "round_trip"])
+@pytest.mark.parametrize("name", sorted(UNPARSEABLE))
+def test_unparseable_bytes_through_the_bytes_entry_are_target_gpx_invalid(caplog, capsys, name, trip_type):
+    caplog.set_level(logging.DEBUG)
+    for km in (None, 1.5):
+        result = target_gpx_route_from_bytes(UNPARSEABLE[name], trip_type, km)
+        assert result == TargetGpxError(TARGET_GPX_INVALID, "unreadable")
+        assert not isinstance(result, TargetGpxRoute)
+    out = capsys.readouterr()
+    assert out.out == "" and out.err == "" and caplog.records == []
+
+
+@pytest.mark.parametrize("trip_type", ["one_way", "round_trip"])
+@pytest.mark.parametrize("name", sorted(UNPARSEABLE))
+def test_unparseable_files_through_the_path_entry_are_target_gpx_invalid(tmp_path, caplog, capsys, name, trip_type):
+    caplog.set_level(logging.DEBUG)
+    file = _secret_file(tmp_path, UNPARSEABLE[name])
+    for argument in (file, str(file)):
+        result = target_gpx_route(argument, trip_type)
+        assert result == TargetGpxError(TARGET_GPX_INVALID, "unreadable")
+        _assert_no_path(repr(result) + str(vars(result)), file)
+    with pytest.raises(GpxGeometryError) as caught:
+        read_gpx_geometry(file)
+    error = caught.value
+    _assert_no_path(str(error) + repr(error) + repr(error.args), file)
+    assert error.__context__ is None and error.__cause__ is None
+    out = capsys.readouterr()
+    _assert_no_path(out.out + out.err, file)
+    assert caplog.records == []
+
+
+def test_caller_type_errors_are_still_raised_and_not_turned_into_route_errors(tmp_path):
+    for bad in ("<gpx/>", None, 123, ["<gpx/>"]):
+        with pytest.raises(TypeError):
+            target_gpx_route_from_bytes(bad, "one_way")
+    for bad in (0, 1.5, b"synthetic.gpx", None):
+        with pytest.raises(TypeError):
+            target_gpx_route(bad, "one_way")
+    with pytest.raises(TripTypeRequiredError):
+        target_gpx_route_from_bytes(UNPARSEABLE["unknown_encoding"], None)
+    with pytest.raises(TypeError):
+        target_gpx_route_from_bytes(gpx(circle()), "round_trip", "1.5")
+
+
+def test_a_valid_known_encoding_declaration_is_still_read():
+    for encoding in ("UTF-8", "utf-8", "ascii", "cp1252", "ISO-8859-1"):
+        assert isinstance(target_gpx_route_from_bytes(_declared(encoding), "round_trip"), TargetGpxRoute)
+
+
 def test_a_rider_turnaround_route_carries_no_path(tmp_path, caplog):
     caplog.set_level(logging.DEBUG)
     file = _secret_file(tmp_path, gpx(circle()))
