@@ -12,12 +12,18 @@ imports `moto_copilot.routing.http_transport` explicitly.
 The endpoint cannot be redirected (CL-R1-25 item 2; H-1):
 - no redirect is followed: one connection and one request per call; a 3xx reply is returned as it
   is, and the client never adopts a reply that is not 200;
-- no proxy is used: `set_tunnel` is never called and nothing reads process settings or env
-  variables; `urllib.request` is not used (it follows redirects and takes proxies from the env);
+- no proxy is used: `set_tunnel` is never called; this module reads no env variables, and no
+  env variable changes the host, the port, a proxy or a redirect; `urllib.request` is not used (it
+  follows redirects and takes proxies from the env);
 - the URL is checked again here: `https://` plus a host (and port) plus `/route`,
   `/trace_attributes` or `/status`, nothing else; the connection goes only to that host and port;
-- TLS verification is always on (`ssl.create_default_context()`: hostname check, certificates
-  required); there is no switch to turn it off;
+- TLS verification is always on and there is no switch to turn it off. The context is built with
+  explicit settings (CL-R1-28, decision-20261118-issue16-c2r1f3): `ssl.SSLContext(PROTOCOL_TLS_CLIENT)`,
+  certificates required, hostname check on, then `load_default_certs(Purpose.SERVER_AUTH)`. It is
+  not `ssl.create_default_context()`, so it does not consult `SSLKEYLOGFILE` and no TLS secrets
+  are written to a file. Loading the default trust store lets OpenSSL consult `SSL_CERT_FILE` and
+  `SSL_CERT_DIR`; those can only add trusted root certificates and do not change the host or the
+  port (TI-C2R1F3-1);
 - a fixed timeout, `TIMEOUT_S`, and no retry.
 
 Content (CL-R1-25 item 3; H-2): the body is sent as the client gave it; the only headers are the
@@ -67,13 +73,22 @@ def _headers(headers) -> dict[str, str]:
     return dict(headers)
 
 
+def _tls_context() -> ssl.SSLContext:
+    """The TLS client context (CL-R1-28 item 2): verification required, hostname check on."""
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+    context.load_default_certs(ssl.Purpose.SERVER_AUTH)
+    return context
+
+
 def https_transport(url: str, body: bytes, headers: Mapping[str, str]) -> HttpResponse:
     """Send one HTTPS POST of `body` to `url` and return the status and body of the reply."""
     host, port, path = _target(url)
     if not isinstance(body, bytes):
         raise TypeError("the request body must be bytes")
     sent_headers = _headers(headers)
-    context = ssl.create_default_context()
+    context = _tls_context()
     connection = None
     failed = False
     try:

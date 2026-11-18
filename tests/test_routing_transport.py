@@ -427,3 +427,32 @@ def test_importing_the_routing_package_does_not_load_the_transport(tmp_path):
                           env=env, timeout=60, cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     assert json.loads(done.stdout) is False
+
+
+# --- T-11, T-12: the TLS context (CL-R1-28, decision-20261118-issue16-c2r1f3) --------------------
+
+TLS_ATTRIBUTES = ("check_hostname", "verify_mode", "verify_flags", "options", "minimum_version", "maximum_version",
+                  "protocol", "hostname_checks_common_name", "post_handshake_auth", "security_level")
+
+
+def test_t11_the_context_is_not_weaker_than_the_standard_default(conn, monkeypatch):
+    monkeypatch.delenv("SSLKEYLOGFILE", raising=False)
+    conn.answers = [(200, b"{}")]
+    https_transport(f"{VALHALLA_ENDPOINT}/route", b"{}", CLIENT_HEADERS)
+    used = conn.made[0].context
+    default = ssl.create_default_context()
+    for name in TLS_ATTRIBUTES:
+        assert getattr(used, name) == getattr(default, name), name
+    assert used.cert_store_stats() == default.cert_store_stats()
+    assert used.keylog_filename is None
+
+
+def test_t12_sslkeylogfile_has_no_effect(conn, monkeypatch, tmp_path):
+    keylog = tmp_path / "synthetic-keylog.txt"
+    monkeypatch.setenv("SSLKEYLOGFILE", str(keylog))
+    conn.answers = [(200, b"{}"), (200, b"{}"), (200, b"{}")]
+    for path in ("/route", "/trace_attributes", "/status"):
+        https_transport(f"{VALHALLA_ENDPOINT}{path}", b"{}", CLIENT_HEADERS)
+    assert len(conn.made) == 3
+    assert all(c.context.keylog_filename is None for c in conn.made)
+    assert not keylog.exists()
