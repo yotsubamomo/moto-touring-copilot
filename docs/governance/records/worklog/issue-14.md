@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #14（SPEC-R1 R1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `deb808d`（派工時的 HEAD，含已結案的 #13）；實作 commit **`aa4239249dde499c46a680d6e150b79f0d4a9a49`**（`aa42392`）與 **`366866c7a3683e06b5b89d3090f6d5feb80eb418`**（`366866c`，測試中的範例座標改成 0°N、0°E 附近的合成值，見第 3 節第 9 項）。**最終 implementation subject 是 `366866c`**。worklog 在另外的 record-only commit |
+| 狀態 | **Executor 工作完成，DA 裁決已依 `decision-20261118-issue14-c141.md` 第 8 節處理，待 R1**：CL-R1-14（捨去）、CL-R1-15（同時最晚取最小 `snapshot_id`）、CL-R1-17（壞檔停止）確認現行實作；CL-R1-16 要求一般模式不重用取得時間晚於「現在」的快照，已在 `5eee704` 修改；TI-C14-5 是 tracked item；C-14-6 仍待 acceptor。pytest `1116 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `deb808d`（派工時的 HEAD，含已結案的 #13）；實作 commit **`aa4239249dde499c46a680d6e150b79f0d4a9a49`**（`aa42392`）與 **`366866c7a3683e06b5b89d3090f6d5feb80eb418`**（`366866c`，測試中的範例座標改成 0°N、0°E 附近的合成值，見第 3 節第 9 項）。CL-R1-16 的修改 commit **`5eee70472a824f2725a02afb3160eea613ea0ae9`**（`5eee704`，父 commit 是 DA record 的 `5ecf0c2`），是**最終 implementation subject**（先前的 `366866c` 是 DA 裁決前的 subject）。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -15,12 +15,13 @@
 - **CL-R1-13**：`decision-20261118-issue13-c131.md` §3.1：ID 樣式的語義是完整字串、ASCII 數字、小寫十六進位；R1-2 以測試證明拒絕結尾換行、前後空白與非 ASCII 數字（同 record 第 6 節 R1-2 列）。
 - **規格來源**：`docs/spec/SPEC-001-plan-schema.md` §2 的「ID」「雜湊與正規化」「隱私」列；4.13 `snapshot_missing`；4.14 RouteSnapshot／RouteLeg 全部；5.4 的重用期限、`request_key` 地標指紋、雜湊正規化精度三列；7.11 第 1、3、4 項；第 9 節 S17、S23、S35、S36、S37、S53–S56、S58、S71–S77、S86。`DESIGN.md` §5「路線快照」摘要（參考）。`contracts/schemas.py` 的 `SNAPSHOT_ID_PATTERN`、`ROUTE_ID_PATTERN`、`TRIP_TYPES`（只匯入，沒有修改）。
 - **高風險類別**：`decision-20261117-high-risk-categories.md` §3.2–§3.4、§5；R1-2 標為 H-2、H-3、H-4（第 6 節 E-6）。
+- **CL-R1-14～CL-R1-17、TI-C14-5**：`decision-20261118-issue14-c141.md`（v1，2026-11-18，HEAD `5ecf0c2` 時已 commit）。CL-R1-14 確認正規化的取位是以最短十進位表示為準的捨去（向零）；CL-R1-15 確認同時最晚時取 `snapshot_id` 字典順序最小者；CL-R1-16 規定一般模式的 30 天內是 `0 ≤ 現在 − 取得時間 ≤ 30 × 24 小時`；CL-R1-17 接受壞檔時停止；TI-C14-5 是凍結清單欄位對應的 tracked item。第 8.1 節是修改的封閉清單，第 8.2 節是 evidence。這是執行中的契約 clarification（DA 依治理 §5.3 第 2 類），不是 Executor 的決定。CL-R1-18、CL-R1-19 屬 R1-3、R1-4，本 Ticket 不涉及。
 
 ## 2. Executing role and binding reference
 
 - 角色：`executor`，由 Orchestrator（run `run-20261117-oc1-run2`，root session `4aa33b53-7e44-4d34-b9b8-e631fb6f55c2`）以 `gov-executor` 派工。有效 mapping：`claude-opus-5-5`／`high`（Bindings O-1）。沒有 escalation、沒有替代。
 - Binding 證據（Bindings 第 3.6 節）：`~/.claude/projects/D--nchu-2026-AIoT-git-repository-moto-touring-copilot/4aa33b53-7e44-4d34-b9b8-e631fb6f55c2/subagents/agent-a731e697ea497fcf3.{meta.json,jsonl}`；`meta.json` 的 `agentType` 是 `gov-executor`，`description` 是「Executor: implement Issue #14 R1-2」。
-- Executor 自行觀測（`366866c` 之後、寫本 worklog 之前，以第 3.6 節的掃描方式）：agentId `a731e697ea497fcf3`，(`claude-opus-5-5`, `high`) 83 則，集合只有一個元素。**這是自我觀測，不是派工者的核對**；之後的訊息不在這個數字內，Orchestrator 採用本 return 前須自行核對全部 assistant 訊息。
+- Executor 自行觀測（`366866c` 之後、寫本 worklog 之前，以第 3.6 節的掃描方式）：agentId `a731e697ea497fcf3`，(`claude-opus-5-5`, `high`) 83 則，集合只有一個元素。CL-R1-16 的修改（同一個 agent，以 SendMessage 續派）在 `5eee704` 之後再觀測一次：(`claude-opus-5-5`, `high`) 118 則，集合仍只有一個元素。**這是自我觀測，不是派工者的核對**；之後的訊息不在這個數字內，Orchestrator 採用本 return 前須自行核對全部 assistant 訊息。
 - Bounded assignments：沒有使用 `gov-investigator` 或 `gov-bounded-worker`，沒有派工任何 subagent。
 
 ## 3. Work performed
@@ -34,24 +35,26 @@
 7. 新建 `src/moto_copilot/routing/__init__.py`（匯出）、`tests/routing_synthetic.py`（合成輸入）、`tests/test_routing_snapshot.py`、`tests/test_routing_store.py`（共 233 個測試案例）。沒有修改任何既有檔案或既有測試。
 8. 自我驗證：全套 pytest、contracts CLI、19 個突變檢查（第 6 節 E-6）。依 SA-1 在 topic branch 作本機 commit `aa42392`；commit 前確認暫存的只有上列 8 個新檔，不含 `.env`、GPX、FIT 或 `data/`。
 9. 複查 diff 時發現 `tests/test_routing_snapshot.py` 用 `23.1…`、`120.…` 當作正規化的範例值，其中一組（`{"lat": 23.12345678, "lon": 120.5}`）成對時落在台灣境內。它們是手寫的數值，不是騎乘資料，但為了讓所有座標都可證明是合成的（E-3），改成 0°N、0°E 附近的值（S56 的各組比較關係不變），`canonical.py` 註解中的例子一併修改。本機 commit `366866c`，暫存的只有這兩個檔案。修改後全套 pytest 與突變檢查重跑（第 6 節）。
-10. 沒有 push、沒有開 PR、沒有碰 GitHub；沒有讀取、列出或搜尋 `data/`；沒有讀 `.env`；沒有執行 `experiments/` 下的任何腳本；沒有發出網路請求。
+10. 讀取 DA record `decision-20261118-issue14-c141.md` 全文後，依其第 8.1 節修改（CL-R1-16）：`store.py` 的 `find_reusable` 只重用 `timedelta(0) <= now - acquired_at(s) <= REUSE_WINDOW` 的快照，docstring 改寫為同一定義並引用該 record；`_latest` 的 docstring 與 `canonical.py` 中 `_ROUNDING` 上方的註解改為引用該 record（CL-R1-15、CL-R1-14），只改註解文字；`tests/test_routing_store.py` 新增 3 個測試函式（4 個案例），既有測試沒有修改。`_ROUNDING`、`_format_float`、S56／S71 的測試、Snapshot Mode、嚴格模式、`put`、`load`、壞檔處理與 `request_key` 都沒有改；沒有加 xfail／skip。本機 commit `5eee704`，暫存的只有這三個檔案。
+    - 程序紀錄：第一次跑突變檢查時，在修改尚未 commit 的狀態下以 `git checkout -- store.py` 還原突變，連同未 commit 的修改一起還原了；發現後重新套用修改，確認 diff 後才 commit，再對 committed 的檔案重跑突變檢查（第 9 節 #3）。最終 subject 的內容以 `git diff 366866c 5eee704` 為準（第 9 節 #4）。
+11. 沒有 push、沒有開 PR、沒有碰 GitHub；沒有讀取、列出或搜尋 `data/`；沒有讀 `.env`；沒有執行 `experiments/` 下的任何腳本；沒有發出網路請求。
 
 ## 4. Decisions and assumptions
 
 | # | 決定 | 依據 |
 | --- | --- | --- |
-| D-14-1 | 取位方式：以浮點數的最短十進位表示（`repr`）為準，**捨去**多出的位數（`ROUND_DOWN`），不四捨五入。寫成固定位數（`12.0`、`0.123456`） | SPEC-001 §2 只寫「取小數六位／一位」，沒有寫取位方式。捨去是唯一能使 S56 兩句都對所有數值成立的讀法：第六位不同的一定不同、只有第七位以後不同的一定相同。四捨五入在進位邊界兩側都會違反（例如 `0.1234561` 與 `0.1234569` 只有第七位不同，四捨五入後是 `0.123456` 與 `0.123457`）；S71 同理。這個選擇決定所有 `snapshot_id`／`request_key` 的值，屬契約語義，**回報 DA 確認（C-14-1）**。實作集中在 `canonical.py` 的 `_ROUNDING` 一個常數 |
+| D-14-1 | 取位方式：以浮點數的最短十進位表示（`repr`）為準，**捨去**多出的位數（`ROUND_DOWN`），不四捨五入。寫成固定位數（`12.0`、`0.123456`） | SPEC-001 §2 只寫「取小數六位／一位」，沒有寫取位方式。捨去是唯一能使 S56 兩句都對所有數值成立的讀法：第六位不同的一定不同、只有第七位以後不同的一定相同。四捨五入在進位邊界兩側都會違反（例如 `0.1234561` 與 `0.1234569` 只有第七位不同，四捨五入後是 `0.123456` 與 `0.123457`）；S71 同理。這個選擇決定所有 `snapshot_id`／`request_key` 的值，屬契約語義，回報 DA 確認（C-14-1）。實作集中在 `canonical.py` 的 `_ROUNDING` 一個常數。**DA 已確認：CL-R1-14（`decision-20261118-issue14-c141.md` 第 2.2 節），程式不改** |
 | D-14-2 | 「以公尺計的長度與偏移」：浮點數自己的鍵，或外層物件／清單的鍵，以 `_m` 結尾 | SPEC-001 §2 的命名規則（`_m` 是公尺）；4.14 的 `endpoint_offset_m`（`start`、`end`）與 `via_offset_m` 都由外層的鍵決定單位。快照中以公尺計的浮點數只有這兩個欄位；`distance_m` 是整數。其他浮點數（含經緯度）一律六位，所以不需要辨認哪些鍵是經緯度 |
 | D-14-3 | `request_key` 的內容：`{"trip_type", "origin", "destination", "via", "routing_params"}`，每個地點是 `{"ref_id", "fingerprint", "entry_ref_id", "entry_fingerprint"}`（沒有 `entry_ref_id` 時兩者為 null）；PlaceRef 的 `kind`、`name` 不進鍵；被引用的代號沒有座標定義時報錯；`request_key` 是完整的 64 碼十六進位 | 7.11 第 4 項「每個地點以代號加指紋表示」「完全相同才算同一個請求」；CL-R1-2。鍵的 JSON 形狀是 HOW，只要求確定性與 S37、S71–S73 的性質 |
 | D-14-4 | `validate_snapshot` 除了 4.14 的結構，也要求已存快照的值：`has_highway` 是 `false`、`freeway_check` 是 `pass`、`warnings` 是空清單、每個偏移介於 0 與 200 m。`put` 與讀檔都經過這個檢查 | 4.14「存成快照的方向一定是 `false`」「每個方向都是 `pass`」「兩個值都不超過 200 m」；7.11 第 6、7 項（有警告就不採用、才存成快照，沒有例外）。這是存放層的 fail-closed 防線，不取代 R1-4 的採用檢查；R1-4 依規則只會存合格的快照，所以不改變任何合法流程 |
 | D-14-5 | 沒有高度欄位：快照與各方向的欄位集合是封閉的（多出的欄位都拒絕）；另外整份快照（含 `request`、`routing_params`）中任何名稱含 `elevation`、`altitude`、`height` 或等於 `ele` 的鍵都拒絕 | 4.14「RouteLeg 沒有高度欄位」「MVP 不向路線引擎要求高度」；`request`、`routing_params` 是 R1-4 組成的自由物件，只檢查封閉欄位會漏掉放在裡面的高度 |
 | D-14-6 | 檔案格式：`<snapshot_id>.json`，內容是整份快照（含 `snapshot_id` 與 `fetched_at`）的正規化 JSON（UTF-8，沒有結尾換行）。`build_snapshot` 回傳的快照已是正規化後的值，所以記憶體中的快照、檔案與雜湊一致 | 4.14「實體檔案格式由 Tickets 決定」；CL-R1-3「檔案位元組決定凍結清單所記的 SHA-256」 |
 | D-14-7 | 存放目錄必須已存在，程式不建立目錄；只處理名稱完全符合 `SN-[0-9a-f]{10}.json` 的檔案，其他檔案忽略 | CL-R1-3（沒有預設位置，寫到呼叫者提供的目錄）；不在呼叫者沒有指定的地方建立任何東西 |
-| D-14-8 | 目錄中名稱符合、但讀不到、不是合法快照、內容的 `snapshot_id` 與檔名不同或與內容雜湊不符的檔案：`SnapshotIntegrityError`，一般模式與 Snapshot Mode 都停止，不略過 | Fail closed：略過壞檔可能讓選取結果變成另一個（較舊的）快照而不被發現。規格沒有寫壞檔的處理，這是 HOW 的保守選擇；列為 C-14-4 供 DA 知悉 |
+| D-14-8 | 目錄中名稱符合、但讀不到、不是合法快照、內容的 `snapshot_id` 與檔名不同或與內容雜湊不符的檔案：`SnapshotIntegrityError`，一般模式與 Snapshot Mode 都停止，不略過 | Fail closed：略過壞檔可能讓選取結果變成另一個（較舊的）快照而不被發現。規格沒有寫壞檔的處理，這是 HOW 的保守選擇；列為 C-14-4 供 DA 知悉。**DA 已接受：CL-R1-17（`decision-20261118-issue14-c141.md` 第 5 節）** |
 | D-14-9 | 一般模式與 Snapshot Mode 的「相容」：快照**每個方向**的 `freeway_check_method` 都等於現行方法 | 7.11 第 3 項以快照為單位判斷；`freeway_check_method` 逐方向記錄。任一方向不同即不相容（fail closed） |
-| D-14-10 | 30 天：`now - 取得時間 <= timedelta(days=30)`（固定 +08:00，沒有日光節約，等於 30 × 24 小時），邊界上算 30 天內。`now` 由呼叫者注入，必須帶時區；預設是 +08:00 的現在。取得時間晚於 `now`（時鐘倒退）時差為負，依字面算 30 天內 | CL-R1-3 的字面定義；列為 C-14-3 供 DA 知悉 |
-| D-14-11 | 「取得時間最晚」有多個快照同時最晚時，取 `snapshot_id` 字典順序最小者，結果不受目錄順序影響 | 規格沒有寫；同一個請求在同一時刻取得不同內容的快照幾乎不會發生，但 H-4 要求選取有確定的結果。**回報 DA 確認（C-14-2）** |
-| D-14-12 | 嚴格模式的輸入：`FrozenEntry(request_key, snapshot_id, sha256)` 或含這三個鍵的物件；整份清單有任何格式不合的項目即停止（`invalid_entry`）；同一個 `request_key` 有完全相同的重複項目時視為一項，有不同項目時停止（`ambiguous_entry`）；讀到的檔案 `request_key` 不是查詢的鍵時停止（`request_key_mismatch`）。`StrictModeStop` 不繼承任何路線錯誤或 `ValueError`，帶 `reason` | CL-R1-4（項目以資料傳入，凍結清單的檔案格式不在本 Spec；停止以專用例外表示，不回傳 `route_error`、不回退）。欄位名稱 `sha256` 是 HOW；之後的 E2／Demo Spec 定義凍結清單格式時可對應 |
+| D-14-10 | 30 天：`now - 取得時間 <= timedelta(days=30)`（固定 +08:00，沒有日光節約，等於 30 × 24 小時），邊界上算 30 天內。`now` 由呼叫者注入，必須帶時區；預設是 +08:00 的現在。取得時間晚於 `now`（時鐘倒退）時差為負，依字面算 30 天內。**已由 CL-R1-16 改為 `0 ≤ now − 取得時間 ≤ 30 × 24 小時`：取得時間晚於 `now` 的快照，一般模式不重用；Snapshot Mode 與嚴格模式不變（`5eee704`）** | CL-R1-3 的字面定義；列為 C-14-3 供 DA 知悉。DA 裁決：`decision-20261118-issue14-c141.md` 第 4 節 |
+| D-14-11 | 「取得時間最晚」有多個快照同時最晚時，取 `snapshot_id` 字典順序最小者，結果不受目錄順序影響 | 規格沒有寫；同一個請求在同一時刻取得不同內容的快照幾乎不會發生，但 H-4 要求選取有確定的結果。回報 DA 確認（C-14-2）。**DA 已確認：CL-R1-15（`decision-20261118-issue14-c141.md` 第 3 節）** |
+| D-14-12 | 嚴格模式的輸入：`FrozenEntry(request_key, snapshot_id, sha256)` 或含這三個鍵的物件；整份清單有任何格式不合的項目即停止（`invalid_entry`）；同一個 `request_key` 有完全相同的重複項目時視為一項，有不同項目時停止（`ambiguous_entry`）；讀到的檔案 `request_key` 不是查詢的鍵時停止（`request_key_mismatch`）。`StrictModeStop` 不繼承任何路線錯誤或 `ValueError`，帶 `reason` | CL-R1-4（項目以資料傳入，凍結清單的檔案格式不在本 Spec；停止以專用例外表示，不回傳 `route_error`、不回退）。欄位名稱 `sha256` 是 HOW；之後的 E2／Demo Spec 定義凍結清單格式時可對應。DA：tracked item TI-C14-5（`decision-20261118-issue14-c141.md` 第 6 節） |
 | D-14-13 | 錯誤訊息只寫欄位與規則，不寫值；`request_key` 的錯誤只寫代號，不寫座標 | SPEC-001 §2 隱私列；SR1-AC4（例外與 log 不含請求的座標）；`request` 可能含位置 |
 
 ## 5. Artifacts
@@ -69,9 +72,11 @@
 
 `git diff --stat deb808d aa42392`：8 files changed, 2043 insertions(+)。`aa42392` → `366866c`：`canonical.py`、`tests/test_routing_snapshot.py`，9 insertions(+), 9 deletions(-)（只改範例數值與註解）。沒有修改既有檔案。
 
+`366866c` → `5eee704`（CL-R1-16）：`src/moto_copilot/routing/store.py`（`find_reusable` 的下界與 docstring、`_latest` 的 docstring）、`src/moto_copilot/routing/canonical.py`（`_ROUNDING` 上方的註解）、`tests/test_routing_store.py`（新增 3 個測試函式），3 files changed, 32 insertions(+), 7 deletions(-)。
+
 ## 6. Verification
 
-### E-1 pytest（subject `366866c`）
+### E-1 pytest（subject `5eee704`，最終）
 
 `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider`，exit 0，完整輸出：
 
@@ -86,14 +91,19 @@
 ........................................................................ [ 51%]
 ........................................................................ [ 58%]
 ........................................................................ [ 64%]
-........................................................................ [ 71%]
+........................................................................ [ 70%]
 ........................................................................ [ 77%]
-........................................................................ [ 84%]
+........................................................................ [ 83%]
 ........................................................................ [ 90%]
-........................................................................ [ 97%]
-................................                                         [100%]
-1112 passed in 28.76s
+........................................................................ [ 96%]
+....................................                                     [100%]
+1116 passed in 16.31s
 ```
+
+- 1116 ＝ 基準 879 ＋ 本 Ticket 新增 237（`366866c` 的 233 個加上 CL-R1-16 的 4 個案例）。摘要只有 `passed`。
+- `grep -rnE "xfail|pytest\.mark\.skip|importorskip" tests/`：0 筆。`git ls-files | grep -iE "(^|/)data/|\.gpx$|\.fit$|(^|/)\.env"`：0 筆。`git status --short`（pytest 與突變檢查之後）：空。
+
+以下是 DA 裁決前 subject `366866c` 的結果（保留作紀錄）：`1112 passed in 28.76s`，exit 0。
 
 - 1112 ＝ 基準 879 ＋ 本 Ticket 新增 233（`--collect-only` 兩個新測試檔：`233 tests collected`）。摘要只有 `passed`。
 - `grep -rnE "xfail|pytest\.mark\.skip|importorskip" tests/`：0 筆。
@@ -121,7 +131,7 @@
 | S76 | `store::test_s76_normal_mode_does_not_reuse_a_snapshot_checked_with_another_method`（含只有一個方向不同）、`store::test_s76_snapshot_mode_with_only_incompatible_snapshots_returns_snapshot_missing`、`store::test_s76_strict_mode_stops_on_another_freeway_check_method` | PASS |
 | S77 | `store::test_s77_snapshot_mode_takes_the_latest_compatible_snapshot_with_no_age_limit`（較新但方法不同、另一個請求的快照都不採用） | PASS |
 | S86 | `store::test_s86_no_frozen_entry_for_the_request_stops_without_using_any_snapshot`（空清單與只有其他請求的清單） | PASS |
-| S35 中屬於存放與選取的部分 | `store::test_s35_a_31_day_old_snapshot_is_not_reused`、`store::test_s35_a_snapshot_within_30_days_is_reused`、`store::test_the_30_day_window_is_30_times_24_hours`、`store::test_s35_normal_mode_takes_the_newest_of_several_fresh_snapshots`、`store::test_s35_refetch_after_31_days_same_content_keeps_one_file_and_snapshot_mode_uses_it`、`store::test_s35_refetch_after_31_days_different_content_adds_a_file_and_the_old_one_stays_usable`（兩種情形舊檔位元組不變；Snapshot Mode 仍可使用舊檔：內容相同時一般的 Snapshot Mode 取到舊檔，內容不同時舊檔經凍結清單以嚴格模式取得） | PASS |
+| S35 中屬於存放與選取的部分 | `store::test_s35_a_31_day_old_snapshot_is_not_reused`、`store::test_s35_a_snapshot_within_30_days_is_reused`、`store::test_the_30_day_window_is_30_times_24_hours`、`store::test_s35_normal_mode_takes_the_newest_of_several_fresh_snapshots`、`store::test_s35_refetch_after_31_days_same_content_keeps_one_file_and_snapshot_mode_uses_it`、`store::test_s35_refetch_after_31_days_different_content_adds_a_file_and_the_old_one_stays_usable`（兩種情形舊檔位元組不變；Snapshot Mode 仍可使用舊檔：內容相同時一般的 Snapshot Mode 取到舊檔，內容不同時舊檔經凍結清單以嚴格模式取得）；CL-R1-16：`store::test_cl_r1_16_a_snapshot_acquired_after_now_is_not_reused`（晚 1 秒、晚 1 天：一般模式回傳 `None`，一般的 Snapshot Mode 仍選到它）、`store::test_cl_r1_16_a_snapshot_acquired_exactly_now_is_reused`（經過時間 0 的邊界）、`store::test_cl_r1_16_one_leg_after_now_makes_the_snapshot_not_reusable` | PASS |
 | S23 中屬於結構的部分 | `snap::test_s23_valid_one_way_and_round_trip_snapshots`、`snap::test_s23_every_snapshot_field_is_required`（8 欄）、`snap::test_s23_every_leg_field_is_required`（13 欄）、`snap::test_s23_legs_count_and_order_follow_the_trip_type`（7 種錯誤的筆數與順序）、`snap::test_s23_snapshot_has_no_elevation_fields`（6 種位置）、`snap::test_s23_snapshot_field_types`、`snap::test_s23_leg_field_types`、`snap::test_stored_directions_satisfy_the_adoption_values_of_4_14`、`snap::test_dd_r1_2_map_data_date_may_be_null_and_engine_version_may_be_unreported` | PASS |
 | S17 中「沒有對應快照時回傳 `snapshot_missing`」 | `store::test_s17_snapshot_mode_without_a_matching_snapshot_returns_snapshot_missing` | PASS |
 | 另加：快照與 `request_key` 的計算不需要網路 | `store::test_hashing_storage_and_selection_need_no_network`、`store::test_the_routing_package_imports_no_network_or_environment_modules` | PASS |
@@ -160,13 +170,13 @@ S35、S17、S23 中屬於引擎呼叫與採用行為的部分屬 R1-4，本 Tick
 - 沒有開啟保留行程的程式路徑；沒有 E1 Lite／E2 的結果或狀態陳述。本 worklog 中的「PASS」只指 pytest 的實際執行結果（E-1）。程式說明沒有把國道檢查稱為道路主管機關的驗證，沒有任何啟發式門檻的驗證宣稱。
 
 **H-4 決策關卡的 fail-closed 語義**（判定 3.4 第 4 項：快照的重用與 Snapshot Mode 的選取）
-- 失效的三個條件各有測試：`request_key` 不同（`test_normal_mode_needs_the_same_request_key`）、超過 30 天（S35，含 30 × 24 小時的邊界與「取得時間是各方向最晚的 `fetched_at`」）、檢查方法不同（S76，含只有回程不同）。
+- 失效的三個條件各有測試：`request_key` 不同（`test_normal_mode_needs_the_same_request_key`）、超過 30 天（S35，含 30 × 24 小時的邊界與「取得時間是各方向最晚的 `fetched_at`」）、檢查方法不同（S76，含只有回程不同）。另依 CL-R1-16，取得時間晚於「現在」的快照不被一般模式重用（3 個 `test_cl_r1_16_*` 測試；突變 M19）。
 - 沒有相容快照時：一般模式回傳 `None`（由 R1-4 呼叫引擎），Snapshot Mode 回傳 `snapshot_missing`，嚴格模式停止；都不回傳預設值或其他快照。
 - 讀不到或不合法的快照檔：停止而不略過（`test_a_broken_file_stops_selection_instead_of_being_skipped`；D-14-8）。被改過的檔案（內容與 `snapshot_id` 不符）被拒絕（`test_load_rejects_missing_tampered_and_misnamed_files`）。
 - 存放層拒絕 4.14 不允許存的值（`has_highway = true`、`freeway_check = fail`、有警告、偏移超過 200 m；D-14-4），突變 M11 被抓到。
-- 取得時間相同時的選取是確定的（`test_equal_acquisition_times_resolve_to_the_smallest_snapshot_id`），規則待 DA 確認（C-14-2）。
+- 取得時間相同時的選取是確定的（`test_equal_acquisition_times_resolve_to_the_smallest_snapshot_id`），規則已由 DA 確認（CL-R1-15）。
 
-**突變檢查**（scratchpad 腳本 `issue14_mutations.py`：每次改 committed 檔案的一處，跑兩個新測試檔，再以 `git checkout --` 還原；在 `366866c` 上重跑，之後 `git status --short` 為空）
+**突變檢查**（scratchpad 腳本 `issue14_mutations.py`：每次改 committed 檔案的一處，跑兩個新測試檔，再以 `git checkout --` 還原；在 `366866c` 上重跑，之後 `git status --short` 為空。M19 在 `5eee704` 上對 committed 的檔案執行）
 
 | # | 突變 | 結果 |
 | --- | --- | --- |
@@ -188,6 +198,7 @@ S35、S17、S23 中屬於引擎呼叫與採用行為的部分屬 R1-4，本 Tick
 | M16 | 拿掉「檔案已存在」的檢查 | 存活：`open(..., "xb")` 本身就拒絕覆寫並轉到比對，行為不變（等價突變）。另以 M16b（同時改成 `"wb"`）確認：4 個測試失敗（S53、S55 兩個、S35） |
 | M17 | 不檢查 `snapshot_id` 與內容一致 | 被抓到 |
 | M18 | `snapshot_id` 樣式改用接受結尾換行的 `$` | 被抓到（CL-R1-13） |
+| M19 | 拿掉 CL-R1-16 的下界（`timedelta(0) <= now - acquired_at(s) <= REUSE_WINDOW` 改回 `now - acquired_at(s) <= REUSE_WINDOW`） | 被抓到：3 failed, 53 passed（`test_cl_r1_16_a_snapshot_acquired_after_now_is_not_reused[ahead0]`、`[ahead1]`、`test_cl_r1_16_one_leg_after_now_makes_the_snapshot_not_reusable`）；還原後 `git status --short` 為空 |
 
 這些是 self-verification，不是 independent audit。
 
@@ -195,15 +206,26 @@ S35、S17、S23 中屬於引擎呼叫與採用行為的部分屬 R1-4，本 Tick
 
 | # | 內容 | 建議的 owner／authority | 是否阻擋 |
 | --- | --- | --- | --- |
-| **C-14-1** | **正規化的取位方式。** SPEC-001 §2「經緯度取小數六位；以公尺計的長度與偏移取小數一位；其他浮點數取小數六位」沒有寫是捨去還是四捨五入。兩種讀法都合理，但會得到不同的 `snapshot_id`／`request_key`，且只有捨去能使 S56（與 S71）的陳述對所有數值成立（D-14-1）。實作採捨去（以最短十進位表示為準，`ROUND_DOWN`），集中在 `canonical.py` 的 `_ROUNDING`。請 DA 裁決：(a) 確認捨去（不需改程式）；或 (b) 改為四捨五入（改一個常數，並把 S56 的測試改成不跨進位邊界的數值，同時說明 S56 在邊界附近不成立）。目前沒有任何已存的快照或凍結清單，改動不影響既有資料 | Design Authority | 是（S56 的判定與所有雜湊值依此而定） |
-| C-14-2 | **取得時間相同時的選取。** 7.11 第 3 項「取其中最新的一個」「取得時間最晚的一個」沒有處理同時最晚的情形。實作取 `snapshot_id` 字典順序最小者（D-14-11）。請 DA 確認，或改為其他確定的規則（例如視為無法選取而停止） | Design Authority | 否 |
-| C-14-3 | 取得時間晚於 `now`（時鐘倒退）時，依 CL-R1-3 的字面算 30 天內而可重用（D-14-10）。若 DA 認為應該 fail closed（不重用未來時間的快照），是一行的修改 | Design Authority（知悉） | 否 |
-| C-14-4 | 目錄中有壞檔時，一般模式與 Snapshot Mode 都停止而不略過（D-14-8）。這會讓一個壞檔擋住所有規劃，直到使用者處理；規格沒有寫，選擇保守的做法 | Design Authority（知悉） | 否 |
-| C-14-5 | 凍結清單項目的欄位名稱（`request_key`、`snapshot_id`、`sha256`）是本 Ticket 的 HOW（D-14-12）；凍結清單的檔案格式屬之後的 E2／Demo Spec，該 Spec 要對應或轉換這三個欄位 | Design Authority（之後的 E2／Demo Spec） | 否 |
-| C-14-6 | `aa42392` 的歷史含手寫的範例值 `23.1…`、`120.…`（第 3 節第 9 項、E-3）。它們不是騎乘資料，也不是由私有資料導出；`366866c` 已改成 0°N、0°E 附近的值。分支尚未 push。是否需要在 push 前整理歷史（RB-6，改寫歷史保留給 acceptor）由 acceptor 決定；Executor 判斷不需要 | acceptor（知悉） | 否 |
+| **C-14-1** | **正規化的取位方式。** SPEC-001 §2「經緯度取小數六位；以公尺計的長度與偏移取小數一位；其他浮點數取小數六位」沒有寫是捨去還是四捨五入。兩種讀法都合理，但會得到不同的 `snapshot_id`／`request_key`，且只有捨去能使 S56（與 S71）的陳述對所有數值成立（D-14-1）。實作採捨去（以最短十進位表示為準，`ROUND_DOWN`），集中在 `canonical.py` 的 `_ROUNDING`。請 DA 裁決：(a) 確認捨去（不需改程式）；或 (b) 改為四捨五入（改一個常數，並把 S56 的測試改成不跨進位邊界的數值，同時說明 S56 在邊界附近不成立）。目前沒有任何已存的快照或凍結清單，改動不影響既有資料 **狀態：已裁決——CL-R1-14 確認捨去，程式不改（`decision-20261118-issue14-c141.md` 第 2 節）。** | Design Authority | 已解決（原為「是」） |
+| C-14-2 | **取得時間相同時的選取。** 7.11 第 3 項「取其中最新的一個」「取得時間最晚的一個」沒有處理同時最晚的情形。實作取 `snapshot_id` 字典順序最小者（D-14-11）。請 DA 確認，或改為其他確定的規則（例如視為無法選取而停止）。**狀態：已裁決——CL-R1-15 確認（同 record 第 3 節）。** | Design Authority | 否 |
+| C-14-3 | 取得時間晚於 `now`（時鐘倒退）時，依 CL-R1-3 的字面算 30 天內而可重用（D-14-10）。若 DA 認為應該 fail closed（不重用未來時間的快照），是一行的修改。**狀態：已裁決——CL-R1-16 要求下界，已在 `5eee704` 修改（同 record 第 4、8 節；第 9 節 evidence）。** | Design Authority（知悉） | 否 |
+| C-14-4 | 目錄中有壞檔時，一般模式與 Snapshot Mode 都停止而不略過（D-14-8）。這會讓一個壞檔擋住所有規劃，直到使用者處理；規格沒有寫，選擇保守的做法。**狀態：已裁決——CL-R1-17 接受（同 record 第 5 節）。** | Design Authority（知悉） | 否 |
+| C-14-5 | 凍結清單項目的欄位名稱（`request_key`、`snapshot_id`、`sha256`）是本 Ticket 的 HOW（D-14-12）；凍結清單的檔案格式屬之後的 E2／Demo Spec，該 Spec 要對應或轉換這三個欄位。**狀態：tracked item TI-C14-5，owner＝Design Authority（同 record 第 6 節）；本 Ticket 沒有動作。** | Design Authority（之後的 E2／Demo Spec） | 否 |
+| C-14-6 | `aa42392` 的歷史含手寫的範例值 `23.1…`、`120.…`（第 3 節第 9 項、E-3）。它們不是騎乘資料，也不是由私有資料導出；`366866c` 已改成 0°N、0°E 附近的值。分支尚未 push。是否需要在 push 前整理歷史（RB-6，改寫歷史保留給 acceptor）由 acceptor 決定；Executor 判斷不需要。**狀態：仍待 acceptor（DA record 第 9 節明列不在其裁決範圍）。** | acceptor（知悉） | 否 |
 
 ## 8. 剩餘工作
 
-- C-14-1 的 DA 裁決；若裁決為四捨五入，依裁決修改 `_ROUNDING` 與 S56 的測試並重跑 E-1、突變檢查。
-- Orchestrator 依 Bindings 第 3.3、3.7 節派本 Ticket 的 R1（受審 subject `366866c`，派工 pack 須含 `decision-20261118-issue13-c131.md` 與 C-14-1 的裁決）。
-- R1-4 會使用本 Ticket 的介面：`build_snapshot`、`SnapshotStore.put`、`find_reusable`、`select_snapshot_mode`、`select_strict`、`request_key`。
+- Orchestrator 依 Bindings 第 3.3、3.7 節派本 Ticket 的 R1：受審 subject `5eee704`；派工內容須含 `decision-20261118-issue13-c131.md` 與 `decision-20261118-issue14-c141.md`（後者第 8.3 節）。
+- C-14-6 由 acceptor 決定。
+- R1-4 會使用本 Ticket 的介面：`build_snapshot`、`SnapshotStore.put`、`find_reusable`、`select_snapshot_mode`、`select_strict`、`request_key`；CL-R1-17、CL-R1-19 對 R1-4 的要求見 DA record 第 5、7.2 節。
+- 先前的剩餘工作「C-14-1 的 DA 裁決」已完成（CL-R1-14，程式不改）。
+
+## 9. `decision-20261118-issue14-c141.md` 第 8.2 節的 evidence
+
+| # | 證據 | 結果 |
+| --- | --- | --- |
+| 1 | D-14-1、D-14-10、D-14-11 與 C-14-1～C-14-5 的狀態 | 第 4 節 D-14-1（CL-R1-14）、D-14-8（CL-R1-17）、D-14-10（CL-R1-16）、D-14-11（CL-R1-15）、D-14-12（TI-C14-5）與第 7 節 C-14-1～C-14-5 的狀態都改為引用該 record；C-14-6 維持 acceptor 待決 |
+| 2 | E-1 | 第 6 節 E-1：subject `5eee704`，`1116 passed in 16.31s`，exit 0，摘要只有 `passed`；沒有 xfail／skip |
+| 3 | 突變 | M19（第 6 節 E-6）：拿掉下界後，第 8.1 節第 2 項的新測試失敗（3 failed, 53 passed：未來 1 秒、未來 1 天、一個方向在未來）；經過時間 0 的邊界測試在突變下仍通過，符合預期（上界不受影響） |
+| 4 | Diff | `git diff --stat 366866c 5eee704 -- src tests`：只有 `src/moto_copilot/routing/canonical.py`（2 行，`_ROUNDING` 上方的註解）、`src/moto_copilot/routing/store.py`（`find_reusable` 的下界與 docstring、`_latest` 的 docstring）、`tests/test_routing_store.py`（新增 22 行，3 個測試函式，既有測試沒有改）；3 files changed, 32 insertions(+), 7 deletions(-)。`366866c`..`5eee704` 的其他變更只在 record-only 路徑（DA record、run record、本 worklog）。`_ROUNDING`、`_format_float`、S56／S71 的測試、Snapshot Mode、嚴格模式、`put`、`load`、壞檔處理、`request_key` 都沒有改 |
+| 5 | E-2 | 第 6 節 E-2 的 S35 列加上 3 個 `test_cl_r1_16_*` 測試 |
