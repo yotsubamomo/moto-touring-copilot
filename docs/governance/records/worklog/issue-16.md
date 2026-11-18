@@ -569,7 +569,7 @@ Scratchpad 的 `probe_c2.py` 把 `git show 65aa00c:src/moto_copilot/routing/adop
 
 ### 12.6 E-6
 
-- **H-4**（自 `022f629` 起）：引擎回應的 `trip.summary.length`、`trip.summary.time`、`edges[n].length` 不論是什麼可由 `_parse_json` 解析出的值，都不會使 `evaluate_direction` 或 `get_route` 拋出未捕捉的例外：無法作為有限數值時記為讀不到，沒有國道訊號時是 `routing_unavailable`、有時是 `highway_in_route`，永不採用、不存快照，兩個方向照樣送出並檢查（第 12.4、12.5 節）。這個陳述只涵蓋這三個欄位；回應的其他部分維持第 6、10、11 節既有的證據範圍（例如第 2.2 節 (6) 的 Alternate 有界探測），不另外宣稱為窮舉。
+- **H-4**（自 `022f629` 起）：引擎回應的 `trip.summary.length`、`trip.summary.time`、`edges[n].length` 不論是什麼可由 `_parse_json` 解析出的值，都不會使 `evaluate_direction` 或 `get_route` 拋出未捕捉的例外：無法作為有限數值時記為讀不到，沒有國道訊號時是 `routing_unavailable`、有時是 `highway_in_route`，永不採用、不存快照，兩個方向照樣送出並檢查（第 12.4、12.5 節）。這個陳述只涵蓋這三個欄位；回應的其他部分維持第 6、10、11 節既有的證據範圍（例如 `audit/issue-16-c1-alt.md` 第 2.2 節 (6) 的有界探測），不另外宣稱為窮舉。
 - **H-1、H-2**：不受影響（傳輸層、client、請求內容與錯誤訊息沒有修改；新案例沒有新的請求）。
 - **突變**（`mutate16b.py`，原文以原本的位元組寫回，結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同，`sources restored: True`；之後 `git status --short` 只有本次尚未 commit 的修改）：第 10.7、11.5 節的 37 個突變加上 2 個新突變，**39 個全部被抓到**。新突變：
 
