@@ -1,22 +1,35 @@
 """JSON Schemas for the minimal data contracts (DESIGN.md §5).
 
-This is contract v0.2 plus the approved v0.3 stop-allowance fields of contracts 1, 3 and 4
-(Issue #7). The v0.3 ID rules and the contract 2 changes are not here yet, so CONTRACT_VERSION
-stays "0.2" until they are (SPEC-B1 CL-B1-2).
+This is contract v0.3: the stop-allowance fields of contracts 1, 3 and 4 (Issue #7), and the
+relaxed route_id / checkpoint_id formats with the contract 2 changes (SPEC-R1 R1-1, Issue #13).
 
 One schema per record type. Rules that span several records (invariants) are in validate.py.
 """
 from __future__ import annotations
 
-CONTRACT_VERSION = "0.2"
+CONTRACT_VERSION = "0.3"
 
 CATEGORIES = ["C1", "C2", "C3"]
+ROUTE_SOURCES = ["trip", "routing", "target_gpx"]
+TRIP_TYPES = ["one_way", "round_trip"]
 
 # ISO 8601 with an explicit +08:00 offset (Asia/Taipei). A time without an offset is invalid.
 _DATETIME = {"type": "string", "pattern": r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?\+08:00$"}
 _TRIP_ID = {"type": "string", "pattern": r"^T\d{3}$"}
-_ROUTE_ID = {"type": "string", "pattern": r"^R\d{2}$"}
-_CHECKPOINT_ID = {"type": "string", "pattern": r"^R\d{2}-CP\d{2}$"}
+
+# v0.3 IDs (SPEC-001 §2). The formats are ^(R\d{2}|R[SG]-[0-9a-f]{10})$ for route_id,
+# ^(R\d{2}|R[SG]-[0-9a-f]{10})-CP\d{2,3}$ for checkpoint_id and ^SN-[0-9a-f]{10}$ for snapshot_id,
+# read as JSON Schema (ECMA-262) patterns. jsonschema runs them with Python's re, where \d also
+# matches non-ASCII digits and $ also matches before a final newline, so they are written here
+# with [0-9] and with (?!\n) after $; under ECMA-262 the two spellings accept the same strings.
+ROUTE_ID_BODY = r"(R[0-9]{2}|R[SG]-[0-9a-f]{10})"
+SNAPSHOT_HEX = r"[0-9a-f]{10}"
+ROUTE_ID_PATTERN = rf"^{ROUTE_ID_BODY}$(?!\n)"
+CHECKPOINT_ID_PATTERN = rf"^{ROUTE_ID_BODY}-CP[0-9]{{2,3}}$(?!\n)"
+SNAPSHOT_ID_PATTERN = rf"^SN-{SNAPSHOT_HEX}$(?!\n)"
+_ROUTE_ID = {"type": "string", "pattern": ROUTE_ID_PATTERN}
+_CHECKPOINT_ID = {"type": "string", "pattern": CHECKPOINT_ID_PATTERN}
+_SNAPSHOT_ID = {"type": "string", "pattern": SNAPSHOT_ID_PATTERN}
 _NAME = {"type": "string", "minLength": 1}
 _POSITIVE = {"type": "number", "exclusiveMinimum": 0}
 _NON_NEGATIVE = {"type": "number", "minimum": 0}
@@ -67,7 +80,10 @@ ROUTE = _record({
     "name": _NAME,
     "n_segments": {"type": "integer", "minimum": 1},
     "total_length_m": _POSITIVE,
-    "source_trip_id": _TRIP_ID,
+    "source_trip_id": _nullable(_TRIP_ID),    # v0.3: may be null (invariant 5 says when)
+    "route_source": {"enum": ROUTE_SOURCES},  # v0.3
+    "snapshot_id": _nullable(_SNAPSHOT_ID),   # v0.3: null when the route is not from a route snapshot
+    "trip_type": {"enum": TRIP_TYPES},        # v0.3
     "category_scheme": _NAME,
     "catalog_version": _NAME,
 })
@@ -83,7 +99,7 @@ ROUTE_SEGMENT = _record({
 CHECKPOINT = _record({
     "checkpoint_id": _CHECKPOINT_ID,
     "route_id": _ROUTE_ID,
-    "kind": {"enum": ["start", "fuel_station", "waypoint", "end"]},
+    "kind": {"enum": ["start", "fuel_station", "waypoint", "turnaround", "end"]},  # v0.3: turnaround
     "after_seg_count": {"type": "integer", "minimum": 0},
     "name": _nullable(_NAME),
     "station_ref": _nullable(_NAME),

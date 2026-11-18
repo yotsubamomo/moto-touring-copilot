@@ -1,4 +1,5 @@
-"""Tests for the data contracts v0.2 with the v0.3 stop-allowance fields of contracts 1, 3, 4 (DESIGN.md §5).
+"""Tests for the data contracts v0.3 (DESIGN.md §5): the stop-allowance fields of contracts 1, 3, 4 and the
+v0.3 ID formats with the contract 2 changes.
 
 These tests check the validators against a mock fixture and against deliberately broken copies
 of it. They say nothing about real rides: no GPX has been ingested yet.
@@ -44,7 +45,7 @@ def by_id(records: list[dict], key: str, value) -> dict:
 # --- the mock fixture itself -------------------------------------------------
 def test_fixture_is_marked_as_mock(data):
     assert data["_meta"]["mock"] is True
-    assert data["_meta"]["contract_version"] == CONTRACT_VERSION == "0.2"
+    assert data["_meta"]["contract_version"] == CONTRACT_VERSION == "0.3"   # SPEC-B1 CL-B1-2, Issue #13
 
 
 def test_mock_fixture_conforms_to_every_contract(data, private_rows):
@@ -847,3 +848,328 @@ def test_non_finite_literals_parsed_from_json_text_are_rejected(literal):
     report = validate_dataset(json.loads(text))
     assert_violation(report["pace_table"], "pace_categories[1]: stop_ratio is not a finite number")
     assert_violation(report["eta_output"], "has a non-finite stop_ratio")
+
+
+# --- v0.3 IDs and contract 2 (SPEC-R1 R1-1, Issue #13; SPEC-001 §2, S37, S58) -------
+# Synthetic IDs: the hex digits are invented, not taken from any snapshot or GPX file.
+HEX_A, HEX_B = "a1b2c3d4e5", "0f9e8d7c6b"
+RS_A, RG_B, SN_A = f"RS-{HEX_A}", f"RG-{HEX_B}", f"SN-{HEX_A}"
+ROUTING = {"route_source": "routing", "source_trip_id": None, "snapshot_id": SN_A}
+TARGET_GPX = {"route_source": "target_gpx", "source_trip_id": None, "snapshot_id": None}
+
+
+def rename_route(d: dict, old: str, new: str, **fields) -> dict:
+    """Give route `old` the route_id `new` everywhere (contracts 1, 2 and 4), with its checkpoint_ids."""
+    def renamed(cid: str) -> str:
+        return new + cid[len(old):] if cid.startswith(old + "-CP") else cid
+    for route in d["routes"]:
+        if route["route_id"] == old:
+            route.update(route_id=new, **fields)
+    for rec in d["route_segments"] + d["checkpoints"] + d["derived_segments"] + d["eta_headers"]:
+        if rec.get("route_id") == old:
+            rec["route_id"] = new
+    for c in d["checkpoints"]:
+        c["checkpoint_id"] = renamed(c["checkpoint_id"])
+    for h in d["eta_headers"]:
+        for b in h["breaks"]:
+            b["after_checkpoint_id"] = renamed(b["after_checkpoint_id"])
+    return d
+
+
+def all_violations(d: dict) -> list[str]:
+    return [v for violations in validate_dataset(d).values() for v in violations]
+
+
+def test_r01_and_r02_stay_valid_trip_routes(data):
+    """AC (1), (5): the demo routes keep their IDs; they are one-way routes taken from a trip."""
+    assert [(r["route_id"], r["route_source"], r["snapshot_id"], r["trip_type"]) for r in data["routes"]] == \
+        [("R01", "trip", None, "one_way"), ("R02", "trip", None, "one_way")]
+    assert all_violations(data) == []
+
+
+@pytest.mark.parametrize("old, new, fields", [
+    ("R01", RS_A, ROUTING), ("R01", RG_B, TARGET_GPX), ("R01", "R99", {}),
+    ("R02", RS_A, ROUTING), ("R02", RG_B, TARGET_GPX),
+])
+def test_s37_s58_every_route_id_format_passes_in_contracts_1_2_and_4(data, old, new, fields):
+    """AC (1): RS-, RG- and R + two digits are accepted in contract 1 route_id, all of contract 2, and
+    contract 4 route_id and breaks[].after_checkpoint_id (R01 carries derived rows and the ETA break)."""
+    rename_route(data, old, new, **fields)
+    assert all_violations(data) == []
+    if old == "R01":
+        assert {r["route_id"] for r in data["derived_segments"] if r["trip_id"] == "T002"} == {new}
+        assert data["eta_headers"][0]["route_id"] == new
+        assert data["eta_headers"][0]["breaks"][0]["after_checkpoint_id"] == f"{new}-CP03"
+
+
+def test_routes_of_all_three_sources_in_one_catalog(data):
+    rename_route(data, "R01", RS_A, **ROUTING)
+    rename_route(data, "R02", RG_B, **TARGET_GPX)
+    data["routes"].append({**data["routes"][1], "route_id": "R03", "route_source": "trip", "source_trip_id": "T001"})
+    data["route_segments"] += [{**s, "route_id": "R03"} for s in data["route_segments"] if s["route_id"] == RG_B]
+    data["checkpoints"] += [{**c, "route_id": "R03", "checkpoint_id": "R03" + c["checkpoint_id"][len(RG_B):]}
+                            for c in data["checkpoints"] if c["route_id"] == RG_B]
+    assert all_violations(data) == []
+
+
+@pytest.mark.parametrize("suffix", ["CP04", "CP99", "CP100", "CP999"])
+@pytest.mark.parametrize("route_id, fields", [("R01", {}), (RS_A, ROUTING), (RG_B, TARGET_GPX)])
+def test_checkpoint_id_has_two_or_three_digits(data, route_id, fields, suffix):
+    rename_route(data, "R01", route_id, **fields)
+    by_id(data["checkpoints"], "checkpoint_id", f"{route_id}-CP04")["checkpoint_id"] = f"{route_id}-{suffix}"
+    assert all_violations(data) == []
+
+
+def test_a_break_may_use_a_three_digit_checkpoint(data):
+    by_id(data["checkpoints"], "checkpoint_id", "R01-CP03")["checkpoint_id"] = "R01-CP103"
+    data["eta_headers"][0]["breaks"][0]["after_checkpoint_id"] = "R01-CP103"
+    assert all_violations(data) == []
+
+
+BAD_ROUTE_IDS = [
+    "R1", "R001", "r01", "R0a", "R-01", f"RS-{HEX_A[:9]}", f"RS-{HEX_A}f", f"RS-{HEX_A.upper()}", f"RX-{HEX_A}",
+    f"RS_{HEX_A}", f"RS{HEX_A}", f"RG-{HEX_A[:9]}g", f"rs-{HEX_A}", SN_A, "T001", "", " R01", "R01 ", "R01\n",
+    f"{RS_A}\n", "R\u0660\u0661", "R\uff10\uff11", "R01-CP01",
+]
+
+
+@pytest.mark.parametrize("bad", BAD_ROUTE_IDS)
+@pytest.mark.parametrize("records, index, label", [
+    ("routes", 1, "routes[1]"),
+    ("route_segments", 0, "route_segments[0]"),
+    ("checkpoints", 0, "checkpoints[0]"),
+    ("derived_segments", 3, "derived_segments(public)[3]"),
+    ("eta_headers", 0, "eta_headers[0]"),
+])
+def test_s37_s58_a_route_id_of_another_format_is_rejected(data, records, index, label, bad):
+    """AC (1): contract 1 route_id, contract 2 (routes, route segments, checkpoints) and contract 4 route_id."""
+    data[records][index]["route_id"] = bad
+    assert_violation(all_violations(data), f"{label} schema: route_id")
+
+
+BAD_CHECKPOINT_IDS = [
+    "R01-CP4", "R01-CP1000", "R01-cp04", "R01CP04", "R01-CP 4", "R01-WP04", "R01-CP04-CP05", "-CP04", "R1-CP04",
+    f"RS-{HEX_A.upper()}-CP04", f"RS-{HEX_A[:9]}-CP04", "R01-CP04\n", "R01-CP\u0660\u0664", "R01-CP\uff10\uff14", "R01",
+]
+
+
+@pytest.mark.parametrize("bad", BAD_CHECKPOINT_IDS)
+def test_s37_s58_a_checkpoint_id_of_another_format_is_rejected(data, bad):
+    by_id(data["checkpoints"], "checkpoint_id", "R01-CP04")["checkpoint_id"] = bad
+    assert_violation(catalog_violations(data), "checkpoints[3] schema: checkpoint_id")
+
+
+@pytest.mark.parametrize("bad", BAD_CHECKPOINT_IDS)
+def test_s37_s58_a_break_at_a_checkpoint_id_of_another_format_is_rejected(data, bad):
+    data["eta_headers"][0]["breaks"][0]["after_checkpoint_id"] = bad
+    assert_violation(eta_violations(data), "eta_headers[0] schema: breaks/0/after_checkpoint_id")
+
+
+@pytest.mark.parametrize("bad", [
+    f"SN-{HEX_A[:9]}", f"SN-{HEX_A}f", f"SN-{HEX_A.upper()}", f"sn-{HEX_A}", f"SN_{HEX_A}", f"SN{HEX_A}",
+    f"SN-{HEX_A[:9]}g", RS_A, "", f"{SN_A}\n", f" {SN_A}", "SN-\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",
+])
+def test_s58_a_snapshot_id_of_another_format_is_rejected(data, bad):
+    rename_route(data, "R02", RS_A, **{**ROUTING, "snapshot_id": bad})
+    assert_violation(catalog_violations(data), "routes[1] schema: snapshot_id")
+
+
+# AC (2): the checkpoint_id prefix is its own route_id.
+@pytest.mark.parametrize("checkpoint_id", ["R02-CP09", "R10-CP04", f"{RS_A}-CP04", f"{RG_B}-CP104"])
+def test_checkpoint_id_starts_with_its_route_id(data, checkpoint_id):
+    by_id(data["checkpoints"], "checkpoint_id", "R01-CP04")["checkpoint_id"] = checkpoint_id
+    assert_violation(catalog_violations(data), f"checkpoints: {checkpoint_id} does not start with its route_id R01")
+
+
+@pytest.mark.parametrize("checkpoint_id", ["R02-CP01", f"RS-{HEX_B}-CP01", f"RG-{HEX_A}-CP01"])
+def test_checkpoint_id_of_an_rs_route_starts_with_that_route_id(data, checkpoint_id):
+    rename_route(data, "R02", RS_A, **ROUTING)
+    by_id(data["checkpoints"], "checkpoint_id", f"{RS_A}-CP01")["checkpoint_id"] = checkpoint_id
+    assert_violation(catalog_violations(data), f"checkpoints: {checkpoint_id} does not start with its route_id {RS_A}")
+
+
+# AC (3): route_source agrees with the route_id format; an RS- route_id has its snapshot_id's hex digits.
+@pytest.mark.parametrize("route_id, fields", [
+    (RS_A, {}), (RG_B, {}),                     # trip
+    ("R02", ROUTING), (RG_B, ROUTING),          # routing
+    ("R02", TARGET_GPX), (RS_A, TARGET_GPX),    # target_gpx
+])
+def test_route_id_format_must_agree_with_route_source(data, route_id, fields):
+    rename_route(data, "R02", route_id, **fields)
+    source = fields.get("route_source", "trip")
+    violations = catalog_violations(data)
+    assert_violation(violations, f"routes: route_id {route_id} does not have the format for route_source {source}")
+    assert not any("(invariant 5)" in v or "schema" in v for v in violations), violations
+
+
+def test_rs_route_id_has_the_hex_digits_of_its_snapshot_id(data):
+    rename_route(data, "R02", RS_A, **{**ROUTING, "snapshot_id": f"SN-{HEX_B}"})
+    assert_violation(catalog_violations(data),
+                     f"routes: {RS_A} and its snapshot_id SN-{HEX_B} do not have the same 10 hex digits")
+    by_id(data["routes"], "route_id", RS_A)["snapshot_id"] = SN_A
+    assert catalog_violations(data) == []
+
+
+# AC (4): one violating case for each of contract 2 invariants 1-5 (4 and 5 are new in v0.3).
+def make_round_trip(d: dict, at=2, checkpoint_id: str = "R01-CP06") -> dict:
+    by_id(d["routes"], "route_id", "R01")["trip_type"] = "round_trip"
+    d["checkpoints"].append({"checkpoint_id": checkpoint_id, "route_id": "R01", "kind": "turnaround",
+                             "after_seg_count": at, "name": None, "station_ref": None})
+    return d
+
+
+def violate_invariant_1(d):
+    by_id(d["checkpoints"], "checkpoint_id", "R01-CP01")["kind"] = "waypoint"
+
+
+def violate_invariant_2(d):
+    by_id(d["checkpoints"], "checkpoint_id", "R01-CP04")["after_seg_count"] = 5
+
+
+def violate_invariant_3(d):
+    """Checkpoints at one position are told apart by checkpoint_id: two with the same one are not."""
+    by_id(d["checkpoints"], "checkpoint_id", "R01-CP02")["checkpoint_id"] = "R01-CP01"
+
+
+def violate_invariant_4(d):
+    by_id(d["routes"], "route_id", "R01")["trip_type"] = "round_trip"   # without a turnaround
+
+
+def violate_invariant_5(d):
+    by_id(d["routes"], "route_id", "R01")["snapshot_id"] = SN_A        # a trip route pointing at a snapshot
+
+
+@pytest.mark.parametrize("change, fragment", [
+    (violate_invariant_1, "checkpoints: R01 must have exactly one start, found 0 (invariant 1)"),
+    (violate_invariant_2, "checkpoints: R01-CP04 after_seg_count 5 is outside 0..4 (invariant 2)"),
+    (violate_invariant_3, "checkpoints: duplicate primary key R01-CP01"),
+    (violate_invariant_4, "checkpoints: R01 is round_trip and needs exactly one turnaround, found 0 (invariant 4)"),
+    (violate_invariant_5, "routes: R01 route_source is trip, so snapshot_id must be null (invariant 5)"),
+])
+def test_each_contract_2_invariant_has_a_rejected_violation(data, change, fragment):
+    assert catalog_violations(data) == []
+    change(data)
+    assert_violation(catalog_violations(data), fragment)
+
+
+@pytest.mark.parametrize("round_trip", [False, True])
+@pytest.mark.parametrize("count, n, outside", [
+    (9.0, 4, True), (5.0, 4, True), (5, 4.0, True), (5.0, 4.0, True),
+    (3.0, 4, False), (4.0, 4.0, False), (0.0, 4, False), (3, 4.0, False),
+])
+def test_invariant_2_counts_whole_number_floats(data, count, n, outside, round_trip):
+    """CL-R1-11: after_seg_count and n_segments are counted with _whole_count, also after a JSON round trip."""
+    by_id(data["checkpoints"], "checkpoint_id", "R01-CP04")["after_seg_count"] = count
+    by_id(data["routes"], "route_id", "R01")["n_segments"] = n
+    if round_trip:
+        data = json_round_trip(data)
+        assert isinstance(by_id(data["checkpoints"], "checkpoint_id", "R01-CP04")["after_seg_count"], type(count))
+    violations = catalog_violations(data)
+    found = [v for v in violations if "R01-CP04 after_seg_count" in v and "(invariant 2)" in v]
+    assert bool(found) is outside, violations
+    if not outside:
+        assert violations == []
+
+
+@pytest.mark.parametrize("value", [1.5, True, None, "3", float("nan"), float("inf"), -1.0])
+def test_an_after_seg_count_that_cannot_be_counted_is_still_a_violation(data, value):
+    by_id(data["checkpoints"], "checkpoint_id", "R01-CP04")["after_seg_count"] = value
+    assert_violation(catalog_violations(data), "checkpoints[3] schema: after_seg_count")
+
+
+@pytest.mark.parametrize("at", [1, 2, 3, 2.0])
+def test_round_trip_with_one_turnaround_inside_the_route_passes(data, at):
+    make_round_trip(data, at=at)
+    assert catalog_violations(data) == []
+    assert catalog_violations(json_round_trip(data)) == []
+
+
+def test_a_break_may_be_at_the_turnaround(data):
+    """The turnaround (after_seg_count 2) replaces R01-CP03 (also 2) as the break checkpoint."""
+    make_round_trip(data, at=2)
+    data["eta_headers"][0]["breaks"] = [{"after_checkpoint_id": "R01-CP06", "duration_s": 600.0}]
+    assert all_violations(data) == []
+
+
+def two_turnarounds(d):
+    make_round_trip(d, at=1)
+    d["checkpoints"].append({**d["checkpoints"][-1], "checkpoint_id": "R01-CP07", "after_seg_count": 3})
+
+
+@pytest.mark.parametrize("change, fragment", [
+    (lambda d: make_round_trip(d, at=0), "R01-CP06 is the turnaround but after_seg_count 0 is not between 0 and 4"),
+    (lambda d: make_round_trip(d, at=4), "R01-CP06 is the turnaround but after_seg_count 4 is not between 0 and 4"),
+    (lambda d: make_round_trip(d, at=4.0), "R01-CP06 is the turnaround but after_seg_count 4.0 is not between 0 and 4"),
+    (lambda d: make_round_trip(d, at=0.0), "R01-CP06 is the turnaround but after_seg_count 0.0 is not between 0 and 4"),
+    (two_turnarounds, "R01 is round_trip and needs exactly one turnaround, found 2 (invariant 4)"),
+    (violate_invariant_4, "R01 is round_trip and needs exactly one turnaround, found 0 (invariant 4)"),
+])
+@pytest.mark.parametrize("round_trip", [False, True])
+def test_invariant_4_round_trip_needs_one_turnaround_strictly_inside(data, change, fragment, round_trip):
+    change(data)
+    if round_trip:
+        data = json_round_trip(data)
+    assert_violation(catalog_violations(data), fragment)
+
+
+def test_invariant_4_one_way_route_has_no_turnaround(data):
+    make_round_trip(data, at=2)
+    by_id(data["routes"], "route_id", "R01")["trip_type"] = "one_way"
+    assert_violation(catalog_violations(data), "checkpoints: R01 is one_way but has 1 turnaround(s) (invariant 4)")
+
+
+@pytest.mark.parametrize("route_id, fields, field, value, must_be", [
+    ("R02", {}, "source_trip_id", None, "set"),                       # trip
+    ("R02", {}, "snapshot_id", SN_A, "null"),
+    (RS_A, ROUTING, "snapshot_id", None, "set"),                      # routing
+    (RS_A, ROUTING, "source_trip_id", "T002", "null"),
+    (RG_B, TARGET_GPX, "source_trip_id", "T002", "null"),             # target_gpx
+    (RG_B, TARGET_GPX, "snapshot_id", SN_A, "null"),
+])
+def test_invariant_5_route_source_decides_which_reference_is_set(data, route_id, fields, field, value, must_be):
+    rename_route(data, "R02", route_id, **fields)
+    by_id(data["routes"], "route_id", route_id)[field] = value
+    source = fields.get("route_source", "trip")
+    assert_violation(catalog_violations(data),
+                     f"routes: {route_id} route_source is {source}, so {field} must be {must_be} (invariant 5)")
+
+
+# v0.3 fields of the route record: required, with fixed values.
+@pytest.mark.parametrize("field", ["route_source", "snapshot_id", "trip_type", "source_trip_id"])
+def test_a_v02_route_record_without_the_v03_fields_is_rejected(data, field):
+    del by_id(data["routes"], "route_id", "R02")[field]
+    assert_violation(catalog_violations(data), f"routes[1] schema: (record): '{field}' is a required property")
+
+
+@pytest.mark.parametrize("field, value", [
+    ("route_source", "Trip"), ("route_source", "gpx"), ("route_source", ""), ("route_source", None),
+    ("trip_type", "oneway"), ("trip_type", "ROUND_TRIP"), ("trip_type", "loop"), ("trip_type", None),
+    ("source_trip_id", "T01"), ("source_trip_id", ""),
+])
+def test_route_source_and_trip_type_have_fixed_values(data, field, value):
+    by_id(data["routes"], "route_id", "R02")[field] = value
+    assert_violation(catalog_violations(data), f"routes[1] schema: {field}")
+
+
+@pytest.mark.parametrize("kind", ["TURNAROUND", "turn_around", "return"])
+def test_checkpoint_kind_turnaround_is_spelled_exactly(data, kind):
+    make_round_trip(data, at=2)
+    data["checkpoints"][-1]["kind"] = kind
+    assert_violation(catalog_violations(data), "schema: kind")
+
+
+def test_contracts_cli_reports_no_violation_for_the_mock_fixture():
+    """AC (5): python -m moto_copilot.contracts on the fixture (no network, no key, no GPX)."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from conftest import MOCK_DATASET
+    src = Path(__file__).resolve().parents[1] / "src"
+    env = {**os.environ, "PYTHONPATH": str(src)}
+    result = subprocess.run([sys.executable, "-m", "moto_copilot.contracts", str(MOCK_DATASET)],
+                            capture_output=True, text=True, encoding="utf-8", env=env, timeout=60)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "data contracts v0.3" in result.stdout
+    assert "violation" not in result.stdout

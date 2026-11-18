@@ -1,4 +1,4 @@
-"""Data contracts v0.2 (DESIGN.md §5): schemas and validation."""
+"""Data contracts v0.3 (DESIGN.md §5): schemas and validation."""
 from .schemas import CONTRACT_VERSION
 from .validate import (
     checkpoint_arrival,

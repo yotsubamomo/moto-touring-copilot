@@ -1,13 +1,16 @@
 """Validation of the minimal data contracts (DESIGN.md §5).
 
-Contract v0.2 plus the approved v0.3 stop-allowance fields and invariants of contracts 1, 3 and 4
-(Issue #7); see schemas.py for what is not covered yet.
+Contract v0.3: the stop-allowance fields and invariants of contracts 1, 3 and 4 (Issue #7), and the
+v0.3 ID formats with contract 2 invariants 4 and 5 (SPEC-R1 R1-1, Issue #13). Contract 2 also checks
+that a checkpoint_id starts with its route_id and that the route_id format agrees with route_source
+(an RS- route_id has the hex digits of its snapshot_id).
 
 Every validate_* function returns a list of violation messages; an empty list means the data
 conforms. Nothing here computes pace or ETA: it only checks data that some producer wrote.
 Contract 3 invariant 3 is checked as a total count of eligible rows, and per category only when the
 derived rows carry the pace table's category_scheme (SPEC-B1 CL-B1-12). Counts that JSON Schema's
-integer accepts as whole-number floats (3.0) are checked like ints (CL-B1-15).
+integer accepts as whole-number floats (3.0) are checked like ints (CL-B1-15; contract 2 invariant 2,
+CL-R1-11).
 """
 from __future__ import annotations
 
@@ -164,6 +167,44 @@ def validate_public_private_pair(public: Rows, private: Rows) -> list[str]:
 
 
 # --- Contract 2: Route Catalog ---------------------------------------------
+# Invariant 5 (v0.3): which of source_trip_id and snapshot_id is set, by route_source.
+_REFERENCES_SET = {"trip": (True, False), "routing": (False, True), "target_gpx": (False, False)}
+# SPEC-001 §2: the route_id format that goes with each route_source.
+_ID_FORMAT = {"trip": "R followed by two digits", "routing": "RS- followed by 10 hex digits",
+              "target_gpx": "RG- followed by 10 hex digits"}
+
+
+def _matches(pattern: str, value: Any) -> bool:
+    """True when the value is a string the schema pattern accepts (the same test as jsonschema)."""
+    return isinstance(value, str) and re.search(pattern, value) is not None
+
+
+def _source_of_route_id(route_id: str) -> str:
+    """The route_source that a route_id of a valid format belongs to."""
+    return {"RS-": "routing", "RG-": "target_gpx"}.get(route_id[:3], "trip")
+
+
+def _route_source_errors(route: dict) -> list[str]:
+    """Invariant 5 and the route_id / route_source / snapshot_id agreement (SPEC-001 §2)."""
+    rid, source = route.get("route_id"), route.get("route_source")
+    if source not in _REFERENCES_SET:
+        return []  # reported by the schema
+    out = []
+    for field, must_be_set in zip(("source_trip_id", "snapshot_id"), _REFERENCES_SET[source]):
+        if (route.get(field) is not None) != must_be_set:
+            out.append(f"routes: {rid} route_source is {source}, so {field} must be "
+                       f"{'set' if must_be_set else 'null'} (invariant 5)")
+    if _matches(S.ROUTE_ID_PATTERN, rid):
+        if _source_of_route_id(rid) != source:
+            out.append(f"routes: route_id {rid} does not have the format for route_source {source} "
+                       f"({_ID_FORMAT[source]})")
+        elif source == "routing":
+            sid = route.get("snapshot_id")
+            if _matches(S.SNAPSHOT_ID_PATTERN, sid) and rid[3:] != sid[3:]:
+                out.append(f"routes: {rid} and its snapshot_id {sid} do not have the same 10 hex digits")
+    return out
+
+
 def validate_route_catalog(routes: Rows, segments: Rows, checkpoints: Rows) -> list[str]:
     out = (_schema_errors("routes", routes, S.ROUTE) + _schema_errors("route_segments", segments, S.ROUTE_SEGMENT)
            + _schema_errors("checkpoints", checkpoints, S.CHECKPOINT))
@@ -201,10 +242,34 @@ def validate_route_catalog(routes: Rows, segments: Rows, checkpoints: Rows) -> l
             for c in of_kind:
                 if c.get("after_seg_count") != position:
                     out.append(f"checkpoints: {c.get('checkpoint_id')} is {kind} but after_seg_count is not {position} (invariant 1)")
+        whole_n = _whole_count(n)  # CL-R1-11: 4.0 counts as 4, here and for after_seg_count
         for c in cps:
-            count = c.get("after_seg_count")
-            if isinstance(count, int) and isinstance(n, int) and not 0 <= count <= n:
-                out.append(f"checkpoints: {c.get('checkpoint_id')} after_seg_count {count} is outside 0..{n} (invariant 2)")
+            count = _whole_count(c.get("after_seg_count"))
+            if count is not None and whole_n is not None and not 0 <= count <= whole_n:
+                out.append(f"checkpoints: {c.get('checkpoint_id')} after_seg_count {c.get('after_seg_count')} "
+                           f"is outside 0..{n} (invariant 2)")
+
+        turnarounds = [c for c in cps if c.get("kind") == "turnaround"]
+        trip_type = route.get("trip_type")
+        if trip_type == "round_trip":
+            if len(turnarounds) != 1:
+                out.append(f"checkpoints: {rid} is round_trip and needs exactly one turnaround, "
+                           f"found {len(turnarounds)} (invariant 4)")
+            for c in turnarounds:
+                count = _whole_count(c.get("after_seg_count"))
+                if count is not None and whole_n is not None and not 0 < count < whole_n:
+                    out.append(f"checkpoints: {c.get('checkpoint_id')} is the turnaround but after_seg_count "
+                               f"{c.get('after_seg_count')} is not between 0 and {n} (invariant 4)")
+        elif trip_type == "one_way" and turnarounds:
+            out.append(f"checkpoints: {rid} is one_way but has {len(turnarounds)} turnaround(s) (invariant 4)")
+
+        out += _route_source_errors(route)
+
+    for c in checkpoints:
+        cid, rid = c.get("checkpoint_id"), c.get("route_id")
+        if _matches(S.CHECKPOINT_ID_PATTERN, cid) and _matches(S.ROUTE_ID_PATTERN, rid) and \
+                cid.rpartition("-CP")[0] != rid:
+            out.append(f"checkpoints: {cid} does not start with its route_id {rid}")
 
     for c in checkpoints:
         is_station, has_ref = c.get("kind") == "fuel_station", c.get("station_ref") is not None

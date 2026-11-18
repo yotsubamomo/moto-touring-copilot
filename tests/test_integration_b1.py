@@ -94,7 +94,8 @@ def catalog(scheme: str):
         segments.append({"route_id": "R08", "seg_index": i, "length_m": length, "cum_length_m": cum,
                          "seg_category": category, "end_lat": 0.0, "end_lon": 0.01 * (i + 1)})
     route = {"route_id": "R08", "name": "合成整合路線（測試）", "n_segments": len(parts), "total_length_m": cum,
-             "source_trip_id": "T901", "category_scheme": scheme, "catalog_version": "catalog-integration"}
+             "source_trip_id": "T901", "route_source": "trip", "snapshot_id": None, "trip_type": "one_way",
+             "category_scheme": scheme, "catalog_version": "catalog-integration"}
     checkpoints = [
         {"checkpoint_id": "R08-CP01", "route_id": "R08", "kind": "start", "after_seg_count": 0, "name": None,
          "station_ref": None},

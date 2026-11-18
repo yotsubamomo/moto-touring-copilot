@@ -1,4 +1,4 @@
-"""Validate a JSON dataset against the data contracts v0.2.
+"""Validate a JSON dataset against the data contracts v0.3.
 
     python -m moto_copilot.contracts DATASET.json            # public data
     python -m moto_copilot.contracts DATASET.json --private  # derived segments with start_time
