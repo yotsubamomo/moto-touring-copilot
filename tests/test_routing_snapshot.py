@@ -512,3 +512,47 @@ def test_request_key_rejects_incomplete_requests(kwargs):
     with pytest.raises(RequestKeyError) as exc:
         request_key(**args)
     assert "0.10" not in str(exc.value)  # no coordinates in the message
+
+
+# --- R1-F1 (audit issue-14-c1-r1): unhashable JSON values never break the validator ----------
+
+@pytest.mark.parametrize("bad", [[], {}, [["one_way"]], {"one_way": 1}])
+def test_r1_f1_a_list_or_object_trip_type_is_a_field_error(bad):
+    snap = syn.snapshot()
+    snap["trip_type"] = bad
+    errors = validate_snapshot(snap)
+    assert any(e.startswith("$.trip_type:") for e in errors)
+    with pytest.raises(SnapshotValidationError) as exc:
+        syn.snapshot(trip_type=bad, rkey=syn.key("one_way"))
+    assert any(e.startswith("$.trip_type:") for e in exc.value.errors)
+
+
+_JSON_VALUES = [[], {}, [[]], [{}], {"a": []}, {"a": {}}, None, True, False, 0, -1, 1.5, "", "x"]
+
+
+@pytest.mark.parametrize("field", SNAPSHOT_FIELDS)
+@pytest.mark.parametrize("value", _JSON_VALUES, ids=repr)
+def test_r1_f1_validator_returns_errors_for_any_json_value_in_a_snapshot_field(field, value):
+    snap = syn.snapshot("round_trip")
+    snap[field] = value
+    assert isinstance(validate_snapshot(snap), list)
+
+
+@pytest.mark.parametrize("field", LEG_FIELDS)
+@pytest.mark.parametrize("value", _JSON_VALUES, ids=repr)
+def test_r1_f1_validator_returns_errors_for_any_json_value_in_a_leg_field(field, value):
+    snap = syn.snapshot("round_trip")
+    snap["legs"][1][field] = value
+    assert isinstance(validate_snapshot(snap), list)
+
+
+@pytest.mark.parametrize("value", _JSON_VALUES, ids=repr)
+def test_r1_f1_validator_returns_errors_for_any_json_value_as_a_leg_or_nested_value(value):
+    snap = syn.snapshot("round_trip")
+    snap["legs"][0] = value
+    assert validate_snapshot(snap) != []
+    snap = syn.snapshot("round_trip")
+    snap["legs"][1]["endpoint_offset_m"]["start"] = value
+    snap["legs"][1]["warnings"] = [value]
+    snap["legs"][1]["via_offset_m"] = [value]
+    assert validate_snapshot(snap) != []

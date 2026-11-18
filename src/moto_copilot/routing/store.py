@@ -67,8 +67,8 @@ class SnapshotNotFoundError(SnapshotStoreError):
 class StrictModeStop(Exception):
     """Strict mode stops (SPEC-001 7.11 item 3; CL-R1-4). Not a route error; there is no fallback.
 
-    `reason` is one of: invalid_entry, no_entry, ambiguous_entry, file_missing, hash_mismatch,
-    invalid_snapshot, request_key_mismatch, method_mismatch.
+    `reason` is one of: invalid_entry, no_entry, ambiguous_entry, file_missing, unreadable,
+    hash_mismatch, invalid_snapshot, request_key_mismatch, method_mismatch.
     """
 
     def __init__(self, reason: str, message: str):
@@ -126,16 +126,23 @@ def _reject_constant(_name):
 
 
 def _parse_snapshot_bytes(data: bytes, snapshot_id: str) -> dict:
-    """Parse and validate the bytes of `<snapshot_id>.json`. Raises SnapshotIntegrityError."""
+    """Parse and validate the bytes of `<snapshot_id>.json`. Raises SnapshotIntegrityError.
+
+    Any failure on the file's content becomes SnapshotIntegrityError, raised `from None` so that
+    neither the message nor the chained cause carries the content or a path (R1-F1, R1-F2).
+    """
     try:
         snapshot = json.loads(
             data.decode("utf-8"),
             object_pairs_hook=_reject_duplicate_keys,
             parse_constant=_reject_constant,
         )
-    except (UnicodeDecodeError, ValueError) as exc:
-        raise SnapshotIntegrityError(f"{snapshot_id}: the file is not valid JSON") from exc
-    errors = validate_snapshot(snapshot)
+    except (UnicodeDecodeError, ValueError, RecursionError):
+        raise SnapshotIntegrityError(f"{snapshot_id}: the file is not valid JSON") from None
+    try:
+        errors = validate_snapshot(snapshot)
+    except (TypeError, ValueError, RecursionError):
+        raise SnapshotIntegrityError(f"{snapshot_id}: the file is not a valid snapshot") from None
     if errors:
         raise SnapshotIntegrityError(f"{snapshot_id}: the file is not a valid snapshot: " + "; ".join(errors))
     if snapshot["snapshot_id"] != snapshot_id:
@@ -170,7 +177,11 @@ class SnapshotStore:
         snapshot_id = snapshot["snapshot_id"]
         path = self.path_for(snapshot_id)
         data = canonical_bytes(snapshot)
-        if not path.exists():
+        try:
+            exists = path.exists()
+        except OSError:
+            raise SnapshotStoreError(f"{snapshot_id}: the snapshot file status cannot be read") from None
+        if not exists:
             try:
                 with open(path, "xb") as handle:  # exclusive create: never replaces a file
                     handle.write(data)
@@ -178,6 +189,9 @@ class SnapshotStore:
                     os.fsync(handle.fileno())
             except FileExistsError:
                 pass  # created by someone else in between; compared below
+            except OSError:
+                # No path in the message or the chained cause (R1-F2).
+                raise SnapshotStoreError(f"{snapshot_id}: the snapshot file cannot be written") from None
             else:
                 stored = _parse_snapshot_bytes(data, snapshot_id)
                 return PutResult(snapshot_id, route_id_for(snapshot_id), path, True, stored)
@@ -186,29 +200,54 @@ class SnapshotStore:
             raise SnapshotConflictError(f"{snapshot_id}: a different content is already stored under this snapshot_id")
         return PutResult(snapshot_id, route_id_for(snapshot_id), path, False, existing)
 
-    def load(self, snapshot_id: str) -> dict:
+    def _read(self, snapshot_id: str) -> bytes:
+        """The file bytes. No file: SnapshotNotFoundError; any other OS error: SnapshotIntegrityError.
+
+        Both are raised `from None` with messages that name only the snapshot_id: an OSError's text
+        holds the path, which may hold the caller's directory names (R1-F2).
+        """
         path = self.path_for(snapshot_id)
         try:
-            data = path.read_bytes()
-        except FileNotFoundError as exc:
-            raise SnapshotNotFoundError(f"{snapshot_id}: no snapshot file") from exc
-        return _parse_snapshot_bytes(data, snapshot_id)
+            return path.read_bytes()
+        except FileNotFoundError:
+            raise SnapshotNotFoundError(f"{snapshot_id}: no snapshot file") from None
+        except OSError:
+            raise SnapshotIntegrityError(f"{snapshot_id}: the snapshot file cannot be read") from None
+
+    def load(self, snapshot_id: str) -> dict:
+        return _parse_snapshot_bytes(self._read(snapshot_id), snapshot_id)
 
     def file_sha256(self, snapshot_id: str) -> str:
         """SHA-256 of the file bytes: the value a frozen list records."""
-        return hashlib.sha256(self.path_for(snapshot_id).read_bytes()).hexdigest()
+        return hashlib.sha256(self._read(snapshot_id)).hexdigest()
 
     def snapshot_ids(self) -> list[str]:
-        """Every `snapshot_id` with a file here. Other files in the directory are ignored."""
-        return sorted(
-            entry.name[: -len(".json")]
-            for entry in self.directory.iterdir()
-            if _FILE_NAME.fullmatch(entry.name) and entry.is_file()
-        )
+        """Every `snapshot_id` with a file here. Other files in the directory are ignored.
+
+        A directory that cannot be listed raises SnapshotIntegrityError (no path in the message).
+        """
+        try:
+            return sorted(
+                entry.name[: -len(".json")]
+                for entry in self.directory.iterdir()
+                if _FILE_NAME.fullmatch(entry.name) and entry.is_file()
+            )
+        except OSError:
+            raise SnapshotIntegrityError("the snapshot directory cannot be listed") from None
 
     def snapshots(self) -> list[dict]:
-        """Every stored snapshot. A file that is not a valid snapshot raises SnapshotIntegrityError."""
-        return [self.load(snapshot_id) for snapshot_id in self.snapshot_ids()]
+        """Every stored snapshot (the selection boundary of normal mode and Snapshot Mode).
+
+        A listed file that is not a valid snapshot, cannot be read, or is gone by the time it is
+        read raises SnapshotIntegrityError (CL-R1-17): selection stops, it never skips the file.
+        """
+        result = []
+        for snapshot_id in self.snapshot_ids():
+            try:
+                result.append(self.load(snapshot_id))
+            except SnapshotNotFoundError:
+                raise SnapshotIntegrityError(f"{snapshot_id}: a listed snapshot file is no longer there") from None
+        return result
 
 
 def _check_method(current_method) -> None:
@@ -312,6 +351,9 @@ def select_strict(
         data = path.read_bytes()
     except FileNotFoundError:
         raise StrictModeStop("file_missing", f"{entry.snapshot_id}: the listed snapshot file does not exist") from None
+    except OSError:
+        # No path in the message or the chained cause (R1-F2).
+        raise StrictModeStop("unreadable", f"{entry.snapshot_id}: the listed snapshot file cannot be read") from None
     if hashlib.sha256(data).hexdigest() != entry.sha256:
         raise StrictModeStop("hash_mismatch", f"{entry.snapshot_id}: the file SHA-256 differs from the frozen list")
     try:

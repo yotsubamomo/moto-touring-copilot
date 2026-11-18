@@ -6,10 +6,13 @@ from __future__ import annotations
 
 import ast
 import copy
+import errno
 import hashlib
 import inspect
 import json
+import os
 import socket
+import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -539,3 +542,177 @@ def test_the_routing_package_imports_no_network_or_environment_modules():
                 continue
             assert not (set(names) & banned), f"{source.name} imports {names}"
         assert "environ" not in source.read_text(encoding="utf-8") and "getenv" not in source.read_text(encoding="utf-8")
+
+
+# --- R1-F1 (audit issue-14-c1-r1): a list or object trip_type in a file -----------------------
+
+def _bad_trip_type_file(store: SnapshotStore, tmp_path: Path, bad) -> tuple[dict, bytes]:
+    """Write a snapshot file whose trip_type is `bad`; returns the original snapshot and the bytes."""
+    snap = syn.snapshot(shape_suffix="bad")
+    broken = copy.deepcopy(snap)
+    broken["trip_type"] = bad
+    data = canonical_bytes(broken)
+    (tmp_path / f"{snap['snapshot_id']}.json").write_bytes(data)
+    return snap, data
+
+
+@pytest.mark.parametrize("bad", [[], {}])
+def test_r1_f1_put_rejects_a_list_or_object_trip_type(store, tmp_path, bad):
+    snap = syn.snapshot()
+    snap["trip_type"] = bad
+    with pytest.raises(SnapshotValidationError) as exc:
+        store.put(snap)
+    assert any(e.startswith("$.trip_type:") for e in exc.value.errors)
+    assert files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("bad", [[], {}])
+def test_r1_f1_load_and_normal_selection_stop_on_a_list_or_object_trip_type(store, tmp_path, bad):
+    good = syn.snapshot(fetched_at=at(timedelta(days=1)), shape_suffix="good")
+    store.put(good)
+    snap, data = _bad_trip_type_file(store, tmp_path, bad)
+    with pytest.raises(SnapshotIntegrityError):
+        store.load(snap["snapshot_id"])
+    # The good compatible snapshot for the same request is not used instead.
+    with pytest.raises(SnapshotIntegrityError):
+        find_reusable(store, good["request_key"], syn.METHOD, now=NOW)
+    with pytest.raises(SnapshotIntegrityError):
+        select_snapshot_mode(store, good["request_key"], syn.METHOD)
+    assert (tmp_path / f"{snap['snapshot_id']}.json").read_bytes() == data
+
+
+@pytest.mark.parametrize("bad", [[], {}])
+def test_r1_f1_strict_mode_stops_on_a_list_or_object_trip_type_with_the_real_sha256(store, tmp_path, bad):
+    good = syn.snapshot(shape_suffix="good")
+    store.put(good)
+    snap, data = _bad_trip_type_file(store, tmp_path, bad)
+    listed = {"request_key": snap["request_key"], "snapshot_id": snap["snapshot_id"],
+              "sha256": hashlib.sha256(data).hexdigest()}
+    assert listed["sha256"] == store.file_sha256(snap["snapshot_id"])
+    with pytest.raises(StrictModeStop) as exc:
+        select_strict(store, snap["request_key"], syn.METHOD, [listed])
+    assert exc.value.reason == "invalid_snapshot"
+    assert exc.value.__cause__ is None
+
+
+# --- R1-F2 (audit issue-14-c1-r1): OS errors are converted and carry no path -------------------
+
+# A synthetic directory name used to prove that no path reaches a message or a traceback.
+MARKER = "synthetic-dir-0.000001N-0.000001E"
+
+
+@pytest.fixture
+def marked(tmp_path) -> tuple[SnapshotStore, Path]:
+    directory = tmp_path / MARKER
+    directory.mkdir()
+    return SnapshotStore(directory), directory
+
+
+def assert_path_free(exc: BaseException) -> None:
+    text = "".join(traceback.format_exception(exc))
+    assert MARKER not in text
+    assert exc.__cause__ is None and exc.__suppress_context__
+
+
+def _fail_reads_of(monkeypatch, name: str, error: type[OSError], errno_value: int) -> None:
+    real = Path.read_bytes
+
+    def fake(self):
+        if self.name == name:
+            raised = error(errno_value, os.strerror(errno_value), str(self))
+            assert MARKER in str(raised)  # the raw OS error does carry the path
+            raise raised
+        return real(self)
+
+    monkeypatch.setattr(Path, "read_bytes", fake)
+
+
+@pytest.mark.parametrize("error, errno_value", [(PermissionError, errno.EACCES), (OSError, errno.EIO)])
+def test_r1_f2_a_read_error_stops_normal_selection_without_a_path(marked, monkeypatch, error, errno_value):
+    store, _ = marked
+    good = syn.snapshot(fetched_at=at(timedelta(days=1)), shape_suffix="good")
+    blocked = syn.snapshot(fetched_at=at(timedelta(days=2)), shape_suffix="blocked")
+    store.put(good)
+    store.put(blocked)
+    _fail_reads_of(monkeypatch, f"{blocked['snapshot_id']}.json", error, errno_value)
+    for call in (lambda: store.load(blocked["snapshot_id"]),
+                 lambda: find_reusable(store, good["request_key"], syn.METHOD, now=NOW),
+                 lambda: select_snapshot_mode(store, good["request_key"], syn.METHOD),
+                 lambda: store.file_sha256(blocked["snapshot_id"])):
+        with pytest.raises(SnapshotIntegrityError) as exc:
+            call()
+        assert not isinstance(exc.value, SnapshotNotFoundError)
+        assert_path_free(exc.value)
+
+
+@pytest.mark.parametrize("error, errno_value", [(PermissionError, errno.EACCES), (OSError, errno.EIO)])
+def test_r1_f2_a_read_error_stops_strict_mode_without_a_path(marked, monkeypatch, error, errno_value):
+    store, _ = marked
+    listed = syn.snapshot(shape_suffix="listed")
+    store.put(listed)
+    store.put(syn.snapshot(shape_suffix="other"))
+    frozen = [entry(store, listed)]
+    _fail_reads_of(monkeypatch, f"{listed['snapshot_id']}.json", error, errno_value)
+    with pytest.raises(StrictModeStop) as exc:
+        select_strict(store, listed["request_key"], syn.METHOD, frozen)
+    assert exc.value.reason == "unreadable"
+    assert_path_free(exc.value)
+
+
+def test_r1_f2_a_file_listed_and_then_gone_stops_normal_selection(marked, monkeypatch):
+    store, directory = marked
+    good = syn.snapshot(fetched_at=at(timedelta(days=1)), shape_suffix="good")
+    store.put(good)
+    vanished = syn.snapshot(shape_suffix="vanished")["snapshot_id"]
+    assert not (directory / f"{vanished}.json").exists()
+    monkeypatch.setattr(SnapshotStore, "snapshot_ids", lambda self: sorted([good["snapshot_id"], vanished]))
+    for call in (lambda: find_reusable(store, good["request_key"], syn.METHOD, now=NOW),
+                 lambda: select_snapshot_mode(store, good["request_key"], syn.METHOD)):
+        with pytest.raises(SnapshotIntegrityError) as exc:
+            call()
+        assert not isinstance(exc.value, SnapshotNotFoundError)
+        assert "no longer there" in str(exc.value)
+        assert_path_free(exc.value)
+    # A direct load of an id that never existed keeps the dedicated not-found error.
+    with pytest.raises(SnapshotNotFoundError) as exc:
+        store.load(vanished)
+    assert_path_free(exc.value)
+
+
+def test_r1_f2_a_directory_that_cannot_be_listed_stops_normal_selection(marked, monkeypatch):
+    store, directory = marked
+    store.put(syn.snapshot())
+
+    def refuse(self):
+        raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), str(self))
+
+    monkeypatch.setattr(Path, "iterdir", refuse)
+    for call in (lambda: find_reusable(store, syn.key("one_way"), syn.METHOD, now=NOW),
+                 lambda: select_snapshot_mode(store, syn.key("one_way"), syn.METHOD)):
+        with pytest.raises(SnapshotIntegrityError) as exc:
+            call()
+        assert_path_free(exc.value)
+
+
+def test_r1_f2_put_errors_carry_no_path_and_write_nothing(marked, monkeypatch):
+    store, directory = marked
+    import moto_copilot.routing.store as store_module
+
+    def refuse_open(path, *args, **kwargs):
+        raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), str(path))
+
+    monkeypatch.setattr(store_module, "open", refuse_open, raising=False)
+    with pytest.raises(SnapshotStoreError) as exc:
+        store.put(syn.snapshot())
+    assert_path_free(exc.value)
+    monkeypatch.undo()
+
+    def refuse_status(self, *args, **kwargs):
+        raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), str(self))
+
+    monkeypatch.setattr(Path, "exists", refuse_status)
+    with pytest.raises(SnapshotStoreError) as exc:
+        store.put(syn.snapshot())
+    assert_path_free(exc.value)
+    monkeypatch.undo()
+    assert list(directory.iterdir()) == []

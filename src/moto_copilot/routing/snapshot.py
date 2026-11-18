@@ -233,7 +233,10 @@ def validate_snapshot(snapshot) -> list[str]:
     if "request_key" in snapshot and not is_request_key(snapshot["request_key"]):
         errors.append("$.request_key: must be 64 lowercase hex characters")
     trip_type = snapshot.get("trip_type")
-    if "trip_type" in snapshot and trip_type not in TRIP_TYPES:
+    # Type and enum first: a JSON list or object is unhashable, so it must never reach the
+    # LEG_DIRECTIONS lookup below (R1-F1).
+    trip_type_ok = isinstance(trip_type, str) and trip_type in TRIP_TYPES
+    if "trip_type" in snapshot and not trip_type_ok:
         errors.append(f"$.trip_type: must be one of {', '.join(TRIP_TYPES)}")
     if "routing_params" in snapshot and not isinstance(snapshot["routing_params"], dict):
         errors.append("$.routing_params: must be an object")
@@ -258,7 +261,7 @@ def validate_snapshot(snapshot) -> list[str]:
         else:
             for i, leg in enumerate(legs):
                 _check_leg(leg, f"$.legs[{i}]", errors)
-            if trip_type in LEG_DIRECTIONS:
+            if trip_type_ok:
                 expected = LEG_DIRECTIONS[trip_type]
                 actual = tuple(leg.get("direction") if isinstance(leg, dict) else None for leg in legs)
                 if actual != expected:
