@@ -40,7 +40,7 @@ def test_canonical_json_is_utf8_without_escaping_non_ascii():
 
 
 def test_canonical_json_six_places_for_coordinates_and_other_floats():
-    assert canonical_json({"lat": 23.12345678, "lon": 120.5}) == '{"lat":23.123456,"lon":120.500000}'
+    assert canonical_json({"lat": 0.12345678, "lon": 0.5}) == '{"lat":0.123456,"lon":0.500000}'
     assert canonical_json({"factor": 0.1234567}) == '{"factor":0.123456}'
 
 
@@ -69,7 +69,7 @@ def test_canonical_json_rejects_non_json_values(value):
 
 def test_canonical_json_is_idempotent():
     from moto_copilot.routing.canonical import normalized
-    value = {"lat": 23.1234569, "via_offset_m": [1.99], "n": 3}
+    value = {"lat": 0.1234569, "via_offset_m": [1.99], "n": 3}
     once = normalized(value)
     assert canonical_json(once) == canonical_json(value)
     assert normalized(once) == once
@@ -78,8 +78,8 @@ def test_canonical_json_is_idempotent():
 # --- S56: precision of the normalization -----------------------------------------------------
 
 @pytest.mark.parametrize("a, b", [
-    (23.123456, 23.123457),
-    (23.1234569, 23.1234571),   # sixth decimal differs (6 vs 7) though the values are 2e-7 apart
+    (0.123456, 0.123457),
+    (0.1234569, 0.1234571),   # sixth decimal differs (6 vs 7) though the values are 2e-7 apart
     (-0.0000011, -0.0000021),
 ])
 def test_s56_coordinates_differing_in_the_sixth_decimal_hash_differently(a, b):
@@ -90,9 +90,9 @@ def test_s56_coordinates_differing_in_the_sixth_decimal_hash_differently(a, b):
 
 
 @pytest.mark.parametrize("a, b", [
-    (23.1234561, 23.1234569),   # only the seventh decimal differs, across a rounding boundary
-    (23.123456, 23.12345699999),
-    (120.0000001, 120.0000009),
+    (0.1234561, 0.1234569),   # only the seventh decimal differs, across a rounding boundary
+    (0.123456, 0.12345699999),
+    (0.0000001, 0.0000009),
 ])
 def test_s56_coordinates_differing_only_after_the_sixth_decimal_hash_the_same(a, b):
     assert sha256_hex({"lat": a}) == sha256_hex({"lat": b})

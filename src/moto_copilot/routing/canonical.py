@@ -10,7 +10,7 @@ How the rule is applied here:
   `endpoint_offset_m.start`. Every other float, latitude and longitude included, gets six places.
 - The decimal places are cut from the shortest decimal form of the float (`repr`), without
   rounding up (`ROUND_DOWN`). See `_ROUNDING`.
-- Floats are written in fixed-point form with exactly that many places (`12.0`, `23.123456`);
+- Floats are written in fixed-point form with exactly that many places (`12.0`, `0.123456`);
   integers stay integers; `-0.0` is written as `0.0`. NaN and infinities are rejected.
 - Only JSON types are accepted: dict with str keys, list, str, int, float, bool, None.
 """
@@ -29,7 +29,7 @@ DEFAULT_PLACES = 6
 # digits (ROUND_DOWN on the shortest decimal form) is the reading under which S56 holds for
 # every pair of values: two values that differ in the sixth decimal always hash differently,
 # and two that differ only from the seventh decimal on always hash the same. Rounding to nearest
-# breaks both halves near a rounding boundary (e.g. 23.1234561 and 23.1234569). This choice is
+# breaks both halves near a rounding boundary (e.g. 0.1234561 and 0.1234569). This choice is
 # reported for Design Authority confirmation (worklog issue-14, C-14-1).
 _ROUNDING = decimal.ROUND_DOWN
 
