@@ -24,6 +24,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -222,27 +223,41 @@ class SnapshotStore:
         return hashlib.sha256(self._read(snapshot_id)).hexdigest()
 
     def snapshot_ids(self) -> list[str]:
-        """Every `snapshot_id` with a file here. Other files in the directory are ignored.
+        """The `snapshot_id` of every directory entry whose name is `SN-<10 hex>.json`.
 
-        A directory that cannot be listed raises SnapshotIntegrityError (no path in the message).
+        Candidates are chosen by name only (CL-R1-20 item 1, decision-20261118-issue14-qalt1):
+        no entry is dropped because it is not a regular file or because its status cannot be read;
+        snapshots() checks each one. Entries with other names are ignored. A directory that cannot
+        be listed raises SnapshotIntegrityError (no path in the message).
         """
         try:
-            return sorted(
-                entry.name[: -len(".json")]
-                for entry in self.directory.iterdir()
-                if _FILE_NAME.fullmatch(entry.name) and entry.is_file()
-            )
+            names = [entry.name for entry in self.directory.iterdir()]
         except OSError:
             raise SnapshotIntegrityError("the snapshot directory cannot be listed") from None
+        return sorted(name[: -len(".json")] for name in names if _FILE_NAME.fullmatch(name))
 
     def snapshots(self) -> list[dict]:
         """Every stored snapshot (the selection boundary of normal mode and Snapshot Mode).
 
-        A listed file that is not a valid snapshot, cannot be read, or is gone by the time it is
-        read raises SnapshotIntegrityError (CL-R1-17): selection stops, it never skips the file.
+        Every candidate from snapshot_ids() must read as a valid snapshot; otherwise selection
+        stops with SnapshotIntegrityError and never skips the entry (CL-R1-17, CL-R1-20 in
+        decision-20261118-issue14-qalt1). That covers an entry that is gone when checked or read,
+        one that is not a regular file after following symlinks (a directory, a FIFO, a device) or
+        is a symlink loop, any other OSError, and the CL-R1-17 content checks. The status comes
+        from an explicit os.stat, never from a predicate that turns an OSError into a boolean
+        (is_file, exists, os.path.isfile), and an entry that is not a regular file is rejected
+        before it is opened. Messages name only the snapshot_id and are raised from None.
         """
         result = []
         for snapshot_id in self.snapshot_ids():
+            try:
+                mode = os.stat(self.path_for(snapshot_id)).st_mode
+            except FileNotFoundError:
+                raise SnapshotIntegrityError(f"{snapshot_id}: a listed snapshot file is no longer there") from None
+            except OSError:
+                raise SnapshotIntegrityError(f"{snapshot_id}: the snapshot file status cannot be read") from None
+            if not stat.S_ISREG(mode):
+                raise SnapshotIntegrityError(f"{snapshot_id}: the listed snapshot entry is not a regular file") from None
             try:
                 result.append(self.load(snapshot_id))
             except SnapshotNotFoundError:

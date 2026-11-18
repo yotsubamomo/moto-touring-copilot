@@ -12,6 +12,7 @@ import inspect
 import json
 import os
 import socket
+import stat
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -716,3 +717,161 @@ def test_r1_f2_put_errors_carry_no_path_and_write_nothing(marked, monkeypatch):
     assert_path_free(exc.value)
     monkeypatch.undo()
     assert list(directory.iterdir()) == []
+
+
+# --- CL-R1-20 (decision-20261118-issue14-qalt1): candidates by name; every one must read --------
+
+def _selection_stops(store: SnapshotStore, request_key: str) -> None:
+    """Both normal-selection entry points stop with a path-free SnapshotIntegrityError."""
+    for call in (lambda: find_reusable(store, request_key, syn.METHOD, now=NOW),
+                 lambda: select_snapshot_mode(store, request_key, syn.METHOD)):
+        with pytest.raises(SnapshotIntegrityError) as exc:
+            call()
+        assert not isinstance(exc.value, SnapshotNotFoundError)
+        assert_path_free(exc.value)
+
+
+def _good_snapshot(store: SnapshotStore, with_good: bool) -> dict:
+    """A compatible, fresh snapshot for the request; stored only when `with_good`."""
+    good = syn.snapshot(fetched_at=at(timedelta(days=1)), shape_suffix="good")
+    if with_good:
+        store.put(good)
+    return good
+
+
+def _fail_stat_of(monkeypatch, name: str, make_error) -> None:
+    """Make os.stat (what snapshots() calls) fail for one entry; everything else is real."""
+    real = os.stat
+
+    def fake(path, *args, **kwargs):
+        if os.fspath(path).endswith(os.sep + name):
+            raised = make_error(os.fspath(path))
+            assert MARKER in str(raised)
+            raise raised
+        return real(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "stat", fake)
+
+
+@pytest.mark.parametrize("with_good", [True, False])
+def test_cl_r1_20_t1_a_directory_named_like_a_snapshot_stops_normal_selection(marked, with_good):
+    store, directory = marked
+    good = _good_snapshot(store, with_good)
+    (directory / f"{syn.snapshot(shape_suffix='dir')['snapshot_id']}.json").mkdir()
+    _selection_stops(store, good["request_key"])
+
+
+@pytest.mark.parametrize("with_good", [True, False])
+def test_cl_r1_20_t2_an_entry_deleted_after_listing_stops_normal_selection(marked, monkeypatch, with_good):
+    store, directory = marked
+    good = _good_snapshot(store, with_good)
+    gone = syn.snapshot(fetched_at=at(timedelta(days=2)), shape_suffix="gone")
+    store.put(gone)
+    gone_path = directory / f"{gone['snapshot_id']}.json"
+    real_iterdir = Path.iterdir
+
+    def iterdir_then_delete(self):
+        entries = list(real_iterdir(self))
+        if self == directory and gone_path.exists():
+            gone_path.unlink()  # a real deletion after listing, before the status check
+        return iter(entries)
+
+    monkeypatch.setattr(Path, "iterdir", iterdir_then_delete)
+    with pytest.raises(SnapshotIntegrityError) as exc:
+        find_reusable(store, good["request_key"], syn.METHOD, now=NOW)
+    assert "no longer there" in str(exc.value)
+    assert_path_free(exc.value)
+    assert not gone_path.exists()
+    store.put(gone)  # list again, delete again: Snapshot Mode stops the same way
+    with pytest.raises(SnapshotIntegrityError) as exc:
+        select_snapshot_mode(store, good["request_key"], syn.METHOD)
+    assert_path_free(exc.value)
+
+
+@pytest.mark.parametrize("with_good", [True, False])
+@pytest.mark.parametrize("make_error", [
+    lambda p: PermissionError(errno.EACCES, os.strerror(errno.EACCES), p),
+    lambda p: OSError(errno.EIO, os.strerror(errno.EIO), p),
+], ids=["EACCES", "EIO"])
+def test_cl_r1_20_t3_a_status_error_stops_normal_selection(marked, monkeypatch, with_good, make_error):
+    store, _ = marked
+    good = _good_snapshot(store, with_good)
+    blocked = syn.snapshot(fetched_at=at(timedelta(days=2)), shape_suffix="blocked")
+    store.put(blocked)
+    _fail_stat_of(monkeypatch, f"{blocked['snapshot_id']}.json", make_error)
+    _selection_stops(store, good["request_key"])
+
+
+@pytest.mark.parametrize("with_good", [True, False])
+@pytest.mark.parametrize("make_error", [
+    lambda p: FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), p),
+    lambda p: OSError(errno.ELOOP, os.strerror(errno.ELOOP), p),
+], ids=["dangling-ENOENT", "loop-ELOOP"])
+def test_cl_r1_20_t4_a_dangling_or_looping_symlink_stops_normal_selection(marked, monkeypatch, with_good, make_error):
+    store, _ = marked
+    good = _good_snapshot(store, with_good)
+    link = syn.snapshot(fetched_at=at(timedelta(days=2)), shape_suffix="link")
+    store.put(link)
+    _fail_stat_of(monkeypatch, f"{link['snapshot_id']}.json", make_error)
+    _selection_stops(store, good["request_key"])
+
+
+def test_cl_r1_20_t5_entries_with_other_names_are_still_ignored(marked, monkeypatch):
+    store, directory = marked
+    good = _good_snapshot(store, True)
+    other = good["snapshot_id"]
+    # (No upper-case variant of the good name: on a case-insensitive file system it is the same file.)
+    for name in (f"{other}.json.tmp", f"{other}.jsonx", f"x{other}.json",
+                 f"{other}x.json", "SN-ABCDEF0123.json", "notes.txt"):
+        (directory / name).write_text("not a snapshot", encoding="utf-8")
+    (directory / f"{other}.json.d").mkdir()
+    # Entries with other names are not even stat'ed: a failing stat on them changes nothing.
+    real = os.stat
+
+    def fake(path, *args, **kwargs):
+        if os.path.basename(os.fspath(path)) != f"{other}.json" and os.path.dirname(os.fspath(path)) == os.fspath(directory):
+            raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), os.fspath(path))
+        return real(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "stat", fake)
+    assert store.snapshot_ids() == [other]
+    assert find_reusable(store, good["request_key"], syn.METHOD, now=NOW) == good
+    assert select_snapshot_mode(store, good["request_key"], syn.METHOD).snapshot == good
+
+
+@pytest.mark.parametrize("with_good", [True, False])
+def test_cl_r1_20_t6_an_entry_that_is_not_a_regular_file_is_never_opened(marked, monkeypatch, with_good):
+    store, directory = marked
+    good = _good_snapshot(store, with_good)
+    # A real directory, and a real valid snapshot file that os.stat reports as a FIFO.
+    subdir_name = f"{syn.snapshot(shape_suffix='dir')['snapshot_id']}.json"
+    (directory / subdir_name).mkdir()
+    fifo = syn.snapshot(fetched_at=at(timedelta(hours=1)), shape_suffix="fifo")
+    store.put(fifo)
+    fifo_name = f"{fifo['snapshot_id']}.json"
+    real_stat, real_read, real_open = os.stat, Path.read_bytes, open
+    opened = []
+
+    def fake_stat(path, *args, **kwargs):
+        if os.fspath(path).endswith(os.sep + fifo_name):
+            return os.stat_result((stat.S_IFIFO | 0o644, 0, 0, 1, 0, 0, 0, 0, 0, 0))
+        return real_stat(path, *args, **kwargs)
+
+    def fake_read(self):
+        opened.append(self.name)
+        return real_read(self)
+
+    def fake_open(file, *args, **kwargs):
+        opened.append(os.path.basename(os.fspath(file)))
+        return real_open(file, *args, **kwargs)
+
+    import moto_copilot.routing.store as store_module
+    monkeypatch.setattr(os, "stat", fake_stat)
+    monkeypatch.setattr(Path, "read_bytes", fake_read)
+    monkeypatch.setattr(store_module, "open", fake_open, raising=False)
+    for remove_dir in (False, True):
+        if remove_dir:
+            (directory / subdir_name).rmdir()  # leaves only the FIFO-like entry (and maybe the good one)
+        opened.clear()
+        _selection_stops(store, good["request_key"])
+        assert subdir_name not in opened and fifo_name not in opened
