@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 **#16 cycle 1 新的 implementation subject（R2 的受審 subject）**。worklog 在另外的 record-only commits |
+| 狀態 | **Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 **#16 cycle 2 的 implementation subject（cycle 2 R1 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -398,7 +398,7 @@
 | --- | --- | --- |
 | D-16-24 | 路線回應：狀態不是 200 或本文沒有 `trip` 物件時，結果一律是 `engine_error`、`leg = None`（永不採用）。本文是物件而且有 `trip` 物件時（不論狀態），先以 `_route_facts` 收集其中的國道訊號（`has_highway`、轉向的 highway 旗標、轉向的國道名稱），有訊號時 `freeway_check = "fail"`。這個回應不作為任何後續請求的依據：**不以錯誤回應的 shape 送道路屬性查詢**（CL-R1-5 的一次查詢是對可採用的路線回應；錯誤回應的 shape 不是可採用的路線） | CL-R1-8；R1-F1 |
 | D-16-25 | 道路屬性回應：狀態不是 200 時仍記 `trace_failed`（無法驗證）；本文是物件時以 `_trace_facts` 收集其中的國道訊號（`motorway`、國道名稱），它的其他原因（長度、警告）不另外列入，因為查詢已經是失敗 | CL-R1-8；R1-F1；CL-R1-27 不受影響 |
-| D-16-26 | 讀不到的本文（不是 JSON、不是物件、`trip` 或 `edges` 的形狀不對、欄位型別錯誤）只得到 `engine_error`／`trace_failed` 與能讀到的訊號，不拋例外；結果是 `routing_unavailable`（除非讀到國道訊號） | R1-F1 Required fix；H-4 |
+| D-16-26 | **〔已被第 12 節取代：本列對 `65aa00c` 不成立。〕** 原文：「讀不到的本文（不是 JSON、不是物件、`trip` 或 `edges` 的形狀不對、欄位型別錯誤）只得到 `engine_error`／`trace_failed` 與能讀到的訊號，不拋例外；結果是 `routing_unavailable`（除非讀到國道訊號）」。更正：在 `65aa00c`，`trip.summary.length`、`trip.summary.time` 或 `edges[n].length` 是絕對值超出浮點範圍的整數（例如 `10**400`）時，`_real` 的 `math.isfinite` 拋 `OverflowError`，HTTP 200 與非 200 都是未捕捉的例外（R2-F1，`audit/issue-16-c1-r2.md`；`ruling-20261118-issue16-c1.md`）。本列的陳述自 cycle 2 的 subject `022f629` 起才成立（D-16-27） | R1-F1 Required fix；H-4；R2-F1 |
 
 模組說明補上「非 200 的回應永不採用，但本文中可讀的國道訊號照樣收集」。`source.py`、`valhalla.py`、`http_transport.py` 與其他檔案沒有修改（`git diff --stat 90efe65 65aa00c`：2 files changed, 128 insertions(+), 3 deletions(-)）。
 
@@ -462,7 +462,7 @@ E-3：新案例的回應全部由既有的合成產生器（`route_body`、`trac
 
 ### 11.5 E-6 與突變檢查
 
-- H-4：每一種非 200 的情形都是明確的路線錯誤代碼，永不採用、不存快照；國道訊號在非 200 時也優先（CL-R1-8）。H-1、H-2 不受影響（傳輸層與請求內容沒有修改；錯誤回應不觸發任何新的請求）。
+- H-4 **〔已被第 12 節取代：下一句的第一個子句對 `65aa00c` 不成立。〕** 原文：「每一種非 200 的情形都是明確的路線錯誤代碼，永不採用、不存快照；國道訊號在非 200 時也優先（CL-R1-8）。」更正：在 `65aa00c`，數值欄位是超出浮點範圍的整數時（非 200 與 200 都是），結果是未捕捉的 `OverflowError`，不是路線錯誤代碼；沒有採用、沒有存快照（R2-F1）。自 `022f629` 起成立的 H-4 陳述見第 12.6 節。H-1、H-2 不受影響（傳輸層與請求內容沒有修改；錯誤回應不觸發任何新的請求）。
 - 突變（`mutate16b.py`，原文以原本的位元組寫回；結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同，`sources restored: True`）：第 10.7 節的 33 個突變加上 4 個新突變，**37 個全部被抓到**。新突變：
 
 | # | 突變 | 失敗 |
@@ -476,3 +476,110 @@ E-3：新案例的回應全部由既有的合成產生器（`route_body`、`trac
 
 1. Orchestrator 核對本 Executor 的 binding，派 R2（受審 subject `65aa00c`）；R2 重讀 R1 record 與本節的證據。
 2. 第 9 節第 2～3 項不變（#14、#15 的最終 subject；TI-C16-2、TI-C16-3；NV-1 與真實請求 NOT RUN；RV-12～RV-14）。
+
+## 12. Cycle 2：R2-F1 的 rework（`ruling-20261118-issue16-c1.md`；subject `022f629`）
+
+### 12.1 Cycle 1 的結果與本 cycle 的契約
+
+- Cycle 1：R1（`audit/issue-16-c1-r1.md`）R1-F1 BLOCKING → correction `65aa00c` → R2（`audit/issue-16-c1-r2.md`）**R2-F1** BLOCKING → Alternate（`audit/issue-16-c1-alt.md`）`VERDICT: UNRESOLVED (R2-F1)` → Final Adjudication（`decisions/ruling-20261118-issue16-c1.md`，HEAD `d9061c5`）：**targeted rework，授權 cycle 2（自 R1 起）**；不 dismiss、不 defer、不交 DA。三份 audit record 與 ruling 已全文閱讀。
+- R2-F1 的 root cause（ruling 第 3.2 節）：`adoption.py` 的 `_real` 以 `math.isfinite` 檢查數值；`math.isfinite` 先把 `int` 轉成 `float`，對絕對值超出浮點範圍的整數（例如 `2**1024`、`10**400`、`-(10**400)`）拋 `OverflowError`。`_real` 自 `7cb4b0c` 起逐字未變；它的呼叫處 `trip.summary.length`、`trip.summary.time`、`edges[n].length` 在 HTTP 200 與非 200 兩條路徑都會經過，所以兩條路徑都以未捕捉的例外中止，回程不送出、不決定代碼。
+- 要達成的結果（ruling 第 3.2 節第 1～4 項）：不拋未捕捉例外；這類值無法作為有限數值時保守拒收（沒有訊號 → `routing_unavailable`，有訊號 → `highway_in_route`，非 200 保留 `engine_error`／`trace_failed`）；訊號收集與兩方向檢查不中斷；其他行為不變（含 `2**1023` 與其他無效值的結果、R1-F1 的修正）。封閉清單：`adoption.py`、`tests/test_routing_engine.py`、本 worklog。
+- 角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`；E-EX 不適用，O-1）。Executor 自行觀測（`022f629` 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 231 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。** 沒有使用 bounded assignments，沒有派工任何 subagent。
+
+### 12.2 修改（`d9061c5` → `022f629`；只有 `adoption.py` 與 `tests/test_routing_engine.py`）
+
+| # | 決定 | 依據 |
+| --- | --- | --- |
+| D-16-27 | `_real(value)`：不是 `int`／`float` 或是 `bool` → `False`；否則回傳 `math.isfinite(value)`，它拋 `OverflowError` 時 → `False`。效果：rework 前被接受的值全部照舊被接受（`math.isfinite` 沒有拋出時結果相同，例如 `2**1023`）；rework 前會拋例外的值（絕對值超出浮點範圍的整數）改為「不可用」，與字串、`null`、清單、物件、`1e400` 同一處理：該欄位記為讀不到（路線回應 `response_malformed`、道路屬性回應 `trace_failed`），國道訊號照樣收集，兩個方向照樣送出並檢查。修正只在 `_real` 一處，三個欄位與兩條路徑都經過它（呼叫處沒有改）。**沒有新增任何長度或時間的上限**：可用與否的界線就是 rework 前 `math.isfinite` 能不能判定的界線，所以不需要 Design Authority 決定新的語義（ruling 第 3.2 節第 4 項） | R2-F1；ruling 第 3.2 節；CL-R1-8；SPEC-001 7.11 第 5 項 |
+| — | 模組說明補上「長度或時間不是可用的有限數值（含超出浮點範圍的整數）時記為讀不到，200 與其他狀態皆然，不中斷訊號收集」；`_real` 加上 docstring | ruling closure 證據第 6 項 |
+
+`git diff --stat d9061c5 022f629`：`adoption.py` 15 additions／2 deletions，`tests/test_routing_engine.py` 118 additions／0 deletions；沒有刪改既有測試函式（E-5：無）。`source.py`、`valhalla.py`、`http_transport.py` 與其他檔案沒有修改。
+
+### 12.3 E-1 pytest（subject `022f629`）
+
+`.venv/Scripts/python.exe -m pytest -q`，在 commit 之後、工作目錄乾淨時執行，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+........................................................................ [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+........................................................................ [ 60%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 97%]
+............................................................             [100%]
+2148 passed in 22.48s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`，exit 0，摘要：
+
+```text
+............................................................             [100%]
+2148 passed in 22.74s
+```
+
+`2015`（`65aa00c`）＋ `133`（cycle 2 的回歸案例）＝ `2148`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。`git ls-files` 不含 `data/`、`.gpx`、`.fit`、`.env`、`*.key`（0 筆）。
+
+### 12.4 E-2：R2-F1 的 coverage（`tests/test_routing_engine.py`）
+
+| 情形 | 測試 | 結果 |
+| --- | --- | --- |
+| `trip.summary.length`、`trip.summary.time` × HTTP 200、302、400、429、500、503 × 有、無 `has_highway` × `2**1024`、`10**400`、`-(10**400)`（經 `get_route` 的來回行程；只改去程） | `test_r2_f1_a_route_summary_number_beyond_the_float_range`（72 個案例）：沒有例外；代碼依訊號；200 的 reasons 含 `outbound:response_malformed`，非 200 含 `outbound:engine_error`；`assert_no_route`；沒有快照檔；請求序列 200 是 `route, trace_attributes, route, trace_attributes`、非 200 是 `route, route, trace_attributes`（回程照樣送出、不依錯誤回應的 shape 查詢、沒有重試、沒有狀態請求）；並確認 JSON 本文中是整數字面值 | PASS |
+| `edges[n].length` × 同上 6 種狀態 × 有、無 `motorway` × 同上 3 個值 | `test_r2_f1_a_road_attribute_edge_length_beyond_the_float_range`（36 個案例）：沒有例外；reasons 含 `outbound:trace_failed`，有訊號時含 `outbound:motorway_edge`；沒有路線、沒有快照；請求序列 `route, trace_attributes, route, trace_attributes` | PASS |
+| 回程的三個欄位 | `test_r2_f1_a_number_beyond_the_float_range_in_the_return_direction`（9 個案例） | PASS |
+| 單方向的結果 | `test_r2_f1_evaluate_direction_records_the_field_as_unreadable`（6 個案例：`leg = None`、`freeway_check = None`、reasons 含 `response_malformed`） | PASS |
+| `2**1023` 的結果與 rework 前相同 | `test_r2_f1_the_largest_float_range_int_keeps_its_earlier_result`（`summary.length`、edge `length`：都是 `trace_length_mismatch`、`routing_unavailable`，沒有快照） | PASS |
+| 其他無效值不變（ruling 第 2.3 節 D 列） | `test_r2_f1_other_invalid_lengths_keep_their_results`（`"abc"`、`-1`、`null`、`1e400`、`-1e400`、`[]`、`{}`、`true`；200、`has_highway: true` → `highway_in_route`，reasons 含 `has_highway`、`response_malformed`、`trace_length_mismatch`） | PASS |
+| R1-F1 的回歸與既有測試 | `test_r1_f1_*` 97 個案例、其他既有測試全部保留並通過（`tests/` 只有新增行） | PASS |
+
+E-3：新案例的回應全部由既有的合成產生器（`route_body`、`trace_body`，0°N、0°E 附近的合成點）加上數值常數組成，或在其 JSON 位元組中替換一個欄位；沒有新的座標來源。E-4：同一檔的 autouse socket 封鎖與 `FakeEngine`；沒有網路請求。E-5：無。
+
+### 12.5 修改前後的比對（ruling closure 證據第 2 項）
+
+Scratchpad 的 `probe_c2.py` 把 `git show 65aa00c:src/moto_copilot/routing/adoption.py` 載入成記憶體中的模組，與工作目錄的 `adoption.py`（內容等於 `022f629`）以同一組合成輸入執行 `evaluate_direction`，比較 (signals, reasons, freeway_check, 是否沒有 leg, 請求序列)。探測不寫入 repo，匯入後封鎖 socket。
+
+| 輸入 | 結果 |
+| --- | --- |
+| 11 種值（`"abc"`、`-1`、`null`、`1e400`、`-1e400`、`[]`、`{}`、`true`、`2**1023`、`0`、`3.5`）× 3 個欄位 × 狀態 200、503 × 有、無訊號（132 組） | **132 組完全相同，0 組不同** |
+| `2**1024`、`10**400`、`-(10**400)` × 3 個欄位 × 狀態 200、503 × 有、無訊號（36 組） | `65aa00c`：36 組全部 `OverflowError`；`022f629`：0 組例外，例如 200、無訊號：`summary.length` → (`response_malformed`, `trace_length_mismatch`)、`summary.time` → (`response_malformed`)、edge `length` → (`trace_failed`)，`freeway_check = None` |
+
+第一次執行時探測腳本自己出錯（以 `importlib` 載入舊模組前沒有放進 `sys.modules`，`dataclasses` 找不到模組），改正後重跑得到上表；這是 harness 的錯誤，不是產品的行為。
+
+### 12.6 E-6
+
+- **H-4**（自 `022f629` 起）：引擎回應的 `trip.summary.length`、`trip.summary.time`、`edges[n].length` 不論是什麼可由 `_parse_json` 解析出的值，都不會使 `evaluate_direction` 或 `get_route` 拋出未捕捉的例外：無法作為有限數值時記為讀不到，沒有國道訊號時是 `routing_unavailable`、有時是 `highway_in_route`，永不採用、不存快照，兩個方向照樣送出並檢查（第 12.4、12.5 節）。這個陳述只涵蓋這三個欄位；回應的其他部分維持第 6、10、11 節既有的證據範圍（例如第 2.2 節 (6) 的 Alternate 有界探測），不另外宣稱為窮舉。
+- **H-1、H-2**：不受影響（傳輸層、client、請求內容與錯誤訊息沒有修改；新案例沒有新的請求）。
+- **突變**（`mutate16b.py`，原文以原本的位元組寫回，結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同，`sources restored: True`；之後 `git status --short` 只有本次尚未 commit 的修改）：第 10.7、11.5 節的 37 個突變加上 2 個新突變，**39 個全部被抓到**。新突變：
+
+| # | 突變 | 失敗 |
+| --- | --- | --- |
+| C2a | 恢復 cycle 1 的 `_real`（對 `int` 直接呼叫 `math.isfinite`，即先轉成 `float`） | 123 |
+| C2b | 超出浮點範圍的整數被當成可用的數值 | 18 |
+
+### 12.7 NOT VERIFIED 與 remaining work
+
+- NV-1（真實伺服器是否會回傳這類數值、真實回應的形狀）：**NOT VERIFIED／NOT RUN**（ruling 第 6 節）。只在 Python 3.11.2 執行；`math.isfinite` 對過大 `int` 的行為在其他版本沒有實測（NV-4）。
+- 範圍界定：`valhalla.py:104`、`canonical.py:45`、`target_gpx.py:166`、`:173` 的 `math.isfinite` 不在本 rework 範圍（ruling 第 3.2 節），沒有修改，也不作判斷。
+- 下一步：Orchestrator 核對本 Executor 的 binding，派 cycle 2 R1（受審 subject `022f629`，完整 audit；pack 含 ruling 與 cycle 1 的三份 audit records）。第 9 節第 2～3 項不變。
