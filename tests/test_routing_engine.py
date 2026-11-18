@@ -930,6 +930,124 @@ def test_r1_f1_a_non_200_trace_with_a_signal_in_one_direction_and_an_error_route
     assert stored_files(tmp_path) == {}
 
 
+# --- R2-F1 (audit issue-16-c1-r2; ruling-20261118-issue16-c1): numbers beyond the float range -------
+
+HUGE_NUMBERS = [2 ** 1024, 10 ** 400, -(10 ** 400)]
+C2_STATUSES = [200, 302, 400, 429, 500, 503]
+
+
+def _huge_route_reply(field, value, status, signal):
+    body = route_body(OUT_POINTS, has_highway=signal)
+    body["trip"]["summary"][field] = value
+    return reply(body, status=status)
+
+
+def _huge_trace_reply(value, status, signal):
+    body = trace_body(OUT_POINTS, road_class="motorway" if signal else "primary")
+    body["edges"][0]["length"] = value
+    return reply(body, status=status)
+
+
+@pytest.mark.parametrize("value", HUGE_NUMBERS, ids=["2**1024", "10**400", "-(10**400)"])
+@pytest.mark.parametrize("signal", [False, True], ids=["no_signal", "signal"])
+@pytest.mark.parametrize("status", C2_STATUSES)
+@pytest.mark.parametrize("field", ["length", "time"])
+def test_r2_f1_a_route_summary_number_beyond_the_float_range(store, tmp_path, field, status, signal, value):
+    out = _huge_route_reply(field, value, status, signal)
+    assert str(abs(value))[:20] in out.body.decode("ascii")  # an integer literal in the JSON, read back as int
+    if status == 200:
+        engine = FakeEngine(routes=[out, reply(route_body(BACK_POINTS))],
+                            traces=[reply(trace_body(OUT_POINTS)), reply(trace_body(BACK_POINTS))])
+        expected_actions = ["route", "trace_attributes", "route", "trace_attributes"]
+        failure = "outbound:response_malformed"
+    else:
+        engine = FakeEngine(routes=[out, reply(route_body(BACK_POINTS))], traces=[reply(trace_body(BACK_POINTS))])
+        expected_actions = ["route", "route", "trace_attributes"]  # no query on an error reply's shape
+        failure = "outbound:engine_error"
+    result = plan(engine, store)  # must not raise
+    assert result.code == (HIGHWAY_IN_ROUTE if signal else ROUTING_UNAVAILABLE)
+    assert failure in result.reasons
+    assert ("outbound:has_highway" in result.reasons) is signal
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    assert engine.actions() == expected_actions  # the return is still sent; no retry; no status
+
+
+@pytest.mark.parametrize("value", HUGE_NUMBERS, ids=["2**1024", "10**400", "-(10**400)"])
+@pytest.mark.parametrize("signal", [False, True], ids=["no_signal", "motorway"])
+@pytest.mark.parametrize("status", C2_STATUSES)
+def test_r2_f1_a_road_attribute_edge_length_beyond_the_float_range(store, tmp_path, status, signal, value):
+    engine = round_trip_engine()
+    engine.queue["trace_attributes"][0] = _huge_trace_reply(value, status, signal)
+    result = plan(engine, store)  # must not raise
+    assert result.code == (HIGHWAY_IN_ROUTE if signal else ROUTING_UNAVAILABLE)
+    assert "outbound:trace_failed" in result.reasons
+    assert ("outbound:motorway_edge" in result.reasons) is signal
+    assert_no_route(result)
+    assert stored_files(tmp_path) == {}
+    assert engine.actions() == ["route", "trace_attributes", "route", "trace_attributes"]
+
+
+@pytest.mark.parametrize("value", HUGE_NUMBERS, ids=["2**1024", "10**400", "-(10**400)"])
+@pytest.mark.parametrize("where", ["route_length", "route_time", "edge_length"])
+def test_r2_f1_a_number_beyond_the_float_range_in_the_return_direction(store, tmp_path, where, value):
+    back = route_body(BACK_POINTS)
+    back_trace = trace_body(BACK_POINTS)
+    if where == "edge_length":
+        back_trace["edges"][0]["length"] = value
+    else:
+        back["trip"]["summary"][where.split("_")[1]] = value
+    engine = round_trip_engine(back=back, back_trace=back_trace)
+    result = plan(engine, store)
+    assert result.code == ROUTING_UNAVAILABLE
+    assert any(r.startswith("return:") for r in result.reasons)
+    assert stored_files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("value", HUGE_NUMBERS, ids=["2**1024", "10**400", "-(10**400)"])
+@pytest.mark.parametrize("where", ["length", "time"])
+def test_r2_f1_evaluate_direction_records_the_field_as_unreadable(where, value):
+    body = route_body(OUT_POINTS)
+    body["trip"]["summary"][where] = value
+    outcome, engine = outcome_of(route=body)
+    assert outcome.leg is None and outcome.signals == () and outcome.freeway_check is None
+    assert "response_malformed" in outcome.reasons
+    assert engine.actions() == ["route", "trace_attributes"]
+
+
+@pytest.mark.parametrize("field", ["length", "edge_length"])
+def test_r2_f1_the_largest_float_range_int_keeps_its_earlier_result(store, tmp_path, field):
+    """2**1023 is a finite float: it was usable before the rework and is still usable (only the
+    lengths no longer match). The result is the same as at subject 65aa00c."""
+    value = 2 ** 1023
+    route = route_body(OUT_POINTS)
+    trace = trace_body(OUT_POINTS)
+    if field == "length":
+        route["trip"]["summary"]["length"] = value
+    else:
+        trace["edges"][0]["length"] = value
+    outcome, _ = outcome_of(route=route, trace=trace)
+    assert outcome.reasons == ("trace_length_mismatch",) and outcome.signals == ()
+    assert outcome.freeway_check is None and outcome.leg is None
+    result = plan(one_way_engine(route=route, trace=trace), store, engine_request("one_way"))
+    assert result == RouteFailure(ROUTING_UNAVAILABLE, None, ("outbound:trace_length_mismatch",))
+    assert stored_files(tmp_path) == {}
+
+
+@pytest.mark.parametrize("raw", [b'"abc"', b"-1", b"null", b"1e400", b"-1e400", b"[]", b"{}", b"true"])
+def test_r2_f1_other_invalid_lengths_keep_their_results(store, tmp_path, raw):
+    """The other invalid values of the ruling's row D: unchanged by the rework."""
+    body = route_body(OUT_POINTS, has_highway=True)
+    body["trip"]["summary"]["length"] = "__LEN__"
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8").replace(b'"__LEN__"', raw)
+    engine = FakeEngine(routes=[HttpResponse(200, data), reply(route_body(BACK_POINTS))],
+                        traces=[reply(trace_body(OUT_POINTS)), reply(trace_body(BACK_POINTS))])
+    result = plan(engine, store)
+    assert result.code == HIGHWAY_IN_ROUTE
+    assert {"outbound:has_highway", "outbound:response_malformed", "outbound:trace_length_mismatch"} <= set(result.reasons)
+    assert stored_files(tmp_path) == {}
+
+
 # --- CL-R1-27: warnings in the road attribute reply (decision-20261118-issue16-c161 section 4.5) ---
 
 @pytest.mark.parametrize("warnings", [

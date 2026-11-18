@@ -15,7 +15,9 @@ road attribute query on that shape (CL-R1-5; no retry). It then collects every c
   closed). No freeway signal but something that cannot be verified (the query failed, its
   reply has warnings, the lengths differ by more than 2%, `has_highway` not reported, a response
   that cannot be read): no `freeway_check` value at all. A reply with an HTTP status other than
-  200 is never adopted, but the freeway signals readable in its body are still collected.
+  200 is never adopted, but the freeway signals readable in its body are still collected. A
+  length or time that is not a usable finite number (including an int beyond the float range)
+  is unreadable, on HTTP 200 and on other statuses; it never stops the signal collection.
 - warnings (item 7): any warning in the route response means the direction is not adopted; a
   warning in the road attribute reply makes the freeway check unverifiable (CL-R1-27), so the
   direction is not adopted either. The freeway signals of that reply still count.
@@ -115,7 +117,18 @@ def not_sent(direction: str) -> DirectionOutcome:
 # --- numbers -------------------------------------------------------------------------------------
 
 def _real(value) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    """A number from an engine reply that can be used in a check: an int or a float, not a bool,
+    and finite. An int too large in magnitude to be a float (`math.isfinite` raises OverflowError
+    for it, e.g. 2**1024 or -(10**400)) is not usable, like a string, null, a list or an infinity:
+    the caller records the field as unreadable and goes on collecting freeway signals (R2-F1 of
+    audit issue-16-c1-r2; ruling-20261118-issue16-c1). Every value accepted before is still accepted.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def _dec(value) -> Decimal:
