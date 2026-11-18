@@ -187,7 +187,8 @@ def _source_of_route_id(route_id: str) -> str:
 def _route_source_errors(route: dict) -> list[str]:
     """Invariant 5 and the route_id / route_source / snapshot_id agreement (SPEC-001 §2)."""
     rid, source = route.get("route_id"), route.get("route_source")
-    if source not in _REFERENCES_SET:
+    # Any JSON value can arrive here; [] or {} is not hashable, so check the type before the lookup (R1-F1).
+    if not isinstance(source, str) or source not in _REFERENCES_SET:
         return []  # reported by the schema
     out = []
     for field, must_be_set in zip(("source_trip_id", "snapshot_id"), _REFERENCES_SET[source]):

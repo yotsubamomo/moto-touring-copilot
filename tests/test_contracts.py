@@ -1151,6 +1151,21 @@ def test_route_source_and_trip_type_have_fixed_values(data, field, value):
     assert_violation(catalog_violations(data), f"routes[1] schema: {field}")
 
 
+@pytest.mark.parametrize("value", [[], {}, ["trip"], {"trip": "trip"}], ids=["list", "dict", "list-trip", "dict-trip"])
+def test_a_route_source_of_another_json_type_is_reported_not_raised(data, value):
+    """R1-F1 (issue-13-c1-r1): an unhashable route_source after a JSON round trip is a schema violation of
+    that route; the route_source cross-checks are skipped, and neither API raises."""
+    by_id(data["routes"], "route_id", "R01")["route_source"] = value
+    data = json_round_trip(data)
+    catalog = validate_route_catalog(data["routes"], data["route_segments"], data["checkpoints"])
+    assert_violation(catalog, "routes[0] schema: route_source")
+    assert not any("R01 route_source is" in v or "route_id R01 does not have the format" in v for v in catalog), catalog
+    report = validate_dataset(data)
+    assert set(report) == {"derived_segments", "route_catalog", "pace_table", "eta_output"}
+    assert_violation(report["route_catalog"], "routes[0] schema: route_source")
+    assert report["derived_segments"] == report["pace_table"] == report["eta_output"] == []
+
+
 @pytest.mark.parametrize("kind", ["TURNAROUND", "turn_around", "return"])
 def test_checkpoint_kind_turnaround_is_spelled_exactly(data, kind):
     make_round_trip(data, at=2)
