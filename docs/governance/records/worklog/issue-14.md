@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #14（SPEC-R1 R1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成，DA 裁決已依 `decision-20261118-issue14-c141.md` 第 8 節處理，待 R1**：CL-R1-14（捨去）、CL-R1-15（同時最晚取最小 `snapshot_id`）、CL-R1-17（壞檔停止）確認現行實作；CL-R1-16 要求一般模式不重用取得時間晚於「現在」的快照，已在 `5eee704` 修改；TI-C14-5 是 tracked item；C-14-6 仍待 acceptor。pytest `1116 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `deb808d`（派工時的 HEAD，含已結案的 #13）；實作 commit **`aa4239249dde499c46a680d6e150b79f0d4a9a49`**（`aa42392`）與 **`366866c7a3683e06b5b89d3090f6d5feb80eb418`**（`366866c`，測試中的範例座標改成 0°N、0°E 附近的合成值，見第 3 節第 9 項）。CL-R1-16 的修改 commit **`5eee70472a824f2725a02afb3160eea613ea0ae9`**（`5eee704`，父 commit 是 DA record 的 `5ecf0c2`），是**最終 implementation subject**（先前的 `366866c` 是 DA 裁決前的 subject）。worklog 在另外的 record-only commits |
+| 狀態 | **R1（`audit/issue-14-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`359b948`），待 R2（第 10 節）**：R1-F1、R1-F2 已修正；R1-N1 併入 C-14-6（acceptor）。pytest `1441 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：**Executor 工作完成，DA 裁決已依 `decision-20261118-issue14-c141.md` 第 8 節處理，待 R1**：CL-R1-14（捨去）、CL-R1-15（同時最晚取最小 `snapshot_id`）、CL-R1-17（壞檔停止）確認現行實作；CL-R1-16 要求一般模式不重用取得時間晚於「現在」的快照，已在 `5eee704` 修改；TI-C14-5 是 tracked item；C-14-6 仍待 acceptor。pytest `1116 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `deb808d`（派工時的 HEAD，含已結案的 #13）；實作 commit **`aa4239249dde499c46a680d6e150b79f0d4a9a49`**（`aa42392`）與 **`366866c7a3683e06b5b89d3090f6d5feb80eb418`**（`366866c`，測試中的範例座標改成 0°N、0°E 附近的合成值，見第 3 節第 9 項）。CL-R1-16 的修改 commit **`5eee70472a824f2725a02afb3160eea613ea0ae9`**（`5eee704`，父 commit 是 DA record 的 `5ecf0c2`），是 R1 的受審 subject（先前的 `366866c` 是 DA 裁決前的 subject）。R1-F1、R1-F2 的 correction commit **`359b948d31b6c3253dbd70bda0d970bc17c24c0c`**（`359b948`，父 commit 是 R1 record 的 `8c1d2d1`），是**最終 implementation subject**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -229,3 +229,85 @@ S35、S17、S23 中屬於引擎呼叫與採用行為的部分屬 R1-4，本 Tick
 | 3 | 突變 | M19（第 6 節 E-6）：拿掉下界後，第 8.1 節第 2 項的新測試失敗（3 failed, 53 passed：未來 1 秒、未來 1 天、一個方向在未來）；經過時間 0 的邊界測試在突變下仍通過，符合預期（上界不受影響） |
 | 4 | Diff | `git diff --stat 366866c 5eee704 -- src tests`：只有 `src/moto_copilot/routing/canonical.py`（2 行，`_ROUNDING` 上方的註解）、`src/moto_copilot/routing/store.py`（`find_reusable` 的下界與 docstring、`_latest` 的 docstring）、`tests/test_routing_store.py`（新增 22 行，3 個測試函式，既有測試沒有改）；3 files changed, 32 insertions(+), 7 deletions(-)。`366866c`..`5eee704` 的其他變更只在 record-only 路徑（DA record、run record、本 worklog）。`_ROUNDING`、`_format_float`、S56／S71 的測試、Snapshot Mode、嚴格模式、`put`、`load`、壞檔處理、`request_key` 都沒有改 |
 | 5 | E-2 | 第 6 節 E-2 的 S35 列加上 3 個 `test_cl_r1_16_*` 測試 |
+
+## 10. R1 的 targeted correction（cycle 1；R1-F1、R1-F2）
+
+依據：`docs/governance/records/audit/issue-14-c1-r1.md`（R1 BLOCKING，受審 HEAD `532c096`）的 R1-F1、R1-F2 與各自的 Required fix；Orchestrator 的派工（HEAD `8c1d2d1`）。R1-N1 依 R1 record 的 disposition 併入 C-14-6（acceptor）：本次沒有改寫歷史，也沒有修改先前的 worklog 內容。
+
+### 10.1 修改（`8c1d2d1` → `359b948`）
+
+| Finding | 修改 | 檔案 |
+| --- | --- | --- |
+| R1-F1 | `validate_snapshot` 先檢查 `trip_type` 是字串且在列舉值內（`trip_type_ok`），只有成立時才以它查 `LEG_DIRECTIONS`；`[]`、`{}` 等值成為 `$.trip_type` 的欄位錯誤，`build_snapshot`／`put` 以 `SnapshotValidationError` 拒絕。讀檔時（`_parse_snapshot_bytes`）另把驗證過程的 `TypeError`、`ValueError`、`RecursionError` 與 JSON 解析的 `RecursionError` 轉成 `SnapshotIntegrityError`（防線，修正後的驗證不會再拋出這些例外），嚴格模式因此以既有的 `StrictModeStop(reason="invalid_snapshot")` 停止 | `src/moto_copilot/routing/snapshot.py`、`store.py` |
+| R1-F2 | 新增 `SnapshotStore._read`：沒有檔案 → `SnapshotNotFoundError`；其他 `OSError`（含 `PermissionError`）→ `SnapshotIntegrityError`。`load`、`file_sha256` 都經過它。`snapshot_ids` 的列舉（`iterdir`／`is_file`）失敗 → `SnapshotIntegrityError`。`snapshots()`（一般模式與一般 Snapshot Mode 的選取邊界）把「已列出、讀取時已不存在」的 `SnapshotNotFoundError` 轉成 `SnapshotIntegrityError`。嚴格模式保留 `file_missing` 分支，其他讀取 `OSError` → `StrictModeStop(reason="unreadable")`。這些例外都以 `from None` 抛出，訊息只寫 `snapshot_id`，不含路徑或檔案內容；JSON 錯誤原本的 `from exc` 也改為 `from None`。沒有任何路徑會略過壞檔、回傳 `snapshot_missing`／`None` 或改選其他快照 | `store.py` |
+| R1-F2（同一類，D-14-14） | `put` 的檔案狀態（`path.exists()`）與寫入的 `OSError`（`FileExistsError` 除外，它照舊轉到比對）轉成不含路徑的 `SnapshotStoreError`（`from None`） | `store.py` |
+
+| # | 決定 | 依據 |
+| --- | --- | --- |
+| D-14-14 | R1-F2 的 Required fix 列出讀取、列舉與檔案狀態；`put` 的 `exists()` 與寫入也會把帶路徑的 `OSError` 原樣丟出，屬同一類缺陷（H-2：例外帶出呼叫者的目錄名稱），一併轉換並加測試。不改變 `put` 的任何成功路徑、不覆寫、不刪除的行為 | R1-F2 的影響段（原始 OS 例外把 caller 的目錄名稱帶到錯誤訊息）；D-14-13（錯誤訊息不寫值）。若 R2 認為超出 targeted correction 的範圍，可以單獨撤回這一項，不影響 R1-F1、R1-F2 的修正 |
+| D-14-15 | `StrictModeStop` 的 reason 新增 `unreadable`（檔案存在但讀不到），與 `file_missing` 分開 | CL-R1-4 只要求專用的停止例外；兩種原因對騎士的處理不同（一個是檔案不見，一個是權限或 I/O） |
+| D-14-16 | 直接呼叫 `load` 讀一個從未存在的 ID 仍是 `SnapshotNotFoundError`（R1-F2 允許保留的專用 not-found API）；只有在選取邊界、已列出的檔案消失時才轉成 `SnapshotIntegrityError` | R1-F2 Required fix 末句；CL-R1-17 |
+
+### 10.2 新增的測試（既有測試沒有修改）
+
+- `tests/test_routing_snapshot.py`：
+  - `test_r1_f1_a_list_or_object_trip_type_is_a_field_error`（`[]`、`{}`、`[["one_way"]]`、`{"one_way": 1}`；validator 回報 `$.trip_type`，`build_snapshot` 拒絕）。
+  - 三個 sweep：快照的每個欄位、回程的每個欄位、整個 leg 與巢狀值，換成 14 種 JSON 值（`[]`、`{}`、`[[]]`、`[{}]`、`{"a": []}`、`{"a": {}}`、`null`、`true`、`false`、`0`、`-1`、`1.5`、`""`、`"x"`）時 `validate_snapshot` 都回傳清單而不拋出例外。
+- `tests/test_routing_store.py`：
+  - R1-F1：`test_r1_f1_put_rejects_a_list_or_object_trip_type`（不寫任何檔案）；`test_r1_f1_load_and_normal_selection_stop_on_a_list_or_object_trip_type`（`load`、`find_reusable`、`select_snapshot_mode` 都是 `SnapshotIntegrityError`；同一請求另有合格的相容快照，也不被改用；壞檔位元組不變）；`test_r1_f1_strict_mode_stops_on_a_list_or_object_trip_type_with_the_real_sha256`（凍結清單用壞檔實算的 SHA-256，等於 `file_sha256`；結果是 `invalid_snapshot`，目錄中另有合格快照也不回退）。
+  - R1-F2（存放目錄名稱是合成的 `synthetic-dir-0.000001N-0.000001E`，用來證明路徑不會出現）：`test_r1_f2_a_read_error_stops_normal_selection_without_a_path`（`PermissionError`／`EACCES` 與 `OSError`／`EIO`；`load`、`find_reusable`、`select_snapshot_mode`、`file_sha256` 都是 `SnapshotIntegrityError` 而不是 not-found，目錄中另有合格快照也不改用）；`test_r1_f2_a_read_error_stops_strict_mode_without_a_path`（同兩種錯誤；`StrictModeStop(reason="unreadable")`）；`test_r1_f2_a_file_listed_and_then_gone_stops_normal_selection`（列出後消失 → `SnapshotIntegrityError`「no longer there」；直接 `load` 未存在的 ID 仍是 `SnapshotNotFoundError`）；`test_r1_f2_a_directory_that_cannot_be_listed_stops_normal_selection`；`test_r1_f2_put_errors_carry_no_path_and_write_nothing`。
+  - 每個 R1-F2 測試以 `traceback.format_exception` 核對完整 traceback（含 chained cause）不含目錄名稱，並核對 `__cause__ is None`、`__suppress_context__`；替身先確認原始 OS 例外的文字確實含該名稱，證明測試有意義。替身只以 monkeypatch 模擬 `Path.read_bytes`、`Path.iterdir`、`Path.exists`、`open` 的失敗，沒有變更任何檔案權限。
+- 兩個新測試檔共 562 個案例（修正前 237 個）。
+
+### 10.3 Verification
+
+**E-1**（subject `359b948`）`.venv/Scripts/python.exe -m pytest -q`，exit 0，完整輸出：
+
+```text
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 29%]
+........................................................................ [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+........................................................................ [ 49%]
+........................................................................ [ 54%]
+........................................................................ [ 59%]
+........................................................................ [ 64%]
+........................................................................ [ 69%]
+........................................................................ [ 74%]
+........................................................................ [ 79%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 94%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+1441 passed in 31.82s
+```
+
+- `.venv/Scripts/python.exe -m pytest -q -rxX`：exit 0，`1441 passed in 30.72s`；輸出中沒有 `xfail`、`xpass`、`skipped`、`error`、`failed`（`grep -ciE` 為 0）。
+- `grep -rnE "xfail|pytest\.mark\.skip|importorskip" tests/`：0 筆。`git ls-files | grep -iE "(^|/)data/|\.gpx$|\.fit$|(^|/)\.env"`：0 筆。兩次 pytest 之後 `git status --short`：空。
+- 1441 ＝ `5eee704` 的 1116 ＋ 本次新增 325。
+
+**修正前重現**：把 `src/moto_copilot/routing/snapshot.py`、`store.py` 暫時換回 `5eee704` 的版本（實作已 commit 之後才換，再以 `git checkout HEAD --` 還原，之後 `git status --short` 為空），只跑 R1 相關的新測試：`23 failed, 302 passed`。失敗的正是 R1-F1 的 validator／builder／put／load／選取／strict 案例與全部 R1-F2 案例；sweep 只在 `trip_type` 欄位失敗，其他欄位在修正前就不會拋出例外，所以 R1-F1 沒有其他同類位置。
+
+**E-6 補充**
+- H-2：store 的例外不再帶出路徑或檔案內容（R1-F2 的測試以完整 traceback 核對）；測試只用合成的目錄名稱、近零座標與 placeholder shape。
+- H-3：嚴格模式遇到型別錯誤的壞檔（雜湊相符）與讀不到的檔案，都以 `StrictModeStop` 停止，不回退。
+- H-4：一般模式與一般 Snapshot Mode 遇到型別錯誤的檔案、讀取錯誤、列出後消失、目錄無法列舉，都以 `SnapshotIntegrityError` 停止，不略過、不回傳 `None`／`snapshot_missing`、不改選其他快照（CL-R1-17）。
+
+**Diff**：`git diff --stat 5eee704 359b948 -- src tests`：`snapshot.py` 7 行、`store.py` 84 行、兩個測試檔新增 221 行；`5eee704`..`359b948` 的其他變更只在 record-only 路徑（R1 record、run record、本 worklog）。
+
+**Binding 自我觀測**：同一個 agent `a731e697ea497fcf3`（以 SendMessage 續派），`359b948` 之後：(`claude-opus-5-5`, `high`) 158 則，集合只有一個元素。這是自我觀測，Orchestrator 須自行核對。
+
+**程序紀錄**：結束時為了確認工作目錄乾淨，我執行了一次 `git status --short --ignored`。它的輸出列出了被忽略的頂層名稱，其中有 `.env` 與 `data/` 兩個名稱。這只是 git 對忽略項目的狀態，沒有列出 `data/` 的內容，也沒有讀取 `.env`；之後的檢查只用 `git status --short`。
+
+### 10.4 Concerns
+
+- C-14-6（含 R1-N1）：仍待 acceptor。
+- D-14-14（`put` 的 I/O 轉換）超出 R1-F2 Required fix 的字面列舉；若 R2 認為不屬 targeted correction，可單獨撤回。
+- 沒有新的 blocking 問題。
+
