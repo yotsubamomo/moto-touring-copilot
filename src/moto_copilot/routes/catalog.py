@@ -1,4 +1,4 @@
-"""Route Catalog (data contract v0.2, contract 2) from private trimmed tracks.
+"""Route Catalog records with the contract 2 v0.3 route fields; building the catalog is still the Pre-Spec Spike (G-RTE).
 
 Pre-Spec Technical Spike (M1-B). A demo route is the longest stretch that several trips ride in
 the same direction; its geometry comes from one of them (the source trip).
@@ -177,6 +177,8 @@ def build_route(route_id: str, name: str, path: list[TrackPoint], *, source_trip
                          "end_lat": round(seg_path[-1].lat, 6), "end_lon": round(seg_path[-1].lon, 6)})
     route = {"route_id": route_id, "name": name, "n_segments": len(segments),
              "total_length_m": segments[-1]["cum_length_m"], "source_trip_id": source_trip_id,
+             # From a trip, one way, no turnaround: CL-R1-12 (decision-20261118-issue13-c131)
+             "route_source": "trip", "snapshot_id": None, "trip_type": "one_way",
              "category_scheme": params.category_scheme, "catalog_version": catalog_version}
     checkpoints = [
         {"checkpoint_id": f"{route_id}-CP01", "route_id": route_id, "kind": "start", "after_seg_count": 0,
