@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Cycle 2 R1（`audit/issue-16-c2-r1.md`）BLOCKING 的 targeted correction 與 CL-R1-28 已完成（`a4f0cd9`、`ecddc57`，第 13 節），pytest `2220 passed`；C2R1-F2 中狀態回應 `version` 的處置回報 `NEEDS_DA`（C-16-5），其餘部分待 cycle 2 R2。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 #16 cycle 2 R1 的受審 implementation subject。Cycle 2 的 targeted correction commit **`a4f0cd9cee4e577f4f9046db5b5df152dcfbde0b`**（`a4f0cd9`，C2R1-F1、F2、F4，父 commit 是 DA record 的 `b3b0c14`）與 CL-R1-28 commit **`ecddc57c0a3bd4dda94a62b3f5281ed70bb7068f`**（`ecddc57`，C2R1-F3）；**`ecddc57` 是目前的最終 implementation subject**。worklog 在另外的 record-only commits |
+| 狀態 | **Cycle 2 的 targeted correction 全部完成，待 cycle 2 R2**：C2R1-F1、F2（含狀態版本，CL-R1-29，`9cc566a`，第 14 節）、F4 與 CL-R1-28；pytest `2238 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 R1（`audit/issue-16-c2-r1.md`）BLOCKING 的 targeted correction 與 CL-R1-28 已完成（`a4f0cd9`、`ecddc57`，第 13 節），pytest `2220 passed`；C2R1-F2 中狀態回應 `version` 的處置回報 `NEEDS_DA`（C-16-5），其餘部分待 cycle 2 R2。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 #16 cycle 2 R1 的受審 implementation subject。Cycle 2 的 targeted correction commit **`a4f0cd9cee4e577f4f9046db5b5df152dcfbde0b`**（`a4f0cd9`，C2R1-F1、F2、F4，父 commit 是 DA record 的 `b3b0c14`）與 CL-R1-28 commit **`ecddc57c0a3bd4dda94a62b3f5281ed70bb7068f`**（`ecddc57`，C2R1-F3）；`ecddc57` 之後，CL-R1-29 的 commit **`9cc566a14fa81324c4251ac266f789256f8921e4`**（`9cc566a`，C-16-5，父 commit 是 DA record 的 `25c77d9`）是 **#16 目前的最終 implementation subject（cycle 2 R2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -702,7 +702,7 @@ Scratchpad 的 `mutate16d.py`（新）與 `mutate16b.py`（既有），每個突
 
 ### 13.7 E-6
 
-- **H-4**：C2R1-F1：shape 不論內容為何（可由 `_parse_json` 解析出的任何字串），`evaluate_direction`／`get_route` 都不拋未捕捉例外，記為讀不到；國道訊號照樣收集；兩個方向照樣送出並檢查；非 200 永不採用。C2R1-F4：存放的 shape 解不出時一律 `SnapshotIntegrityError`（CL-R1-17）。C2R1-F2：轉向名稱不是合法 Unicode 文字時，該方向不採用、不存快照，訊號照樣優先。**例外：狀態回應的 `version` 含孤立 surrogate 時，`build_snapshot` 仍拋未捕捉的 `SnapshotValidationError`（C-16-5，NEEDS_DA）**；在 DA 裁決並實作之前，本 worklog 不宣稱「引擎回應的字串內容不會使 `get_route` 拋出例外」。
+- **H-4**：C2R1-F1：shape 不論內容為何（可由 `_parse_json` 解析出的任何字串），`evaluate_direction`／`get_route` 都不拋未捕捉例外，記為讀不到；國道訊號照樣收集；兩個方向照樣送出並檢查；非 200 永不採用。C2R1-F4：存放的 shape 解不出時一律 `SnapshotIntegrityError`（CL-R1-17）。C2R1-F2：轉向名稱不是合法 Unicode 文字時，該方向不採用、不存快照，訊號照樣優先。**〔已被第 14.6 節取代：本句只對 `ecddc57` 成立。〕** 原文：「**例外：狀態回應的 `version` 含孤立 surrogate 時，`build_snapshot` 仍拋未捕捉的 `SnapshotValidationError`（C-16-5，NEEDS_DA）**；在 DA 裁決並實作之前，本 worklog 不宣稱「引擎回應的字串內容不會使 `get_route` 拋出例外」。」自 `9cc566a` 起，狀態版本依 CL-R1-29 記為 `unreported`；H-4 的陳述以第 14.6 節為準，只涵蓋已測試的範圍（道路名稱、`engine_version`、shape），不宣稱窮舉。
 - **H-1**（Commit B）：CL-R1-25 第 2 項 (a) 不跟隨轉址：T-1；(b) 不使用代理：T-2、T-3、T-10；(c) 只連到 URL 指定的主機：T-7、T-2、T-1；(d) TLS 驗證不得關閉、CL-R1-28：T-3、T-11、T-12；(e) 逾時：T-4、T-5。`git ls-files` 不含 `.env`、`*.key`；diff 沒有憑證值。
 - **H-2**：送往第三方的內容、header 與 User-Agent 沒有改變（T-5、T-6 照舊通過）；`SSLKEYLOGFILE` 不再寫出可還原請求的 TLS 秘密（T-12）。
 - 第 10.6 節中以 `ssl.create_default_context()` 作為 (d) 證據的敘述，自 `ecddc57` 起改為以 CL-R1-28 與 T-3、T-11、T-12 為準（舊的 T-3 結論仍成立）。
@@ -711,10 +711,105 @@ Scratchpad 的 `mutate16d.py`（新）與 `mutate16b.py`（既有），每個突
 
 | # | 內容 | 建議的 owner／authority | 狀態 |
 | --- | --- | --- | --- |
-| **C-16-5**（blocking 的一部分：C2R1-F2 的狀態版本） | 狀態回應的 `version` 是含孤立 surrogate 的字串時，`_engine_info` 把它當作有回報的版本，`build_snapshot` 在寫出 canonical JSON 時拋 `SnapshotValidationError`，`get_route` 沒有處理它（R1 record 的重現列 4；在 `ecddc57` 仍成立，沒有修改）。可行的做法至少兩種，後果不同：(i) 視為「引擎沒有回報」，記為 `unreported`，路線照常採用；(ii) 使路線不採用（例如 `routing_unavailable`）。(i) 與 D-16-16 對不是字串或空字串的處理一致（cycle 1、cycle 2 R1 都核對過 DD-R1-2），但 DD-R1-2 只寫「引擎沒有回報時」，沒有寫「回報了不能保存的值」；R1 record 與派工都把這個選擇列為契約沒有涵蓋的語義，所以 Executor 不自行決定。它只需要 `source.py` 的 `_engine_info`（封閉清單內）與測試，不需要修改受保護的檔案 | Design Authority | **NEEDS_DA**；其他部分已完成，不受影響 |
-| 觀察（不是 finding） | 呼叫者提供的請求位置的 `ref_id`、`role` 若含孤立 surrogate，`build_snapshot` 也會拋 `SnapshotValidationError`。這是呼叫端的輸入錯誤（CL-R1-24 的同類），不是引擎回應，不在 C2R1-F2 的範圍；本次沒有修改 | Design Authority 知悉（G-RREQ 的輸入檢查） | 知悉 |
+| **C-16-5**（blocking 的一部分：C2R1-F2 的狀態版本） | 狀態回應的 `version` 是含孤立 surrogate 的字串時，`_engine_info` 把它當作有回報的版本，`build_snapshot` 在寫出 canonical JSON 時拋 `SnapshotValidationError`，`get_route` 沒有處理它（R1 record 的重現列 4；在 `ecddc57` 仍成立，沒有修改）。可行的做法至少兩種，後果不同：(i) 視為「引擎沒有回報」，記為 `unreported`，路線照常採用；(ii) 使路線不採用（例如 `routing_unavailable`）。(i) 與 D-16-16 對不是字串或空字串的處理一致（cycle 1、cycle 2 R1 都核對過 DD-R1-2），但 DD-R1-2 只寫「引擎沒有回報時」，沒有寫「回報了不能保存的值」；R1 record 與派工都把這個選擇列為契約沒有涵蓋的語義，所以 Executor 不自行決定。它只需要 `source.py` 的 `_engine_info`（封閉清單內）與測試，不需要修改受保護的檔案 | Design Authority | **已裁決：CL-R1-29**（`decision-20261118-issue16-c165.md`，讀法 (i)）；`9cc566a` 實作（第 14 節） |
+| 觀察（不是 finding） | 呼叫者提供的請求位置的 `ref_id`、`role` 若含孤立 surrogate，`build_snapshot` 也會拋 `SnapshotValidationError`。這是呼叫端的輸入錯誤（CL-R1-24 的同類），不是引擎回應，不在 C2R1-F2 的範圍；本次沒有修改 | Design Authority 知悉（G-RREQ 的輸入檢查） | **TI-C165-1**（`decision-20261118-issue16-c165.md` 第 3、5 節）；本 Ticket 不修改 |
 
 ### 13.9 NOT VERIFIED 與 remaining work
 
 - NV-1（真實伺服器的 TLS、回應形狀，以及它是否可能回傳這類 shape 或字串）：**NOT VERIFIED／NOT RUN**。只在 Python 3.11.2 執行。TI-C2R1F3-1 屬 DA。
 - 下一步：(1) Design Authority 裁決 C-16-5，依裁決在 `source.py` 實作並補測試與突變（另一個 commit）；(2) Orchestrator 核對本 Executor 的 binding，派 cycle 2 R2（受審 subject 以 C-16-5 處理後的最終 subject 為準；R2 依 CL-R1-28 record 第 3.4 節只就 CL-R1-28 的項目核對 `ecddc57`）。
+
+## 14. C-16-5 的處理：CL-R1-29（`decision-20261118-issue16-c165.md`；subject `9cc566a`）
+
+### 14.1 契約與角色
+
+- DA 裁決（HEAD `25c77d9`，全文閱讀）：**CL-R1-29，讀法 (i)**。狀態回應的 `version` 只有在是非空字串、而且能以嚴格的 UTF-8 編碼時才是「引擎回報的版本」，原樣記錄；其他情形（不是字串、空字串、含孤立 surrogate）都是 DD-R1-2 的「沒有回報」，記 `unreported`，路線照常採用；不得修補、替換、跳脫或截斷；`map_data_date` 不受影響。可以修改的只有 `source.py` 的 `_engine_info` 與其 docstring、`tests/test_routing_engine.py`（只新增）與本 worklog；不得以 `try`／`except` 包住 `build_snapshot`。
+- 呼叫端位置的 `ref_id`／`role` 含孤立 surrogate：DA 判定為呼叫端輸入錯誤，**tracked item TI-C165-1**（G-RREQ，owner Design Authority），本次不修改（第 13.8 節「觀察」列的狀態以此為準）。
+- 角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`）。Executor 自行觀測（`9cc566a` 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 321 則，集合只有一個元素。**這是自我觀測，不是派工者的核對。** 沒有使用 bounded assignments，沒有派工任何 subagent。
+
+### 14.2 修改（`25c77d9` → `9cc566a`）
+
+| # | 決定 | 依據 |
+| --- | --- | --- |
+| D-16-30 | `_engine_info`：`version` 是非空字串時以 `version.encode("utf-8")` 判定，`UnicodeEncodeError` → `unreported`；不是字串或是空字串 → `unreported`（照舊）。合法的值原樣保留（含非 ASCII）。`tileset_last_modified` 的處理、`get_route` 與其他程式碼不變；沒有任何包住 `build_snapshot` 的 `try`／`except`。docstring 引用 CL-R1-29。D-16-16 的「非空字串」因此加上「合法的 Unicode 文字」 | CL-R1-29；DD-R1-2；CL-R1-26 |
+
+`git diff --numstat 25c77d9 9cc566a`：`source.py` 11／2（兩個 hunk 都在 `_engine_info` 內：docstring 與版本的判定），`tests/test_routing_engine.py` 55／0（只新增）。
+
+### 14.3 E-2：新測試（`tests/test_routing_engine.py`，18 個案例；狀態回應以 `\u` 跳脫的 ASCII JSON 送出）
+
+| # | 測試 | 結果 |
+| --- | --- | --- |
+| V-1 | `test_cl_r1_29_v1_a_version_that_is_not_unicode_text_is_unreported`（來回行程、單向 × `"\ud800"`、`"\udfff"`、`"3.9.1\ud800"`，6 例）：沒有例外；回傳採用的路線；存了一個快照，`engine_version == "unreported"`；`map_data_date` 等於同一回應 `tileset_last_modified` 的 +08:00 日期；請求序列以一次 `status` 結束；Snapshot Mode 與一般模式的重用讀回同一條路線，不呼叫引擎 | PASS |
+| V-2 | `test_cl_r1_29_v2_a_valid_non_ascii_version_is_kept_as_it_is`（`"3.9.1-é"`、`"版本 3.9.1"`、含表情符號的字串）：原樣記錄 | PASS |
+| V-3 | `test_cl_r1_29_v3_a_bad_version_does_not_change_rejections`（國道訊號、警告、偏移 × 3 種版本，9 例）：結果依 CL-R1-8（`highway_in_route`／`routing_unavailable`），沒有狀態請求，沒有快照 | PASS |
+
+既有測試（含 `test_dd_r1_2_engine_version_and_map_data_date`、`test_c2r1_f2_*`、`test_r1_f1_*`、`test_r2_f1_*`）沒有刪改，全部通過。E-3：只用既有的合成產生器與 `STATUS` 常數，加上孤立 surrogate 與非 ASCII 字串。E-4：`FakeEngine` 與 autouse socket 封鎖，沒有網路請求。E-5：無。
+
+### 14.4 E-1 pytest（最終 subject `9cc566a`）
+
+`.venv/Scripts/python.exe -m pytest -q`，在 commit 之後、工作目錄乾淨時執行，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+......                                                                   [100%]
+2238 passed in 23.22s
+```
+
+`.venv/Scripts/python.exe -m pytest -q -rxX`，exit 0，摘要：
+
+```text
+......                                                                   [100%]
+2238 passed in 22.76s
+```
+
+`2220`（`ecddc57`）＋ `18` ＝ `2238`。`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。`git ls-files` 不含 `data/`、`.gpx`、`.fit`、`.env`、`*.key`（0 筆）。
+
+### 14.5 突變（scratchpad 的 `mutate16e.py`；原文以原本的位元組寫回，結束時 `routing/` 下全部 `.py` 的 SHA-256 與開始時相同）
+
+| # | 突變 | 結果 |
+| --- | --- | --- |
+| V-m1 | 拿掉 UTF-8 的判定 | **KILLED**，6 failed（V-1：`build_snapshot` 拋 `SnapshotValidationError`） |
+| V-m2 | 以替換字元修補版本（`encode("utf-8", "replace")`） | **KILLED**，6 failed（V-1 的 `unreported` 斷言） |
+| V-m3 | 所有非 ASCII 版本都記為 `unreported` | **KILLED**，3 failed（V-2） |
+
+### 14.6 E-6
+
+- **H-4**：自 `9cc566a` 起，以第 13.4、14.3 節的測試證明：寫入快照、且來自引擎回應的字串欄位——轉向的道路名稱（C2R1-F2，第 13.4 節）、`engine_version`（V-1～V-3）、shape（C2R1-F1、F4，第 13.4 節）——在已測試的值（孤立 surrogate、部分合法的字串、會解出超出範圍數值的 shape）上不會使 `get_route` 拋出未捕捉的例外；國道訊號的優先順序與採用檢查不變（V-3）。這只是已測試的範圍，**不宣稱窮舉**引擎回應的所有內容。呼叫端提供的位置的 `ref_id`／`role` 不在此陳述內（TI-C165-1）。
+- **H-3**：`unreported` 是 DD-R1-2 的固定值，沒有推測或修補（V-m2 被抓到）。
+- **H-1、H-2**：不涉及（傳輸層、送往第三方的內容與 header 都沒有修改）。
+
+### 14.7 Remaining work
+
+- C-16-5：**已依 CL-R1-29 處理**（第 13.8 節）。C2R1-F1、C2R1-F2（道路名稱與狀態版本）、C2R1-F4、CL-R1-28 的修改都已完成；最終 implementation subject 是 `9cc566a`。
+- 下一步：Orchestrator 核對本 Executor 的 binding，派 cycle 2 R2（受審 subject `9cc566a`；依治理 §4.4 核對 C2R1-F1、F2 是否解決與 correction 的回歸；CL-R1-28 依其 record 第 3.4 節的範圍）。
+- 不在本 Ticket：TI-C165-1、TI-C16-2、TI-C16-3、TI-C2R1F3-1（Design Authority）；NV-1 與真實請求（NOT RUN）；只在 Python 3.11.2 執行。
