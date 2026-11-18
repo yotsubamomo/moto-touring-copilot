@@ -1211,6 +1211,61 @@ def test_c2r1_f2_a_lone_surrogate_in_a_road_attribute_name_does_not_stop_adoptio
     assert isinstance(result, AdoptedRoute)
 
 
+# --- CL-R1-29 (decision-20261118-issue16-c165; C-16-5): a status version that is not Unicode text ---
+
+BAD_VERSIONS = ["\ud800", "\udfff", "3.9.1\ud800"]
+STATUS_DATE = datetime.fromtimestamp(STATUS["tileset_last_modified"], TAIPEI).date().isoformat()
+
+
+def _status_with_version(version):
+    return ascii_reply(dict(STATUS, version=version))
+
+
+@pytest.mark.parametrize("version", BAD_VERSIONS, ids=["ud800", "udfff", "partly_valid"])
+@pytest.mark.parametrize("trip_type", ["round_trip", "one_way"])
+def test_cl_r1_29_v1_a_version_that_is_not_unicode_text_is_unreported(store, tmp_path, trip_type, version):
+    if trip_type == "round_trip":
+        engine = round_trip_engine(statuses=[_status_with_version(version)])
+        expected = ["route", "trace_attributes", "route", "trace_attributes", "status"]
+    else:
+        engine = one_way_engine()
+        engine.queue["status"] = [_status_with_version(version)]
+        expected = ["route", "trace_attributes", "status"]
+    result = plan(engine, store, engine_request(trip_type))  # must not raise
+    assert isinstance(result, AdoptedRoute) and result.trip_type == trip_type
+    assert list(stored_files(tmp_path)) == [f"{result.snapshot_id}.json"]
+    stored = store.load(result.snapshot_id)
+    assert stored["engine_version"] == ENGINE_VERSION_UNREPORTED
+    assert stored["map_data_date"] == STATUS_DATE
+    assert engine.actions() == expected  # one status request, at the end
+    # Read back: Snapshot Mode and normal reuse give the same route without calling the engine.
+    assert get_route(engine_request(trip_type), store=store, snapshot_mode=True) == result
+    assert plan(FakeEngine(), store, engine_request(trip_type), now=NOW + timedelta(days=1)) == result
+
+
+@pytest.mark.parametrize("version", ["3.9.1-é", "版本 3.9.1", "3.9.1 🏍"])
+def test_cl_r1_29_v2_a_valid_non_ascii_version_is_kept_as_it_is(store, version):
+    engine = round_trip_engine(statuses=[reply(dict(STATUS, version=version))])
+    result = plan(engine, store)
+    assert store.load(result.snapshot_id)["engine_version"] == version
+
+
+@pytest.mark.parametrize("version", BAD_VERSIONS, ids=["ud800", "udfff", "partly_valid"])
+@pytest.mark.parametrize("case", ["highway", "warning", "offset"])
+def test_cl_r1_29_v3_a_bad_version_does_not_change_rejections(store, tmp_path, version, case):
+    out = route_body(OUT_POINTS, has_highway=case == "highway",
+                     warnings=[{"code": 1, "text": "synthetic"}] if case == "warning" else None)
+    positions = None
+    if case == "offset":
+        far = [pos("SYN-ORIGIN", "origin", 0, 0), pos("SYN-VIA-A", "via", 1500, 0), pos("SYN-DEST", "destination", 9800, 0)]
+        positions = {"outbound": far, "return": BACK_POSITIONS}
+    engine = round_trip_engine(out=out, statuses=[_status_with_version(version)])
+    result = plan(engine, store, engine_request(positions=positions))
+    assert result.code == (HIGHWAY_IN_ROUTE if case == "highway" else ROUTING_UNAVAILABLE)
+    assert "status" not in engine.actions()
+    assert stored_files(tmp_path) == {}
+
+
 # --- CL-R1-27: warnings in the road attribute reply (decision-20261118-issue16-c161 section 4.5) ---
 
 @pytest.mark.parametrize("warnings", [

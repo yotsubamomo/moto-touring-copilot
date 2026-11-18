@@ -237,7 +237,11 @@ def _reasons(outcomes: Sequence[DirectionOutcome]) -> tuple[str, ...]:
 def _engine_info(client: ValhallaClient) -> tuple[str, str | None]:
     """(engine_version, map_data_date) from the status reply (DD-R1-2).
 
-    No version reported: the fixed string `unreported`, nothing guessed. `map_data_date` is the
+    No version reported: the fixed string `unreported`, nothing guessed. A version counts as
+    reported only when it is a non-empty string that encodes as strict UTF-8 (valid Unicode text,
+    no lone surrogate); it is then kept as it is. Anything else (not a string, empty, a lone
+    surrogate) is `unreported`; the value is never repaired, replaced or cut, and the route is
+    adopted as usual (CL-R1-29, decision-20261118-issue16-c165). `map_data_date` is the
     +08:00 date of the reported `tileset_last_modified` (Unix seconds): the engine's reported tile
     last-modified date (圖磚最後修改日期), not the date the OpenStreetMap data was taken. Not
     reported: None, never the acquisition date (CL-R1-26, decision-20261118-issue16-c161).
@@ -248,7 +252,12 @@ def _engine_info(client: ValhallaClient) -> tuple[str, str | None]:
         return ENGINE_VERSION_UNREPORTED, None
     body = reply.body if reply.status == 200 and isinstance(reply.body, dict) else {}
     version = body.get("version")
-    if not isinstance(version, str) or version == "":
+    if isinstance(version, str) and version != "":
+        try:
+            version.encode("utf-8")
+        except UnicodeEncodeError:
+            version = ENGINE_VERSION_UNREPORTED
+    else:
         version = ENGINE_VERSION_UNREPORTED
     modified = body.get("tileset_last_modified")
     map_date = None
