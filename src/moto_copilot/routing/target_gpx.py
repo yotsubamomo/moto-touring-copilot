@@ -17,14 +17,21 @@ type raises `TripTypeRequiredError` (CL-R1-10 item 3). One way: the geometry is 
 no turnaround position is used. The geometry is never reversed, and no point is added, moved or
 dropped: every point of a returned leg is a point of the file, in file order.
 
+Round trip turnaround (CL-R1-10 item 4; CL-R1-22, decision-20261118-issue15-c151): a legal rider
+position m (0 < m < total, CL-R1-18) is realised at the usable track point whose distance along
+the track is closest to m, compared exactly with `Decimal` (the lower index on a tie); no point is
+interpolated. Without a rider position, the detected turnaround is the farthest point. In both
+cases the turnaround is a point of the file: it ends the outbound leg and starts the return leg.
+
 Out-and-back detection (CL-R1-10 item 5) uses conservative heuristic thresholds (50 m / 100 m /
 90%), NOT validated with real data; nothing in this module claims otherwise.
 
 `route_id` (CL-R1-10 item 6; SPEC-001 §2): `RG-` plus the first 10 hex characters of the SHA-256 of
-`<file SHA-256 hex>:<trip_type>`, followed for a round trip by `:<turnaround metres>`. The integer
-metres are rounded half up for both the rider's and the detected position (CL-R1-18,
-decision-20261118-issue14-c141); Python's `round()` is not used. `target_gpx_ref` is the SHA-256 of
-the file's bytes.
+`<file SHA-256 hex>:<trip_type>`, followed for a round trip by `:<turnaround metres>`. The
+turnaround metres are those of the adopted turnaround point, `c_k` (CL-R1-22 item 5), rounded half
+up from the shortest decimal form of its distance along the track, for both the rider's and the
+detected position (CL-R1-18, decision-20261118-issue14-c141); Python's `round()` is not used.
+`target_gpx_ref` is the SHA-256 of the file's bytes.
 
 Privacy (CL-R1-10 item 7): results and errors carry no path and no file name, and this module
 does not log.
@@ -77,16 +84,6 @@ class TripTypeRequiredError(ValueError):
     """No trip type was given. The trip type is never inferred from the geometry (CL-R1-10 item 3)."""
 
 
-class TurnaroundSplitUndecidedError(Exception):
-    """The rider's legal turnaround position lies between two points of the track.
-
-    How to cut the geometry there is not decided by the contract: CL-R1-10 item 4 cuts at the
-    position m metres along the track, while S64 forbids made-up track points. Reported to the
-    Design Authority as C-15-1 (worklog issue-15). Until it is decided, no route is returned for
-    this input (fail closed). The message carries no position, path or coordinate.
-    """
-
-
 @dataclass(frozen=True)
 class TargetGpxLeg:
     direction: str                  # "outbound" or "return"
@@ -101,7 +98,7 @@ class TargetGpxRoute:
     trip_type: str
     target_gpx_ref: str             # SHA-256 of the file's bytes
     total_length_m: float
-    turnaround_m: int | None        # integer metres from the start; None for one way
+    turnaround_m: int | None        # integer metres of the adopted turnaround point (c_k); None for one way
     turnaround_source: str | None   # "rider", "detected", or None for one way
     legs: tuple[TargetGpxLeg, ...]  # one way: (outbound,); round trip: (outbound, return)
     route_source: str = ROUTE_SOURCE
@@ -259,36 +256,54 @@ def _route(points: tuple[GeoPoint, ...], ref: str, trip_type: str,
         metres = turnaround_m_from_km(turnaround_km)
         if metres is None or not 0 < metres < total:
             return TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
-        at = _point_at_exactly(cum, metres)
+        at = rider_turnaround_index(cum, metres)
         if at is None:
-            raise TurnaroundSplitUndecidedError(
-                "the turnaround position lies between two track points; how to cut there is pending "
-                "a Design Authority decision (C-15-1)")
-        return _round_trip(points, cum, ref, at, metres, TURNAROUND_FROM_RIDER)
+            return TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
+        return _round_trip(points, cum, ref, at, TURNAROUND_FROM_RIDER)
 
     boundary = detect_out_and_back(points, cum)
-    if boundary is None:
+    if boundary is None or not _usable(cum, boundary):
         return TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
-    metres = metres_half_up(cum[boundary])
-    if not 0 < metres < total:
-        return TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
-    return _round_trip(points, cum, ref, boundary, metres, TURNAROUND_DETECTED)
+    return _round_trip(points, cum, ref, boundary, TURNAROUND_DETECTED)
 
 
-def _round_trip(points, cum, ref, at: int, metres: int, source: str) -> TargetGpxRoute:
-    """Cut at the point `at`: it ends the outbound leg and starts the return leg."""
+def rider_turnaround_index(cum: list[float], metres: int) -> int | None:
+    """The track point that realises the rider's legal position `metres` (CL-R1-22 items 2-4).
+
+    Among the usable points (`_usable`), the one with the smallest |Decimal(repr(cum_i)) - metres|,
+    compared exactly; on a tie the lowest index (so a repeated point gives its first copy). None
+    when no point is usable. No point is interpolated (decision-20261118-issue15-c151).
+    """
+    target = Decimal(metres)
+    best: tuple[Decimal, int] | None = None
+    for index in range(len(cum)):
+        if not _usable(cum, index):
+            continue
+        distance = abs(Decimal(repr(cum[index])) - target)
+        if best is None or distance < best[0]:
+            best = (distance, index)
+    return None if best is None else best[1]
+
+
+def _usable(cum: list[float], index: int) -> bool:
+    """A point can be the turnaround: 0 < cum_i < total and 0 < c_i < total (CL-R1-22 items 2, 6)."""
+    total = cum[-1]
+    if not 0 < cum[index] < total:
+        return False
+    return 0 < metres_half_up(cum[index]) < total
+
+
+def _round_trip(points, cum, ref, at: int, source: str) -> TargetGpxRoute:
+    """Cut at the track point `at` (CL-R1-22 item 7): outbound p_0..p_at, return p_at..p_{n-1}.
+
+    Both legs include the turnaround point. `turnaround_m` and the `RG-` route_id use its integer
+    metres c_at (CL-R1-22 item 5; CL-R1-18 item 3), not the rider's requested position.
+    """
+    metres = metres_half_up(cum[at])
     outbound = TargetGpxLeg("outbound", points[: at + 1], cum[at])
     back = TargetGpxLeg("return", points[at:], cum[-1] - cum[at])
     route_id = target_gpx_route_id(ref, "round_trip", metres)
     return TargetGpxRoute(route_id, "round_trip", ref, cum[-1], metres, source, (outbound, back))
-
-
-def _point_at_exactly(cum: list[float], metres: int) -> int | None:
-    """The index of a track point whose distance along the track is exactly `metres`, if any."""
-    index = bisect.bisect_left(cum, metres)
-    if index < len(cum) and cum[index] == metres and 0 < index < len(cum) - 1:
-        return index
-    return None
 
 
 # --- helpers -------------------------------------------------------------------------------------

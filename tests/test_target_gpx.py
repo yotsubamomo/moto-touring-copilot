@@ -13,6 +13,7 @@ import logging
 import math
 import re
 import socket
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import pytest
@@ -30,10 +31,10 @@ from moto_copilot.routing.target_gpx import (
     TargetGpxError,
     TargetGpxRoute,
     TripTypeRequiredError,
-    TurnaroundSplitUndecidedError,
     cumulative_m,
     detect_out_and_back,
     metres_half_up,
+    rider_turnaround_index,
     target_gpx_route,
     target_gpx_route_from_bytes,
     target_gpx_route_id,
@@ -134,9 +135,14 @@ def route(positions, trip_type, km=None, **gpx_options):
     return target_gpx_route_from_bytes(gpx(positions, **gpx_options), trip_type, km)
 
 
-def assert_slices_of_the_file(result: TargetGpxRoute, positions):
-    """S64: every leg is a contiguous, forward slice of the file's points; nothing added or reversed."""
+def assert_slices_of_the_file(result: TargetGpxRoute, positions, lengths: bool = True):
+    """S64 (T-6): every leg is a contiguous, forward slice of the file's points; nothing added or reversed.
+
+    With `lengths`, the leg lengths are cum_k and total - cum_k exactly (CL-R1-22 item 7). Tests that
+    replace the distances along the track pass `lengths=False`.
+    """
     original = points_of(positions)
+    cum = cumulative_m(original)
     if result.trip_type == "one_way":
         assert len(result.legs) == 1 and result.legs[0].points == original
         return
@@ -148,6 +154,12 @@ def assert_slices_of_the_file(result: TargetGpxRoute, positions):
     assert outbound.points[-1] is back.points[0] or outbound.points[-1] == back.points[0]
     assert outbound.points + back.points[1:] == original
     assert len(outbound.points) + len(back.points) == len(original) + 1
+    assert set(outbound.points) | set(back.points) <= set(original)
+    if lengths:
+        assert outbound.length_m == cum[k] and back.length_m == cum[-1] - cum[k]
+        assert result.total_length_m == cum[-1]
+        assert result.turnaround_m == metres_half_up(cum[k])
+        assert result.route_id == target_gpx_route_id(result.target_gpx_ref, "round_trip", result.turnaround_m)
 
 
 # --- geometry reading (scope (a); CL-R1-10 item 1) ------------------------------------------------
@@ -483,13 +495,130 @@ def test_an_illegal_turnaround_on_a_clear_out_and_back_does_not_fall_back_to_det
             TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
 
 
-def test_a_legal_turnaround_between_track_points_is_held_for_the_design_authority():
-    # C-15-1: how to cut between two track points is not decided by the contract. Until it is,
-    # a legal position there gives no route (fail closed), and never the detected turnaround.
-    for positions in (circle(), out_and_back()):
-        with pytest.raises(TurnaroundSplitUndecidedError) as caught:
-            route(positions, "round_trip", 1.2345)
-        assert "1.2345" not in str(caught.value) and "1234" not in str(caught.value)
+def oracle_index(cum: list[float], metres: int) -> int | None:
+    """CL-R1-22 items 2-3 computed point by point with Decimal: the test's own oracle."""
+    total = cum[-1]
+    best = None
+    for i, c in enumerate(cum):
+        d = Decimal(repr(c))
+        ci = int(d.quantize(Decimal(1), rounding=ROUND_HALF_UP))
+        if not (0 < c < total and 0 < ci < total):
+            continue
+        gap = abs(d - Decimal(metres))
+        if best is None or gap < best[0]:
+            best = (gap, i)
+    return None if best is None else best[1]
+
+
+def test_t1_s61_a_loop_is_cut_at_the_nearest_track_point_to_the_riders_position():
+    positions = circle()
+    cum = cumulative_m(points_of(positions))
+    i = 60
+    assert cum[i + 1] - cum[i] > 10                      # about 21 m between the two points
+    nearer_next = math.floor(cum[i + 1]) - 1               # strictly between, closer to point i + 1
+    nearer_this = math.ceil(cum[i]) + 1                    # strictly between, closer to point i
+    for metres, expected in ((nearer_next, i + 1), (nearer_this, i)):
+        assert cum[i] < metres < cum[i + 1]
+        result = route(positions, "round_trip", metres / 1000)
+        assert isinstance(result, TargetGpxRoute)
+        assert result.turnaround_source == "rider"
+        assert len(result.legs[0].points) - 1 == expected
+        assert result.turnaround_m == metres_half_up(cum[expected])
+        assert result.turnaround_m != metres                 # c_k, not the requested m
+        assert result.route_id == target_gpx_route_id(result.target_gpx_ref, "round_trip", result.turnaround_m)
+        assert_slices_of_the_file(result, positions)
+
+
+def test_t2_s80_on_a_clear_out_and_back_the_riders_position_wins_between_points():
+    positions = out_and_back()
+    detected = route(positions, "round_trip")
+    farthest = len(detected.legs[0].points) - 1
+    cum = cumulative_m(points_of(positions))
+    metres = 1234
+    assert metres != detected.turnaround_m
+    assert any(cum[j] < metres < cum[j + 1] for j in range(len(cum) - 1))
+    result = route(positions, "round_trip", metres / 1000)
+    k = len(result.legs[0].points) - 1
+    assert k == oracle_index(cum, metres) == 25 and k != farthest
+    assert result.turnaround_source == "rider" and result.turnaround_m == metres_half_up(cum[k]) == 1250
+    assert result.route_id != detected.route_id
+    assert_slices_of_the_file(result, positions)
+
+
+def test_t3_s78_full_flow_rider_and_detected_with_equal_metres_give_the_same_route():
+    positions = out_and_back(length=3137.3, step=47.1)
+    points = points_of(positions)
+    cum = cumulative_m(points)
+    detected = route(positions, "round_trip")
+    farthest = len(detected.legs[0].points) - 1
+    assert Decimal(repr(cum[farthest])) != Decimal(detected.turnaround_m)   # not a whole number of metres
+    rider = route(positions, "round_trip", detected.turnaround_m / 1000)   # no distance replaced
+    assert rider.turnaround_source == "rider"
+    assert rider.turnaround_m == detected.turnaround_m
+    assert rider.route_id == detected.route_id
+    assert [leg.points for leg in rider.legs] == [leg.points for leg in detected.legs]
+    # two different positions that select the same point: same route_id
+    near_same = route(positions, "round_trip", (detected.turnaround_m + 3) / 1000)
+    assert len(near_same.legs[0].points) - 1 == farthest and near_same.route_id == detected.route_id
+    # a position that selects another point: another route_id
+    other = route(positions, "round_trip", (detected.turnaround_m - 200) / 1000)
+    assert len(other.legs[0].points) - 1 != farthest and other.route_id != detected.route_id
+    assert route(positions, "one_way").route_id not in {detected.route_id, other.route_id}
+    for result in (detected, rider, near_same, other):
+        assert_slices_of_the_file(result, positions)
+
+
+@pytest.mark.parametrize("cum, metres, expected", [
+    ([0.0, 999.5, 1000.5, 2000.0], 1000, 1),             # tie at 0.5: the lower index
+    ([0.0, 1023.9, 1024.1, 2048.0], 1024, 1),            # tie in Decimal, not in float differences
+    ([0.0, 500.0, 1000.0, 1000.0, 2000.0], 1000, 2),     # a repeated point: the first copy
+    ([0.0, 900.0, 1800.0, 2700.0], 10, 1),               # nearest is the start: the first usable point
+    ([0.0, 900.0, 1800.0, 2700.0], 2690, 2),             # nearest is the end: the last usable point
+    ([0.0, 0.4, 900.0, 1800.0], 1, 2),                   # 0 < cum but c = 0: not usable
+    ([0.0, 900.0, 1999.6, 2000.0], 1999, 1),             # c = total: not usable
+    ([0.0, 0.3, 1999.7, 2000.0], 1000, None),            # no usable point
+    ([0.0, 600.4, 600.6, 2000.0], 601, 2),               # exact comparison picks the nearer one
+])
+def test_t4_the_selection_follows_the_definition(cum, metres, expected):
+    assert rider_turnaround_index(cum, metres) == expected == oracle_index(cum, metres)
+
+
+def test_t4_no_usable_point_through_the_route_is_turnaround_unconfirmed(monkeypatch):
+    positions = circle()
+    real_total = cumulative_m(points_of(positions))[-1]
+    fake = [0.0] * (len(positions) - 1) + [real_total]   # every inner point at distance 0
+    monkeypatch.setattr(tg, "cumulative_m", lambda points: list(fake))
+    assert route(positions, "round_trip", 1.0) == TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
+
+
+@pytest.mark.parametrize("boundary", ["start", "end"])
+def test_a_detected_boundary_that_is_not_usable_is_turnaround_unconfirmed(monkeypatch, boundary):
+    # CL-R1-22 item 6 (defensive): detection never returns these, so the detector is replaced.
+    positions = out_and_back()
+    index = 0 if boundary == "start" else len(positions) - 1
+    monkeypatch.setattr(tg, "detect_out_and_back", lambda points, cum=None: index)
+    assert route(positions, "round_trip") == TargetGpxError(TARGET_GPX_NOT_ROUND_TRIP, TURNAROUND_UNCONFIRMED)
+
+
+@pytest.mark.parametrize("name, positions", [
+    ("loop", circle()), ("out_and_back", out_and_back()), ("figure_eight", figure_eight()),
+    ("sparse_loop", circle(radius=1500.0, n=12)),
+])
+def test_t5_every_legal_whole_metre_gives_the_route_the_definition_selects(name, positions):
+    cum = cumulative_m(points_of(positions))
+    total = cum[-1]
+    checked = 0
+    for metres in range(1, math.ceil(total), 37):
+        result = route(positions, "round_trip", metres / 1000)
+        assert isinstance(result, TargetGpxRoute), metres
+        k = len(result.legs[0].points) - 1
+        assert k == oracle_index(cum, metres)
+        assert result.turnaround_source == "rider"
+        assert abs(Decimal(repr(cum[k])) - metres) <= min(
+            abs(Decimal(repr(cum[j])) - metres) for j in range(1, len(cum) - 1))
+        assert_slices_of_the_file(result, positions)
+        checked += 1
+    assert checked > 10
 
 
 def _with_exact_cumulative(monkeypatch, positions, exact_at: dict[int, float]):
@@ -514,7 +643,7 @@ def test_a_loop_is_cut_at_the_riders_position_when_a_point_is_there(monkeypatch)
     assert isinstance(result, TargetGpxRoute)
     assert result.turnaround_m == 1257 and result.turnaround_source == "rider"
     assert len(result.legs[0].points) == 61
-    assert_slices_of_the_file(result, positions)
+    assert_slices_of_the_file(result, positions, lengths=False)
 
 
 def test_the_riders_legal_position_wins_over_the_detected_one(monkeypatch):
@@ -526,7 +655,7 @@ def test_the_riders_legal_position_wins_over_the_detected_one(monkeypatch):
     assert result.turnaround_source == "rider" and result.turnaround_m == 1000
     assert len(result.legs[0].points) == 21
     assert result.route_id != detected.route_id
-    assert_slices_of_the_file(result, positions)
+    assert_slices_of_the_file(result, positions, lengths=False)
 
 
 @pytest.mark.parametrize("km, metres", [
@@ -703,11 +832,13 @@ def test_parse_errors_do_not_carry_the_parser_message_or_a_chained_exception():
     assert "line" not in str(caught.value) and "column" not in str(caught.value)
 
 
-def test_the_held_split_error_carries_no_path(tmp_path):
+def test_a_rider_turnaround_route_carries_no_path(tmp_path, caplog):
+    caplog.set_level(logging.DEBUG)
     file = _secret_file(tmp_path, gpx(circle()))
-    with pytest.raises(TurnaroundSplitUndecidedError) as caught:
-        target_gpx_route(file, "round_trip", 1.2345)
-    _assert_no_path(str(caught.value) + repr(caught.value), file)
+    result = target_gpx_route(file, "round_trip", 1.2345)
+    assert isinstance(result, TargetGpxRoute) and result.turnaround_source == "rider"
+    _assert_no_path(repr(result) + str(vars(result)), file)
+    assert caplog.records == []
 
 
 def test_route_and_error_have_no_field_for_a_path():
