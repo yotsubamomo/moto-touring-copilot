@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #14（SPEC-R1 R1-2），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Cycle 2：CL-R1-20 的修改已完成（`665a86f`），待 cycle 2 R1（第 11 節）**。Cycle 1 已由 Alternate Review 達成 closure（`audit/issue-14-c1-alt.md`，subject `c7976b5`）；Q-ALT-1 由 `decision-20261118-issue14-qalt1.md` 裁決（CL-R1-20）。pytest `1456 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：**R1（`audit/issue-14-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`359b948`），待 R2（第 10 節）**：R1-F1、R1-F2 已修正；R1-N1 併入 C-14-6（acceptor）。pytest `1441 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：**Executor 工作完成，DA 裁決已依 `decision-20261118-issue14-c141.md` 第 8 節處理，待 R1**：CL-R1-14（捨去）、CL-R1-15（同時最晚取最小 `snapshot_id`）、CL-R1-17（壞檔停止）確認現行實作；CL-R1-16 要求一般模式不重用取得時間晚於「現在」的快照，已在 `5eee704` 修改；TI-C14-5 是 tracked item；C-14-6 仍待 acceptor。pytest `1116 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| 狀態 | **Executor 工作完成；cycle 2 R1 PASS（`audit/issue-14-c2-r1.md`，受審 subject `6f08a5a`），沒有未解 blocking finding；仍有 tracked items（第 12 節）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。** 以下為先前狀態：**Cycle 2：CL-R1-20 的修改已完成（`665a86f`），待 cycle 2 R1（第 11 節）**。Cycle 1 已由 Alternate Review 達成 closure（`audit/issue-14-c1-alt.md`，subject `c7976b5`）；Q-ALT-1 由 `decision-20261118-issue14-qalt1.md` 裁決（CL-R1-20）。pytest `1456 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：**R1（`audit/issue-14-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`359b948`），待 R2（第 10 節）**：R1-F1、R1-F2 已修正；R1-N1 併入 C-14-6（acceptor）。pytest `1441 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定。以下為先前狀態：**Executor 工作完成，DA 裁決已依 `decision-20261118-issue14-c141.md` 第 8 節處理，待 R1**：CL-R1-14（捨去）、CL-R1-15（同時最晚取最小 `snapshot_id`）、CL-R1-17（壞檔停止）確認現行實作；CL-R1-16 要求一般模式不重用取得時間晚於「現在」的快照，已在 `5eee704` 修改；TI-C14-5 是 tracked item；C-14-6 仍待 acceptor。pytest `1116 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，回報 `NEEDS_DA`**：C-14-1（正規化的取位方式，影響 S56 的判定與所有雜湊值）需要 Design Authority 確認；C-14-2（取得時間相同時的選取）一併請 DA 確認，non-blocking。其餘範圍 (a)–(f) 完成，pytest `1112 passed`（第 6 節 E-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `deb808d`（派工時的 HEAD，含已結案的 #13）；實作 commit **`aa4239249dde499c46a680d6e150b79f0d4a9a49`**（`aa42392`）與 **`366866c7a3683e06b5b89d3090f6d5feb80eb418`**（`366866c`，測試中的範例座標改成 0°N、0°E 附近的合成值，見第 3 節第 9 項）。CL-R1-16 的修改 commit **`5eee70472a824f2725a02afb3160eea613ea0ae9`**（`5eee704`，父 commit 是 DA record 的 `5ecf0c2`），是 R1 的受審 subject（先前的 `366866c` 是 DA 裁決前的 subject）。R1-F1、R1-F2 的 correction commit **`359b948d31b6c3253dbd70bda0d970bc17c24c0c`**（`359b948`，父 commit 是 R1 record 的 `8c1d2d1`），是 cycle 1 的最終 implementation subject。CL-R1-20 的 commit **`665a86f1cf6b85ca84a9481b2e80d2949a8cf9d3`**（`665a86f`，父 commit 是 DA record 的 `262f893`），是 **#14 新的 implementation subject（cycle 2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
@@ -402,4 +402,98 @@ Alternate record（`audit/issue-14-c1-alt.md` 第 4 節 ALT-N1）指出：第 10
 - Binding 自我觀測：同一個 agent `a731e697ea497fcf3`（以 SendMessage 續派），`665a86f` 之後：(`claude-opus-5-5`, `high`) 197 則，集合只有一個元素。這是自我觀測，Orchestrator 須自行核對。
 - 第一次執行突變腳本時，子行程以相對路徑呼叫直譯器，在 Windows 上 `CreateProcess` 找不到檔案而中止；腳本的 `finally` 已以 `git checkout HEAD --` 還原，`git status --short` 為空、84 passed，改用絕對路徑重跑，結果如第 11.2 節。沒有使用 `git status --ignored`。
 - Concerns：C-14-6（含 R1-N1）仍待 acceptor；D-14-14（`put` 的 I/O 轉換）照舊，DA record 第 4.3 節沒有要求修改。沒有新的 blocking 問題。
+
+## 12. 結案前的紀錄（record-only）
+
+本節只更新紀錄。`665a86f` 之後沒有修改 `src/`、`tests/`（`git diff --stat 665a86f 33aa560 -- src tests` 為空）；本節的 commit 只改本 worklog。
+
+### 12.1 C2-R1-N1：`-q -rxX` 的完整輸出
+
+`audit/issue-14-c2-r1.md` 的 C2-R1-N1（Low／non-blocking）指出：第 11.2 節對 `-q -rxX` 只記了 exit code 與最後一行，沒有完整輸出。下面是 **Executor 在目前的 HEAD `33aa560449e5a02024d9d36539969bda3f41217f` 重新執行的結果**，不是 `665a86f` 當時的歷史輸出，也不是 reviewer 在 `6f08a5a` 的重跑。HEAD `33aa560` 與 `665a86f` 的程式與測試相同（上一段），所以它是同一份程式的輸出。第 11.2 節對 `665a86f` 的記載（exit 0、`1456 passed in 28.19s`）保持原樣。
+
+- 指令：`.venv/Scripts/python.exe -m pytest -q -rxX`（repo 根目錄，Git Bash；輸出導到 scratchpad 檔以取得 pytest 自己的 exit code）
+- Subject：HEAD `33aa560`（implementation `665a86f`）
+- Exit code：0
+
+```text
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 29%]
+........................................................................ [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+........................................................................ [ 49%]
+........................................................................ [ 54%]
+........................................................................ [ 59%]
+........................................................................ [ 64%]
+........................................................................ [ 69%]
+........................................................................ [ 74%]
+........................................................................ [ 79%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 93%]
+........................................................................ [ 98%]
+................                                                         [100%]
+1456 passed in 29.27s
+```
+
+摘要只有 `passed`：沒有 failed、error、xfailed、xpassed、skipped。執行後 `git status --short` 為空。
+
+### 12.2 Audit 結果
+
+| Cycle | Round | Record | Subject | 結果 |
+| --- | --- | --- | --- | --- |
+| 1 | R1 | `docs/governance/records/audit/issue-14-c1-r1.md` | `532c096` | **BLOCKING**：R1-F1（不可 hash 的 `trip_type`）、R1-F2（未轉換、帶路徑的 `OSError`）；R1-N1 併入 C-14-6。修正見第 10 節（`359b948`） |
+| 1 | R2 | `docs/governance/records/audit/issue-14-c1-r2.md` | `c7976b5` | **BLOCKING** |
+| 1 | Alternate | `docs/governance/records/audit/issue-14-c1-alt.md` | `c7976b5` | **CLOSURE**；R2 的殘留項目改列 ALT-N1（Low），語義問題記為 Q-ALT-1 → Design Authority（`decision-20261118-issue14-qalt1.md`，CL-R1-20、CL-R1-21） |
+| 2 | R1（delta audit，DA record 第 4.4 節） | `docs/governance/records/audit/issue-14-c2-r1.md` | `6f08a5a` | **PASS**；沒有 blocking finding；C2-R1-N1（Low）由第 12.1 節處理；ALT-N1 的 record-only fix 判為已滿足 |
+
+- **最終受審 subject：`6f08a5a974967568be3719dd051e8647be70e74c`**（`6f08a5a`，cycle 2 R1）。
+- **Implementation commits**（依序）：`aa42392`（套件與測試）、`366866c`（測試範例座標改成近零值）、`5eee704`（CL-R1-16）、`359b948`（R1-F1、R1-F2）、`665a86f`（CL-R1-20，最終 implementation）。其餘 commit 都只改 `docs/governance/records/**`。
+- 相關的 DA records：`decision-20261118-issue13-c131.md`（CL-R1-13）、`decision-20261118-issue14-c141.md`（CL-R1-14～CL-R1-19）、`decision-20261118-issue14-qalt1.md`（CL-R1-20、CL-R1-21）。
+
+### 12.3 Tracked items
+
+| 項目 | 內容 | Owner／狀態 |
+| --- | --- | --- |
+| C-14-6／R1-N1 | `aa42392` 的歷史含手寫範例值，worklog 中也有引用（第 3 節第 9 項、E-3、C-14-6）；不是騎乘資料。是否在 push 前整理歷史或紀錄（RB-6） | acceptor；未決 |
+| TI-C14-5 | 凍結清單的檔案格式與 `FrozenEntry(request_key, snapshot_id, sha256)` 的對應 | Design Authority（E2／凍結 Demo 的 Spec）；tracked |
+| RV-8、RV-9、RV-10 | SPEC-001 的文字同步（CL-R1-14 取位、CL-R1-18 取整、CL-R1-17／20／21 的選取與存放錯誤） | Design Authority（SPEC-R1 phase acceptance 之後，AB-12 的文件工作）；tracked |
+| NV-PY313 | Python 3.13 以後的直譯器上的實跑 | **NOT RUN**（本機只有 3.11、3.12.14）；結果與版本無關的依據是選取路徑不使用吞下 `OSError` 的判斷式 |
+| NV-SYMLINK | 真實失效／循環符號連結的實跑 | **NOT RUN**（建立連結時 WinError 1314，沒有權限）；由 T-4 的替身涵蓋邏輯 |
+| NV-PRIV | 真實騎乘資料、真實使用者的快照存放與部署路徑 | acceptor（RB-7）；**NOT VERIFIED**。本 Ticket 只用合成資料，合成測試的 PASS 不代表真實資料的驗證 |
+
+### 12.4 最終 pytest
+
+Executor 在 HEAD `33aa560`（implementation `665a86f`）重新執行 `.venv/Scripts/python.exe -m pytest -q`，exit 0，完整輸出：
+
+```text
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 29%]
+........................................................................ [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+........................................................................ [ 49%]
+........................................................................ [ 54%]
+........................................................................ [ 59%]
+........................................................................ [ 64%]
+........................................................................ [ 69%]
+........................................................................ [ 74%]
+........................................................................ [ 79%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 93%]
+........................................................................ [ 98%]
+................                                                         [100%]
+1456 passed in 28.18s
+```
+
+`tests/` 沒有 xfail／skip 標記；`git ls-files` 沒有 `data/`、`.gpx`、`.fit`、`.env`；執行後 `git status --short` 為空。
 
