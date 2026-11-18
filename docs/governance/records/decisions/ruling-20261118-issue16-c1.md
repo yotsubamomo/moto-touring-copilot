@@ -225,3 +225,93 @@ R1-F1 不在未解的 blocking findings 中（第 3.1 節「R1-F1」）；本 ru
 沒有讀取、列出或搜尋 `data/`；沒有讀 `.env`；沒有讀取或執行 `experiments/` 下的任何檔案；沒有使用 `git status --ignored`；沒有網路請求；沒有修改受審檔案、契約或其他紀錄；沒有派工任何 subagent；沒有 commit。
 
 Ruling: R2-F1 — targeted rework（範圍以 root cause `_real` 為準，涵蓋 `summary.length`、`summary.time`、edge `length`，HTTP 200 與非 200），授權 cycle 2（自 R1 起）；不 dismiss、不 defer、不交 DA。
+
+---
+
+## Addendum A（2026-11-18）— cycle 2 targeted correction 的檔案範圍；C2R1-F1 與 R2-F1 root cause 的關係
+
+本 addendum 只釐清本 ruling 的適用範圍與 routing（治理 §2.4、§4.5；FA 的 routing／process 權限），不改變上文第 1～8 節的任何裁決，不另作 finding、severity 或 closure 的判斷。
+
+| 欄位 | 內容 |
+| --- | --- |
+| 日期 | 2026-11-18（Asia/Taipei） |
+| 提問者 | Orchestrator，run `run-20261117-oc1-run2`（主 checkout HEAD `f2728d8395d3a1527f1bb5e9ea95c3430f8e7259`；run record §6 事件 96～100） |
+| 角色與 context | 同一個 `final_adjudicator` assignment（作出本 ruling 的同一 context），沒有新的派工；binding 依 Bindings §3.6 由派工者核對本段工作的 transcript |
+| 讀過的 records | Cycle 2 R1 `docs/governance/records/audit/issue-16-c2-r1.md`（本 FA 重算 SHA-256 `5a8943995c16a586bd4678925ff07d09fb05e1ce33f4251bad7be79226e51d92`，與事件 100 相同；`Verdict: BLOCKING (C2R1-F1, C2R1-F2)`）；run record 事件 96～100。Record 的結論都當成待驗證主張；下文採用的事實由本 FA 另行讀原始碼或重現 |
+| 受審 subject（cycle 2 R1） | `fb6210dbceab4b04651380d8bc23ee82d4896484`；cycle 2 的實作 commit `022f629`。`git diff --stat 0799682 fb6210d -- src tests`：只有 `adoption.py`（17 行）與 `tests/test_routing_engine.py`（118 行）；`git diff --name-only fb6210d f2728d8`：只有 cycle 2 R1 record 與 run record |
+| Capability escalation | 不提出 E-FA/D1：兩個問題都可以由本 ruling 的文字、治理 §4.4／§4.5 與原始碼直接回答 |
+
+### A.1 問題
+
+1. 本 ruling 第 3.2 節的封閉檔案清單（`adoption.py`、`tests/test_routing_engine.py`、worklog）只約束 R2-F1 的 rework，還是也約束 cycle 2 中針對新 findings 的 targeted correction？具體地說，#16 Executor 能否在 `valhalla.py`、`source.py` 與測試中對 C2R1-F1、C2R1-F2（以及 Low 的 C2R1-F4）作 cycle 2 的 targeted correction，之後進 cycle 2 R2？還是需要另一份 ruling 或其他 route？
+2. 本 FA 是否對「C2R1-F1 不是 R2-F1 的 root cause」這個 Reviewer 判斷有異議（它影響本 ruling 第 3.3 節的 cycle 3 限制）？
+
+### A.2 本 FA 自行取得的證據
+
+- `git show fb6210d:src/moto_copilot/routing/valhalla.py` 第 209～237 行：`decode_polyline6` 以無上限的 Python `int` 累加每個值（第 226 行），在第 233 行 `point = (lat / 1e6, lon / 1e6)` 轉成浮點數，第 234 行才做範圍檢查。`git diff 0799682 fb6210d -- src` 沒有 `valhalla.py`；Reviewer 所述自 `7cb4b0c` 起只改過模組說明，與此一致。
+- `git show fb6210d:src/moto_copilot/routing/adoption.py` 第 240～245 行：`_route_facts` 呼叫 `decode_polyline6(shape)`，只捕捉 `PolylineError`。第 119～131 行：cycle 2 的 `_real` 在 `math.isfinite` 拋 `OverflowError` 時回傳 `False`；`shape` 不經過 `_real`。
+- 本 FA 的記憶體內探測（worktree `cx16r2`，`0799682`；`valhalla.py` 的程式在 `0799682` 與 `fb6210d` 相同；合成字串，socket 封鎖）：`decode_polyline6("~"*210 + "??")` → `OverflowError: int too large to convert to float`（不是 `ValueError`，也不是 `PolylineError`）；`"~"*60 + "??"` → `PolylineError`（超出範圍，第 234 行攔下）；`"~~~"` → `PolylineError`。Worktree 的 `git status --porcelain` 前後不變。
+- 本 ruling 第 3.2 節的範圍界定列出 `routing/` 內使用 `math.isfinite` 的其他位置，沒有列出 `decode_polyline6`：它的溢位來自除法，不是 `math.isfinite`，本 FA 當時以 `isfinite` 搜尋而沒有找到它。這是本 FA 範圍界定的遺漏，不改變第 3.3 節對 root cause 的定義。
+
+### A.3 問題 1：封閉清單只約束 R2-F1 的 rework；cycle 2 的 targeted correction 不需要另一份 ruling
+
+**釐清。** 第 3.2 節的封閉檔案清單屬於「Rework 的範圍」一節，只約束 R2-F1 的 material rework，也就是作為 cycle 2 起點、第 3.3 節第 1～3 項所列的那一個 delta（`022f629` 與其 worklog）。它不約束 cycle 2 中針對 cycle 2 新 findings 的 targeted correction。理由：
+
+1. 該清單的作用是讓 R2-F1 的 rework 不夾帶無關的範圍（治理 §4.4 targeted correction 的限制），並界定第 3.3 節所說的「實質改變」。它的對象是本 FA 裁決的那一個 finding。
+2. 治理 §4.5：新 cycle「一律從 R1 開始」，之後依 §4.4 的 R1 → targeted correction → R2 →（仍 blocking 時）exactly one Alternate → FA 進行。Cycle 2 R1 的 blocking findings 由 cycle 2 的 Reviewer 擁有（治理 §2.4），它們的 targeted correction 範圍由該 R1 record 的 findings 與 required fix 界定（§4.4：「聚焦 blocking findings」）。本 FA 沒有裁決這些 findings，也沒有權限預先限制合法的 §4.4 流程。
+3. 契約內必要的 rework 與 re-verification 不是新工作的接受關卡（治理 §1.2）；orch-default §6 的 audit 流程不要求 cycle 內的 targeted correction 另有 FA 授權。
+
+**結論。** #16 Executor 可以在 cycle 2 內對 C2R1-F1、C2R1-F2 作 targeted correction，之後進 **cycle 2 R2**。不需要另一份 ruling，也不開新 cycle：cycle 2 仍以本 ruling 為起點的引用；在 cycle 2 的 Alternate Review 之前開 cycle 3 是不合法的（治理 §4.5 只有兩個起點）。派工依治理 §2.4 的表：cycle 2 R1 record 已指明 owner（#16 Executor）與 required fix，屬「已指明 authority」，直接派工。
+
+**Correction 的界限**（都是既有規則或既有 routing 的重述，不是新要求）：
+
+1. **聚焦**：以 cycle 2 R1 record 中 C2R1-F1、C2R1-F2 的 required fix 為範圍，不夾帶無關的範圍或重新設計，並提供可驗證的 closure 與回歸證據（治理 §4.4）。R2-F1 的回歸測試（`test_r2_f1_*`）與 R1-F1 的回歸測試（`test_r1_f1_*`）保留並通過。
+2. **檔案**：限於 #16 自己的 routing 模組（`valhalla.py`、`adoption.py`、`source.py`；`http_transport.py` 與 F1／F2 無關）、#16 的測試檔（`tests/test_routing_engine.py`，必要時 `tests/test_routing_transport.py`）與 worklog。
+3. **已結案 Ticket 與受保護的檔案**：`canonical.py`、`request_key.py`、`snapshot.py`、`store.py`、`target_gpx.py`、`routing/__init__.py`、`contracts/`、`ingest/`、`tests/routing_synthetic.py`、`tests/test_routing_snapshot.py`、`tests/test_routing_store.py`、`tests/test_target_gpx.py`、`pyproject.toml`。若 correction 需要改動其中任何一個（例如 C2R1-F2 牽涉 `build_snapshot`／`canonical_bytes` 的行為），Executor 停止並 route 至 Design Authority，由 DA 判斷是否在 #16 的範圍內、以及對已結案 Ticket（#14、#15、R1-1）的影響（先例：`decision-20261118-issue16-c161.md` 第 2.2、2.4、10 節）。Executor 不自行修改。
+4. **語義**：C2R1-F2 中狀態回應 `version` 的處置等契約沒有涵蓋的語義，依 cycle 2 R1 record 的 required fix，停止並依治理 §2.4 route 至 Design Authority。
+5. **C2R1-F3**（Low，DA routing）不屬這次 correction；Design Authority 作成決定之前不實作。
+6. **C2R1-F4**（Low，non-blocking）：Reviewer 的 disposition（owner #16 Executor，隨 C2R1-F1 處理，不另立 work item）成立，本 FA 不覆寫。它在 #16 的既有契約內（CL-R1-17：快照的完整性問題是 `SnapshotIntegrityError`），與 C2R1-F1 是同一個解碼路徑，不是無關的範圍。所以可以在同一次 correction 中處理，但只限於與 C2R1-F1 共用的 shape 解碼與 `_from_snapshot` 的例外轉換，不得以 F4 的名義作其他改動。它不延長 cycle：R2 不必把它當作 blocking；沒有處理時，依 Reviewer 的 disposition 在 worklog 記下狀態。
+7. **其他**：不加入 xfail／skip；不發出網路請求；不讀 `data/`、不執行 `experiments/`（CL-R1-1、RB-7）；實作 commit 與 record commits 分開。
+
+**之後的流程**：cycle 2 R2 依治理 §4.4 核對 C2R1-F1、F2 是否解決、correction 是否引入回歸，以及 correction 直接產生或暴露的 blocking defects；不是第二次全面 audit。R2 仍 blocking 時，派 exactly one cycle 2 Alternate Review；仍未解時進 FA。R2 由哪個 mapping 執行，依 Bindings §3.1、§3.3 解析，不在本 addendum 的範圍。
+
+### A.4 問題 2：本 FA 對「C2R1-F1 不是 R2-F1 的 root cause」沒有異議
+
+本 ruling 第 3.3 節把進展限制所指的 root cause 界定為「`adoption.py` 對引擎回應數值欄位（`trip.summary.length`、`trip.summary.time`、`edges[n].length`）的讀取與檢查，對合法的 JSON 數值拋出未捕捉的例外」，已知機制是 `_real` 的 `math.isfinite`，並寫明 cycle 2 的 findings 是否屬此 root cause 由 cycle 2 的 Reviewer 判斷。Cycle 2 R1 的判斷（C2R1-F1、F2 都不是）與這個定義一致：
+
+1. **欄位與位置不同。** C2R1-F1 是字串欄位 `trip.legs[0].shape`，溢位發生在 `valhalla.py:233` 的 polyline 解碼，不經過 `_real`，也不在三個數值欄位之列（A.2）。
+2. **它不在 rework 的範圍內。** 第 3.2 節的封閉清單不含 `valhalla.py`，R2-F1 的 rework 不可能、也不被允許修正它。治理 §4.5 的進展限制針對的是「經過新 cycle 的 rework 之後仍未解」的 root cause，用來判斷它已不是 rework 可解的 implementation defect。把一個從未進入過任何 rework 範圍的缺陷算作同一 root cause，不符合這個用意。Profile 的 E-FA (M2) 也寫「同一 root cause 在新 cycle **再次**進入 Final Adjudication」。
+3. **機制相近，如實記下。** 兩者都是「無上限的 Python `int` 轉成浮點數時溢位」。這只是同類機制，不是同一 root cause。C2R1-F1 自 `7cb4b0c` 起存在，cycle 1 的 R1、R2、Alternate 與本 FA 都沒有發現；它由 cycle 2 的完整 R1 發現，正是治理 §4.5「新 cycle 從 R1 開始」所要求的完整 audit 的結果。
+4. **C2R1-F2**（孤立 surrogate 使 `build_snapshot` 拋 `SnapshotValidationError`）的機制是字串編碼，與 R2-F1 無關；本 FA 同樣沒有異議。
+
+**對 cycle 3 限制的影響：**
+- 第 3.3 節的 cycle 3 限制只綁定 R2-F1 的 root cause。Cycle 2 R1 記錄 R2-F1 已解決、沒有再出現；本 FA 不確認也不覆寫這個 Reviewer 結論，cycle 2 R2 依 §4.4 核對 correction 是否使它回歸。若 R2-F1 的 root cause 在 cycle 2 的 R2 之後再次出現而未解，第 3.3 節的限制照常適用。
+- C2R1-F1、F2 是 cycle 2 才提出、尚未進入過 FA 的 findings，第 3.3 節的限制不適用於它們。若它們在 cycle 2 的 Alternate Review 之後仍未解，屆時是它們第一次進入 FA，由該次 FA 依治理 §4.5 決定處置（包括是否授權指明實質改變的新 cycle）；此時 E-FA (M2) 不因它們而成立。本 addendum 不預先決定該次裁決。
+
+### A.5 本 addendum 沒有做的事
+
+- 沒有改變上文第 1～8 節的任何裁決；第 3.2 節的封閉清單對 R2-F1 rework 的約束照舊。
+- 沒有判斷 C2R1-F1～F4 的有效性、severity、blocking 或 disposition（Reviewer 的權限）；沒有判斷 R2-F1 是否 closure。
+- 沒有把任何 gate 標為 PASS；沒有指定修正的做法；沒有授權新 cycle；沒有處理 C2R1-F3 的語義（Design Authority）。
+
+### A.6 下一步
+
+1. **Orchestrator**：核對本段工作的 binding（Bindings §3.6），記入 run record，並原樣 commit 本 addendum。
+2. **Orchestrator → #16 Executor**（同一 worklog identity）：派 C2R1-F1、C2R1-F2 的 cycle 2 targeted correction（C2R1-F4 依 Reviewer 的 disposition），派工內容引用 cycle 2 R1 record 與本 addendum A.3。
+3. **Orchestrator → Design Authority**：C2R1-F3；以及 Executor 依 A.3 第 3、4 項回報的問題（若有）。
+4. **Orchestrator → Primary Reviewer**：correction 完成後派 cycle 2 R2。
+
+### A.7 執行紀錄
+
+| 指令／動作 | 結果 |
+| --- | --- |
+| `git rev-parse HEAD`、`git log --oneline e1e7d32..HEAD`、`git diff --stat e1e7d32..HEAD`（主 checkout） | `f2728d8`；8 個 commits；產品與測試的改動只有 `022f629` 的 `adoption.py`、`tests/test_routing_engine.py` |
+| `sha256sum` 本 ruling（addendum 之前）與 `issue-16-c2-r1.md` | `b7c0fc24…cbf50aae`（與事件 96、commit `d9061c5` 相同）；`5a894399…6e51d92`（與事件 100 相同） |
+| `git diff --stat 0799682 fb6210d -- src tests`；`git diff --name-only fb6210d f2728d8`；`git log … bc7024b..f2728d8 -- src/moto_copilot/routing/__init__.py` | A.2 表頭；`__init__.py` 只在 `7cb4b0c` 改過 |
+| `git show fb6210d:src/moto_copilot/routing/valhalla.py`（第 205～237 行）、`git show fb6210d:src/moto_copilot/routing/adoption.py`（第 115～132、236～250 行） | A.2 |
+| Worktree `cx16r2`：stdin 探測 `decode_polyline6` 的三個合成字串（`-B`、`PYTHONDONTWRITEBYTECODE=1`、socket 封鎖） | A.2；`git status --porcelain` 前後都只有 `?? docs/governance/records/audit/issue-16-c1-r2.md` |
+| 閱讀 | `issue-16-c2-r1.md` 全文；run record 事件 96～100 |
+
+沒有讀取、列出或搜尋 `data/`；沒有讀 `.env`；沒有讀取或執行 `experiments/`；沒有網路請求；沒有讀取派工範圍以外的 worktree（`cl16c2r1` 沒有開啟）；沒有修改受審檔案或其他紀錄；沒有 stage 或 commit。
+
+Addendum A: 封閉檔案清單只約束 R2-F1 的 rework；C2R1-F1、F2（與依 Reviewer disposition 的 F4）的 cycle 2 targeted correction 依治理 §4.4 進行、之後進 cycle 2 R2，不需要另一份 ruling；修改已結案 Ticket 的檔案或需要新語義時 route 至 DA。本 FA 對 C2R1-F1（及 F2）不是 R2-F1 root cause 的判斷沒有異議；第 3.3 節的 cycle 3 限制只綁定 R2-F1 的 root cause。
