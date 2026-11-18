@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | SPEC-R1 Spec Integration Audit cycle 1 R1（`docs/governance/records/audit/spec-SPEC-R1-c1-r1.md`）的 blocking finding **SIA-R1-F1** 的 targeted correction；OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成，待 SIA cycle 1 R2。** 新增的整合測試在 `4cbc71b`；pytest `2244 passed`；contracts CLI exit 0。Closure 由 SIA 的 R2 與 Orchestrator 判定，本 worklog 不宣告 closure |
+| 狀態 | **SIA cycle 1 R2 PASS（SIA-R1-F1 RESOLVED）；DA phase acceptance ACCEPT（第 9 節）。** 以下為先前狀態：**Executor 工作完成，待 SIA cycle 1 R2。** 新增的整合測試在 `4cbc71b`；pytest `2244 passed`；contracts CLI exit 0。Closure 由 SIA 的 R2 與 Orchestrator 判定，本 worklog 不宣告 closure |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；派工時的 HEAD `c2cd52d`（`804362d` 之後的 SIA R1 record commit）；implementation（測試）commit **`4cbc71bdc63f63e80a6295ada32b67ce2c5e5e77`**（`4cbc71b`）。worklog 在另一個 record-only commit |
 | 日期 | 2026-11-18 |
 
@@ -144,4 +144,39 @@ data contracts v0.3: tests\fixtures\contract_v02\mock_dataset.json
 ## 8. Remaining work
 
 1. Orchestrator 核對本 Executor 的 binding，派 SIA cycle 1 R2（受審 subject 以 `4cbc71b` 之後的 HEAD 為準）。
-2. 不在本次：SIA-R1-N1 的補登（Orchestrator／DA）；record 中 tracked items 表的各項沿用各自的 owner（TI-C13-2、RV-6～RV-14、TI-C14-1、TI-C14-5、TI-C15-1、TI-C16-2、TI-C16-3、TI-C165-1、TI-C2R1F3-1 屬 Design Authority；NV-1、NV-PRIVATE 屬 acceptor；NV-PY313／NV-PY、NV-SYMLINK 由 Orchestrator 安排、契約 scope 屬 DA）。真實請求與私有資料下的行為維持 NOT RUN／NOT VERIFIED；本測試只用合成資料，不把它們記為已涵蓋。
+2. **〔已被第 9.2 節更正：本句中「SIA-R1-N1 的補登」被寫成尚未完成，但它已記入 run record 事件 111。〕** 原文：「不在本次：SIA-R1-N1 的補登（Orchestrator／DA）；」其餘：record 中 tracked items 表的各項沿用各自的 owner（TI-C13-2、RV-6～RV-14、TI-C14-1、TI-C14-5、TI-C15-1、TI-C16-2、TI-C16-3、TI-C165-1、TI-C2R1F3-1 屬 Design Authority；NV-1、NV-PRIVATE 屬 acceptor；NV-PY313／NV-PY、NV-SYMLINK 由 Orchestrator 安排、契約 scope 屬 DA）。真實請求與私有資料下的行為維持 NOT RUN／NOT VERIFIED；本測試只用合成資料，不把它們記為已涵蓋。
+
+## 9. 結案紀錄（WL-R1；record-only）
+
+本節只整理紀錄，沒有修改程式、測試或其他 record。
+
+### 9.1 引用的 records
+
+| Record | 結果 | SHA-256（前 16 碼，本 Executor 重算） |
+| --- | --- | --- |
+| SPEC-R1 SIA cycle 1 R2：`docs/governance/records/audit/spec-SPEC-R1-c1-r2.md` | `Verdict: PASS`；**SIA-R1-F1 RESOLVED**（本 worklog 的整合測試 `4cbc71b`）；SIA-R1-N1 的紀錄缺漏 RESOLVED（平台 verification 本身仍 NOT RUN）；SIA-R1-G01～G13 依原 disposition 保留 OPEN、交 DA | `38d205a091853c65` |
+| DA phase acceptance：`docs/governance/records/decisions/decision-20261118-spec-r1-phase-acceptance.md` | **ACCEPT**（SPEC-R1 v1 的 phase acceptance，限該 record 第 6 節的分配範圍與第 7～9 節的限制）；不是 OC-1 completion、run completion 或 release authorization | `975328e928af5dfb` |
+
+### 9.2 更正：SIA-R1-N1 的補登
+
+第 8 節第 2 項把「SIA-R1-N1 的補登」寫成不在本次而尚未完成。實際上它已由 Orchestrator 記入 run record（`docs/governance/records/run/run-20261117-oc1-run2.md`）**事件 111**：#14 的 NV-PY313 與 #16 的 Python 3.13 以後 NOT RUN 合併為同一個 tracked item，owner＝Orchestrator，required authority＝Design Authority。SIA R2 據此把 SIA-R1-N1 記為 RESOLVED。原文已在第 8 節標為被本節更正；平台的實際驗證仍 NOT RUN。
+
+### 9.3 SIA-R1-G01～G13
+
+SIA R1 記錄的十三項 OC-1 分配缺口，DA 的逐項 determination 在 phase acceptance record **第 10 節**（第 10.2 節逐項、第 10.3 節 G-* 狀態總表）；本 worklog 不重述內容。
+
+| ID | 位置 |
+| --- | --- |
+| SIA-R1-G01 | phase acceptance record 第 10 節 |
+| SIA-R1-G02 | 同上 |
+| SIA-R1-G03 | 同上 |
+| SIA-R1-G04 | 同上 |
+| SIA-R1-G05 | 同上 |
+| SIA-R1-G06 | 同上 |
+| SIA-R1-G07 | 同上 |
+| SIA-R1-G08 | 同上 |
+| SIA-R1-G09 | 同上 |
+| SIA-R1-G10 | 同上 |
+| SIA-R1-G11 | 同上 |
+| SIA-R1-G12 | 同上 |
+| SIA-R1-G13 | 同上 |
