@@ -3,9 +3,18 @@
 - Snapshots (SPEC-R1 R1-2; SPEC-001 §2, 4.14, 7.11 items 1, 3, 4): the snapshot model, the
   canonical hashing, write-once storage and selection.
 - Target route GPX (SPEC-R1 R1-3; SPEC-001 7.11 item 2; CL-R1-10): `target_gpx`.
-
-Calling the routing engine, the freeway check and the offsets are not here (R1-4).
+- Routing engine (SPEC-R1 R1-4; SPEC-001 7.11 items 3, 5-8): the client of the public Valhalla
+  server with a replaceable transport (`valhalla`), the adoption checks of one direction
+  (`adoption`), and the shared route interface `get_route` for both route sources (`source`).
 """
+from .adoption import (
+    FREEWAY_CHECK_METHOD,
+    HIGHWAY_IN_ROUTE,
+    ROUTING_UNAVAILABLE,
+    DirectionOutcome,
+    decide_code,
+    evaluate_direction,
+)
 from .canonical import CanonicalError, canonical_bytes, canonical_json, sha256_hex
 from .request_key import RequestKeyError, place_fingerprint, request_key, request_key_content
 from .snapshot import (
@@ -16,6 +25,15 @@ from .snapshot import (
     hash_scope,
     route_id_for,
     validate_snapshot,
+)
+from .source import (
+    ENGINE_VERSION_UNREPORTED,
+    AdoptedLeg,
+    AdoptedRoute,
+    EngineRouteRequest,
+    RouteFailure,
+    TargetGpxRequest,
+    get_route,
 )
 from .store import (
     REUSE_WINDOW,
@@ -47,13 +65,40 @@ from .target_gpx import (
     target_gpx_route_id,
     turnaround_m_from_km,
 )
+from .valhalla import (
+    ENGINE_NAME,
+    USER_AGENT,
+    VALHALLA_ENDPOINT,
+    EngineReply,
+    HttpResponse,
+    PolylineError,
+    Position,
+    TransportError,
+    ValhallaClient,
+    decode_polyline6,
+    routing_params,
+)
 
 __all__ = [
+    "AdoptedLeg",
+    "AdoptedRoute",
     "CanonicalError",
+    "DirectionOutcome",
+    "ENGINE_NAME",
+    "ENGINE_VERSION_UNREPORTED",
+    "EngineReply",
+    "EngineRouteRequest",
+    "FREEWAY_CHECK_METHOD",
     "FrozenEntry",
+    "HIGHWAY_IN_ROUTE",
+    "HttpResponse",
+    "PolylineError",
+    "Position",
     "PutResult",
     "REUSE_WINDOW",
+    "ROUTING_UNAVAILABLE",
     "RequestKeyError",
+    "RouteFailure",
     "SNAPSHOT_MISSING",
     "SnapshotConflictError",
     "SnapshotIntegrityError",
@@ -67,21 +112,31 @@ __all__ = [
     "TARGET_GPX_NOT_ROUND_TRIP",
     "TargetGpxError",
     "TargetGpxLeg",
+    "TargetGpxRequest",
     "TargetGpxRoute",
+    "TransportError",
     "TripTypeRequiredError",
+    "USER_AGENT",
+    "VALHALLA_ENDPOINT",
+    "ValhallaClient",
     "acquired_at",
     "build_snapshot",
     "canonical_bytes",
     "canonical_json",
     "compute_snapshot_id",
+    "decide_code",
+    "decode_polyline6",
     "detect_out_and_back",
+    "evaluate_direction",
     "find_reusable",
+    "get_route",
     "hash_scope",
     "is_compatible",
     "place_fingerprint",
     "request_key",
     "request_key_content",
     "route_id_for",
+    "routing_params",
     "select_snapshot_mode",
     "select_strict",
     "sha256_hex",
