@@ -36,7 +36,7 @@
 4. 新建 `src/moto_copilot/routing/adoption.py`（範圍 (b)、(c)、(d)）：`evaluate_direction`（一個方向的路線請求、道路屬性查詢與全部檢查，回傳 `DirectionOutcome`；只有通過時才組成 RouteLeg）、`decide_code`（CL-R1-8）、`offsets`／`offset_reasons`／`nearest_on_shape`（CL-R1-7）、`FREEWAY_CHECK_METHOD`。
 5. 新建 `src/moto_copilot/routing/source.py`（範圍 (e)、(f)）：`get_route(request, *, store, client, snapshot_mode, frozen_entries, now)`，對 `EngineRouteRequest` 與 `TargetGpxRequest` 回傳 `AdoptedRoute` 或 `RouteFailure`。
 6. `src/moto_copilot/routing/__init__.py`：只加上新模組的 import、`__all__` 的新名稱與說明文字；#14、#15 既有的匯出與行為不變。
-7. 新建 `tests/test_routing_engine.py`（77 個測試函式，165 個案例）：以 `FakeEngine` 替身取代傳輸層，autouse fixture 封鎖 socket。
+7. 新建 `tests/test_routing_engine.py`（76 個測試函式，165 個案例）：以 `FakeEngine` 替身取代傳輸層，autouse fixture 封鎖 socket。
 8. 自我驗證：全套 pytest、23 個突變檢查（第 6 節 E-6）、子行程中的環境變數測試、`git ls-files` 檢查。
 9. 依 SA-1 在 topic branch 作本機 commit `7cb4b0c`；commit 前以 `git diff --cached --name-only` 確認暫存的只有上列 5 個檔案，不含 `.env`、GPX、FIT、`data/` 或測試產生的暫存檔。
 10. 沒有 push、沒有開 PR、沒有碰 GitHub；沒有讀取、列出或搜尋 `data/`；沒有使用 `git status --ignored`；沒有讀 `.env`；沒有執行 `experiments/` 下的任何腳本；沒有發出任何網路請求。
