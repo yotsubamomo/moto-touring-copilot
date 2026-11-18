@@ -29,8 +29,8 @@ DEFAULT_PLACES = 6
 # digits (ROUND_DOWN on the shortest decimal form) is the reading under which S56 holds for
 # every pair of values: two values that differ in the sixth decimal always hash differently,
 # and two that differ only from the seventh decimal on always hash the same. Rounding to nearest
-# breaks both halves near a rounding boundary (e.g. 0.1234561 and 0.1234569). This choice is
-# reported for Design Authority confirmation (worklog issue-14, C-14-1).
+# breaks both halves near a rounding boundary (e.g. 0.1234561 and 0.1234569). Confirmed by the
+# Design Authority as CL-R1-14 (decision-20261118-issue14-c141).
 _ROUNDING = decimal.ROUND_DOWN
 
 # Enough precision to quantize any finite float (up to about 1.8e308) to six places.

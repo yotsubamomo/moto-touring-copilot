@@ -229,6 +229,28 @@ def test_the_30_day_window_is_30_times_24_hours(store):
     assert find_reusable(store, edge["request_key"], syn.METHOD, now=NOW + timedelta(seconds=1)) is None
 
 
+@pytest.mark.parametrize("ahead", [timedelta(seconds=1), timedelta(days=1)])
+def test_cl_r1_16_a_snapshot_acquired_after_now_is_not_reused(store, ahead):
+    future = syn.snapshot("round_trip", fetched_at=(NOW + ahead).isoformat())
+    store.put(future)
+    assert find_reusable(store, future["request_key"], syn.METHOD, now=NOW) is None
+    # Plain Snapshot Mode has no age limit and still selects it.
+    assert select_snapshot_mode(store, future["request_key"], syn.METHOD).snapshot == future
+
+
+def test_cl_r1_16_a_snapshot_acquired_exactly_now_is_reused(store):
+    snap = syn.snapshot(fetched_at=NOW.isoformat())
+    store.put(snap)
+    assert find_reusable(store, snap["request_key"], syn.METHOD, now=NOW) == snap
+
+
+def test_cl_r1_16_one_leg_after_now_makes_the_snapshot_not_reusable(store):
+    legs = [syn.leg("outbound", fetched_at=at(timedelta(days=1))), syn.leg("return", fetched_at=(NOW + timedelta(seconds=1)).isoformat())]
+    snap = syn.snapshot("round_trip", legs=legs)
+    store.put(snap)
+    assert find_reusable(store, snap["request_key"], syn.METHOD, now=NOW) is None
+
+
 def test_the_acquisition_time_is_the_latest_fetched_at_of_the_legs(store):
     legs = [syn.leg("outbound", fetched_at=at(timedelta(days=31))), syn.leg("return", fetched_at=at(timedelta(days=29)))]
     snap = syn.snapshot("round_trip", legs=legs)

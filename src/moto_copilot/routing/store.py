@@ -230,8 +230,7 @@ def _latest(candidates: list[dict]) -> dict | None:
     """The snapshot with the latest acquisition time.
 
     Ties (equal acquisition times) go to the smallest `snapshot_id`, so the result never depends
-    on the directory order. The tie rule is not in SPEC-001; it is reported for Design Authority
-    confirmation (worklog issue-14, C-14-2).
+    on the directory order (CL-R1-15, decision-20261118-issue14-c141).
     """
     if not candidates:
         return None
@@ -254,8 +253,9 @@ def find_reusable(
 ) -> dict | None:
     """Normal mode: the latest compatible snapshot acquired within 30 days, else None.
 
-    "Within 30 days" is now - acquisition time <= 30 x 24 hours (CL-R1-3). `now` defaults to the
-    current time in +08:00 and must be timezone-aware.
+    "Within 30 days" is 0 <= now - acquisition time <= 30 x 24 hours (CL-R1-3, CL-R1-16 in
+    decision-20261118-issue14-c141): a snapshot whose acquisition time is later than `now` is not
+    reused. `now` defaults to the current time in +08:00 and must be timezone-aware.
     """
     _check_request_key(request_key)
     _check_method(current_method)
@@ -263,7 +263,10 @@ def find_reusable(
         now = datetime.now(TAIPEI)
     if now.tzinfo is None or now.utcoffset() is None:
         raise ValueError("now must be timezone-aware")
-    fresh = [s for s in _matching(store, request_key, current_method) if now - acquired_at(s) <= REUSE_WINDOW]
+    fresh = [
+        s for s in _matching(store, request_key, current_method)
+        if timedelta(0) <= now - acquired_at(s) <= REUSE_WINDOW
+    ]
     return _latest(fresh)
 
 
