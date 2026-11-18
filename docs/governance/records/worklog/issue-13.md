@@ -4,8 +4,8 @@
 | --- | --- |
 | Work item | GitHub Issue #13（SPEC-R1 R1-1），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Executor 工作完成，待 R1。** C-13-1 已由 Design Authority 裁決（`decision-20261118-issue13-c131.md`，CL-R1-12、CL-R1-13），依該 record 第 5 節修正 `build_route`（`6ec1903`），pytest `875 passed`（第 6 節 V-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：`153adca` 時為 NEEDS_DA（`1 failed, 874 passed`）→ DA 裁決 → `6ec1903` |
-| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `1fd1de3585ea23f80842ac3276fe9305369b51e3`（`1fd1de3`，派工時的 HEAD，含 #10 的最終 commit 與 `_whole_count`）；實作 commit **`153adcadfdf02f3697ba47f8912ac444c1a3f8d3`**（`153adca`）；CL-R1-12 的實作 commit **`6ec1903632a1fbff90405de2627eb9dee5d51950`**（`6ec1903`，父 commit 是 DA record 的 `5c2e0e8`），是**最終 implementation subject**。worklog 在另外的 record-only commits |
+| 狀態 | **R1 BLOCKING（R1-F1）的 targeted correction 已完成（`3c065f8`），待 R2（第 9 節）。** 以下為先前狀態：**Executor 工作完成，待 R1。** C-13-1 已由 Design Authority 裁決（`decision-20261118-issue13-c131.md`，CL-R1-12、CL-R1-13），依該 record 第 5 節修正 `build_route`（`6ec1903`），pytest `875 passed`（第 6 節 V-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。歷程：`153adca` 時為 NEEDS_DA（`1 failed, 874 passed`）→ DA 裁決 → `6ec1903` |
+| Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `1fd1de3585ea23f80842ac3276fe9305369b51e3`（`1fd1de3`，派工時的 HEAD，含 #10 的最終 commit 與 `_whole_count`）；實作 commit **`153adcadfdf02f3697ba47f8912ac444c1a3f8d3`**（`153adca`）；CL-R1-12 的實作 commit **`6ec1903632a1fbff90405de2627eb9dee5d51950`**（`6ec1903`，父 commit 是 DA record 的 `5c2e0e8`），R1 的受審 subject。R1-F1 的 correction commit **`3c065f8d9d433aa00253078b209dd025d154df2b`**（`3c065f8`，父 commit 是 R1 record 的 `e5dfe5e`），是**最終 implementation subject**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
 ## 1. Contract reference
@@ -253,7 +253,7 @@ R1-1 標為「不涉及」，CL-R1-12 沒有改變這個標示。`catalog.py` �
 
 ## 7. Audit status
 
-Formal：本 Ticket 的 independent audit（R1）**required**（Bindings 第 5 節）。尚未派工；派工由 Orchestrator 依 Bindings 第 3.3、3.7 節進行，R1 的 pack 須包含 `decision-20261118-issue13-c131.md`，審查範圍涵蓋 `catalog.py` 的 diff 與 V-1～V-7（該 record 第 5.2 節）。最終 implementation subject 是 `6ec1903`。本 worklog 的自我驗證（含突變檢查）不是 audit。
+Formal：本 Ticket 的 independent audit **required**（Bindings 第 5 節）。**R1 已完成：BLOCKING**（`docs/governance/records/audit/issue-13-c1-r1.md`，受審 subject `6ec1903`，finding R1-F1 Medium／blocking），correction 見第 9 節，待 Orchestrator 派 R2。以下為 R1 前的狀態：R1 尚未派工；派工由 Orchestrator 依 Bindings 第 3.3、3.7 節進行，R1 的 pack 須包含 `decision-20261118-issue13-c131.md`，審查範圍涵蓋 `catalog.py` 的 diff 與 V-1～V-7（該 record 第 5.2 節）。最終 implementation subject 是 `6ec1903`。本 worklog 的自我驗證（含突變檢查）不是 audit。
 
 ## 8. Remaining work and concerns
 
@@ -266,4 +266,107 @@ Formal：本 Ticket 的 independent audit（R1）**required**（Bindings 第 5 �
 | C-13-5 | `README.md`、`DESIGN.md` §10 的指令沒有改；CLI 的輸出第一行改為 `data contracts v0.3` | 無需處理（記錄） | 記錄 |
 | C-13-6 | `experiments/` 中呼叫 `build_route` 的腳本，路線紀錄多出三個鍵後的行為 | 之後執行它們的 work item | **NOT VERIFIED**（DA record §6；本 run 不執行 `experiments/`） |
 
-**剩餘工作**：Executor 端沒有。下一步由 Orchestrator 對最終 subject `6ec1903` 派 R1；R1 的 findings 由 Executor 以 targeted correction 處理。TI-C13-2、RV-6、RV-7 是 Design Authority 的 tracked items，不在 #13。
+**剩餘工作**（R1 前的狀態，已由第 9 節取代）：Executor 端沒有。下一步由 Orchestrator 對最終 subject `6ec1903` 派 R1；R1 的 findings 由 Executor 以 targeted correction 處理。TI-C13-2、RV-6、RV-7 是 Design Authority 的 tracked items，不在 #13。
+
+## 9. R1-F1 的 targeted correction（cycle 1）
+
+### 9.1 依據與範圍
+
+- Finding：`docs/governance/records/audit/issue-13-c1-r1.md` **R1-F1**（Medium／blocking，owner Issue #13 Executor）。受審 subject `6ec1903`；派工時 HEAD `e5dfe5e`（R1 record 的 commit）。
+- 缺陷：`_route_source_errors` 以 `source not in _REFERENCES_SET` 對任意 JSON 值做 dict membership；`[]`、`{}`、`["trip"]` 不可 hash，拋出 `TypeError`，使 `validate_route_catalog` 與 `validate_dataset` 中止、不回傳 report。修正前以同樣的探測重現（`[]` → `TypeError: unhashable type: 'list'`，`{}` → `'dict'`）。
+- 範圍：只修 R1-F1 的 required fix，不夾帶其他變更（治理 §4.4）。
+
+### 9.2 修正（`3c065f8`）
+
+- `src/moto_copilot/contracts/validate.py` `_route_source_errors`：條件改為 `if not isinstance(source, str) or source not in _REFERENCES_SET: return []`，加一行註解引用 R1-F1。不是字串或不是三個合法值之一的 `route_source` 只由 schema 的 enum 回報（`routes[i] schema: route_source: ... is not one of ['trip', 'routing', 'target_gpx']`），來源的交叉檢查（不變條件 5、ID 格式一致性、`RS-`／`SN-` 十六進位）跳過。沒有放寬 enum，沒有吞掉任何例外。合法來源、不變條件 1–5、AC (2)、(3) 的檢查與 CL-R1-12 的三鍵修正都不變。
+- `tests/test_contracts.py`：新增 `test_a_route_source_of_another_json_type_is_reported_not_raised`（4 例：`[]`、`{}`、`["trip"]`、`{"trip": "trip"}`），每例先作 JSON round trip，斷言 (i) `validate_route_catalog` 回傳 `routes[0] schema: route_source` 且沒有該路線的交叉檢查訊息；(ii) `validate_dataset` 回傳四份契約的 report，`route_catalog` 含同一 schema 違反，其他三份為空。沒有修改任何既有測試。
+- `git diff --stat e5dfe5e 3c065f8`：`validate.py` 3 行（+2／−1）、`tests/test_contracts.py` +15；沒有其他檔案。
+
+### 9.3 同類模式的盤點
+
+R1-F1 要求檢查本 Ticket 新增的其他 helper：
+
+| Helper／檢查（本 Ticket 新增） | 對任意 JSON 值的處理 | 結果 |
+| --- | --- | --- |
+| `_route_source_errors` 的 `source not in _REFERENCES_SET` | dict membership | **R1-F1，已修** |
+| `_REFERENCES_SET[source]`、`_ID_FORMAT[source]` | 只在上面的守衛之後（`source` 已是合法字串） | 安全 |
+| `_matches` | 先 `isinstance(value, str)` | 安全 |
+| `_source_of_route_id` | 只在 `_matches(ROUTE_ID_PATTERN, rid)` 之後呼叫 | 安全 |
+| `checkpoint_id` 前綴（`cid.rpartition`） | 只在 `cid`、`rid` 都通過 `_matches` 之後 | 安全 |
+| 不變條件 4 的 `trip_type == "round_trip"`、`kind == "turnaround"` | 相等比較，不需 hash | 安全 |
+| 不變條件 2、4 的 `_whole_count` | `isinstance` 判斷 | 安全 |
+
+以合成 fixture 的副本逐一把新增或相關欄位設為 `[]`、`{}`、`["trip"]`（經 JSON round trip）呼叫 `validate_dataset`：修正前只有 `route_source` 屬本 Ticket 的 helper 拋錯；`snapshot_id`、`trip_type`、`source_trip_id`、`n_segments`、`kind`、`after_seg_count` 都正常回傳 report。
+
+**範圍外的既有缺陷（C-13-7，不在本 correction）**：同一探測中，`route_id`（路線、檢查點、衍生路段、ETA 表頭）與 `checkpoint_id` 為 `[]`／`{}` 時也拋 `TypeError`。在 BASE `1fd1de3` 的 `src/` 以 `git archive` 匯出到 scratchpad 後重跑同樣的探測，結果相同，所以它來自 v0.2 既有的主鍵重複檢查（`_duplicates` 的 set）與 `route_ids` 的 set／dict，不是本 Ticket 新增的 helper。依治理 §4.4 與 R1-F1「不要求全面重寫舊 validator」，沒有修改；列為 C-13-7。
+
+### 9.4 驗證（最終 subject `3c065f8`，`git status --short` 為空）
+
+`PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m pytest -q`，exit code **0**：
+
+```text
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 49%]
+........................................................................ [ 57%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+........................................................................ [ 81%]
+........................................................................ [ 90%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+879 passed in 28.21s
+```
+
+`PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m pytest -q -rxX`，exit code **0**：
+
+```text
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 49%]
+........................................................................ [ 57%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+........................................................................ [ 81%]
+........................................................................ [ 90%]
+........................................................................ [ 98%]
+...............                                                          [100%]
+879 passed in 27.64s
+```
+
+875 → 879：新增的 4 個 R1-F1 案例。摘要只有 `passed`，沒有 xfail／xpass 的列。
+
+`PYTHONPATH=src .venv/Scripts/python.exe -m moto_copilot.contracts tests/fixtures/contract_v02/mock_dataset.json`，exit code 0：
+
+```text
+data contracts v0.3: tests\fixtures\contract_v02\mock_dataset.json
+  derived_segments: OK
+  route_catalog: OK
+  pace_table: OK
+  eta_output: OK
+```
+
+- `grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。
+- 突變檢查 M10：把守衛換回 `if source not in _REFERENCES_SET:` → 新增的 4 例全部失敗（`4 failed`）；還原後通過。
+- `git ls-files | grep -iE '(^data/|\.gpx$|\.fit$|(^|/)\.env)'`：沒有輸出。
+- E-3、E-4、E-6 不變：新增案例是 fixture 副本，沒有座標或私有資料；沒有網路；高風險類別仍「不涉及」（修正只讓錯誤型別回報為違反，不涉及 H-1～H-4 的路徑）。
+- 沒有讀取、列出或搜尋 `data/`，沒有讀 `.env`，沒有執行 `experiments/`；搜尋只在允許的路徑。
+
+### 9.5 Binding
+
+同一個 agent（`a95eaf00e5bb8b468`，`gov-executor`）以 SendMessage 續派。Executor 自行觀測（`3c065f8` 之後、寫本節之前）：(`claude-opus-5-5`, `high`) 125 則，集合只有一個元素。這是自我觀測，不是派工者的核對。
+
+### 9.6 Concerns 與剩餘工作
+
+| # | 內容 | 建議的 owner／authority | 狀態 |
+| --- | --- | --- | --- |
+| R1-F1 | 見 9.1–9.4 | Reviewer（R2 核對 closure） | Executor 已修正；closure 由 R2 判定，本 worklog 不宣告已解決 |
+| C-13-7 | v0.2 既有的 `route_id`、`checkpoint_id` 主鍵與集合檢查，對不可 hash 的值拋 `TypeError`（BASE `1fd1de3` 已存在）。不在 R1-1 新增的 helper，沒有修改 | Design Authority（是否列為 tracked item 或納入之後的 `contracts` 工作） | open |
+
+**剩餘工作**：Executor 端沒有。下一步由 Orchestrator 對 `3c065f8` 派 R2（治理 §4.4：R1-F1 是否解決、有沒有回歸、修正直接產生或暴露的 blocking defect）。
