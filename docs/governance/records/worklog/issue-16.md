@@ -4,7 +4,7 @@
 | --- | --- |
 | Work item | GitHub Issue #16（SPEC-R1 R1-4），OC-1 Formal run `run-20261117-oc1-run2` |
 | Lane | Formal（Spec＋Tickets＋Orchestrator） |
-| 狀態 | **Cycle 2 的 targeted correction 全部完成，待 cycle 2 R2**：C2R1-F1、F2（含狀態版本，CL-R1-29，`9cc566a`，第 14 節）、F4 與 CL-R1-28；pytest `2238 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 R1（`audit/issue-16-c2-r1.md`）BLOCKING 的 targeted correction 與 CL-R1-28 已完成（`a4f0cd9`、`ecddc57`，第 13 節），pytest `2220 passed`；C2R1-F2 中狀態回應 `version` 的處置回報 `NEEDS_DA`（C-16-5），其餘部分待 cycle 2 R2。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
+| 狀態 | **Cycle 2 R2 PASS（`audit/issue-16-c2-r2.md`，受審 subject `18a5c5c`），C2R1-F1～F4 RESOLVED，沒有未解 blocking finding；結案前的紀錄見第 15 節，仍有 tracked items 與 NOT RUN 項目。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 targeted correction 全部完成，待 cycle 2 R2**：C2R1-F1、F2（含狀態版本，CL-R1-29，`9cc566a`，第 14 節）、F4 與 CL-R1-28；pytest `2238 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 R1（`audit/issue-16-c2-r1.md`）BLOCKING 的 targeted correction 與 CL-R1-28 已完成（`a4f0cd9`、`ecddc57`，第 13 節），pytest `2220 passed`；C2R1-F2 中狀態回應 `version` 的處置回報 `NEEDS_DA`（C-16-5），其餘部分待 cycle 2 R2。** Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Cycle 2 的 rework 已完成（`022f629`，第 12 節），待 cycle 2 R1。** Cycle 1 以 Final Adjudication 結束（`ruling-20261118-issue16-c1.md`：R2-F1 targeted rework，授權 cycle 2）。pytest `2148 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**R1（`audit/issue-16-c1-r1.md`）BLOCKING 的 targeted correction 已完成（`65aa00c`，第 11 節），待 R2**：R1-F1 已修正，pytest `2015 passed`。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 工作完成，待 R1。** C-16-1～C-16-4 已由 `decision-20261118-issue16-c161.md` 裁決（CL-R1-25～CL-R1-27、TI-C16-3）；CL-R1-25（真實 HTTPS 傳輸層）與 CL-R1-27（道路屬性回應的警告）的修改在 `f6810d2`（第 10 節），pytest `1918 passed`。真實請求仍是 NOT RUN（NV-1）。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure。以下為先前狀態：**Executor 回報 `NEEDS_DA`。** 範圍 (a)～(f) 中不需要真實網路傳輸的部分全部完成，pytest `1843 passed`（第 6 節 E-1）。**C-16-1（blocking，範圍 (a) 的一部分）**：真實的 HTTP 傳輸層（實際把請求送到公開 Valhalla 伺服器的程式）沒有實作，因為 #14 的既有測試禁止 `routing/` 的任何模組 import 網路模組，而契約沒有寫它應該放在哪裡、或是否屬於本 Ticket；client 目前要求呼叫者傳入傳輸層。**C-16-2**：`map_data_date` 取自狀態回應的 `tileset_last_modified`，請 DA 確認這個讀法。Ticket closure 由 Orchestrator 依 orch-default §7 判定，本 worklog 不宣告 closure |
 | Subject | branch `oc1-run2-b1-ui0-r1-routing`；BASE `bc7024b`（含已結案的 #13、#14、#15）；實作 commit **`7cb4b0cabcccb6541f395f999fe5b43e1b905e91`**（`7cb4b0c`）。CL-R1-25、CL-R1-27 的修改 commit **`f6810d2607e2f78f19020cc0ef32307dda2b23dd`**（`f6810d2`，父 commit 是 DA record 的 `2c0f662`），是 #16 的 implementation subject（取代 `7cb4b0c`）。R1-F1 的 correction commit **`65aa00c01d5ddab9a2cbbb2618ff55d3b029667c`**（`65aa00c`，父 commit 是 R1 record 的 `90efe65`），是 #16 cycle 1 的最後 implementation subject。Cycle 2 的 rework commit **`022f629f7d60996b7360687490a019c68ae86dcd`**（`022f629`，父 commit 是 FA ruling 的 `d9061c5`），是 #16 cycle 2 R1 的受審 implementation subject。Cycle 2 的 targeted correction commit **`a4f0cd9cee4e577f4f9046db5b5df152dcfbde0b`**（`a4f0cd9`，C2R1-F1、F2、F4，父 commit 是 DA record 的 `b3b0c14`）與 CL-R1-28 commit **`ecddc57c0a3bd4dda94a62b3f5281ed70bb7068f`**（`ecddc57`，C2R1-F3）；`ecddc57` 之後，CL-R1-29 的 commit **`9cc566a14fa81324c4251ac266f789256f8921e4`**（`9cc566a`，C-16-5，父 commit 是 DA record 的 `25c77d9`）是 **#16 目前的最終 implementation subject（cycle 2 R2 的受審 subject）**。worklog 在另外的 record-only commits |
 | 日期 | 2026-11-18 |
 
@@ -813,3 +813,85 @@ Scratchpad 的 `mutate16d.py`（新）與 `mutate16b.py`（既有），每個突
 - C-16-5：**已依 CL-R1-29 處理**（第 13.8 節）。C2R1-F1、C2R1-F2（道路名稱與狀態版本）、C2R1-F4、CL-R1-28 的修改都已完成；最終 implementation subject 是 `9cc566a`。
 - 下一步：Orchestrator 核對本 Executor 的 binding，派 cycle 2 R2（受審 subject `9cc566a`；依治理 §4.4 核對 C2R1-F1、F2 是否解決與 correction 的回歸；CL-R1-28 依其 record 第 3.4 節的範圍）。
 - 不在本 Ticket：TI-C165-1、TI-C16-2、TI-C16-3、TI-C2R1F3-1（Design Authority）；NV-1 與真實請求（NOT RUN）；只在 Python 3.11.2 執行。
+
+## 15. 結案前的紀錄（cycle 2 R2 PASS 之後；record-only）
+
+本節只整理紀錄，沒有修改任何程式、測試、契約或其他 record。**Ticket closure 由 Orchestrator 依 orch-default §7 判定；本 worklog 不宣告 closure，也不代替 SPEC-R1 的 Spec Integration Audit、Design Authority phase acceptance、真實服務的驗收或任何 release authorization。**
+
+### 15.1 Audit 歷程（`docs/governance/records/audit/`、`docs/governance/records/decisions/`）
+
+| # | Record | 受審 subject | 結果 | Record 的 SHA-256（前 16 碼，本 Executor 重算） |
+| --- | --- | --- | --- | --- |
+| 1 | Cycle 1 R1：`audit/issue-16-c1-r1.md`（Codex） | `e1ef580` | `Verdict: BLOCKING`（R1-F1：非 200 回應在讀取國道訊號前離開）→ correction `65aa00c`（第 11 節） | `32d43f3a11e6e7fd` |
+| 2 | Cycle 1 R2：`audit/issue-16-c1-r2.md`（Codex） | `0799682` | `Verdict: BLOCKING`（R2-F1：`_real` 對超出浮點範圍的整數拋 `OverflowError`） | `a88e9ebec7d82137` |
+| 3 | Cycle 1 Alternate：`audit/issue-16-c1-alt.md`（`gov-alternate-reviewer`） | `0799682` | `VERDICT: UNRESOLVED (R2-F1)`；R1-F1 判為已解決 | `315457c7dcd6e50c` |
+| 4 | Final Adjudication：`decisions/ruling-20261118-issue16-c1.md` | `0799682` | R2-F1 targeted rework，授權 cycle 2（自 R1 起）；不 dismiss、不 defer、不交 DA → rework `022f629`（第 12 節）。**Addendum A**（同一檔末段）：第 3.2 節的封閉清單只約束 R2-F1 的 rework；cycle 2 的 targeted correction 依治理 §4.4 進行；C2R1-F1／F2 不是 R2-F1 的 root cause | — |
+| 5 | Cycle 2 R1：`audit/issue-16-c2-r1.md`（**Claude path**：Codex 當次 usage limit，依 Bindings 第 3.1 節 R-PR 替代為 `gov-primary-reviewer`，`diversity_lost` 記於 run record） | `fb6210d` | `Verdict: BLOCKING (C2R1-F1, C2R1-F2)`；C2R1-F3（Low，DA routing）、C2R1-F4（Low）；R2-F1、R1-F1 判為已解決 → correction `a4f0cd9`、`ecddc57`、`9cc566a`（第 13、14 節） | `5a8943995c16a586` |
+| 6 | Cycle 2 R2：`audit/issue-16-c2-r2.md` | `18a5c5c` | **`Verdict: PASS`**；C2R1-F1～F4 RESOLVED；沒有新的 finding | `6568f307af7e2eb9` |
+
+期間的 DA records（契約的 clarification，不是 audit）：`decision-20261118-issue16-c161.md`（CL-R1-25～27、TI-C16-2、TI-C16-3）、`decision-20261118-issue16-c2r1f3.md`（CL-R1-28、TI-C2R1F3-1）、`decision-20261118-issue16-c165.md`（CL-R1-29、TI-C165-1）。
+
+### 15.2 Subject
+
+- **最終受審 subject：`18a5c5c8fedd03c9f5428525090c9f1aee9a2edf`**（cycle 2 R2）。它相對最後一個 implementation commit `9cc566a` 只多 record-only commits（`git diff --name-only 9cc566a 988f1e4 -- src tests` 為空）。
+- **Implementation commits**（依序）：`7cb4b0c`（client、採用檢查、共用介面）、`f6810d2`（真實 HTTPS 傳輸層 CL-R1-25、CL-R1-27）、`65aa00c`（R1-F1）、`022f629`（R2-F1，cycle 2 rework）、`a4f0cd9`（C2R1-F1、F2 道路名稱、F4）、`ecddc57`（CL-R1-28）、`9cc566a`（CL-R1-29，C2R1-F2 狀態版本）。
+- BASE：`bc7024b`。
+
+### 15.3 E-1（本節撰寫時重跑；HEAD `988f1e4`，產品與測試等同 `9cc566a`）
+
+`.venv/Scripts/python.exe -m pytest -q`，工作目錄乾淨，exit 0，完整輸出：
+
+```text
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 45%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 93%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+......                                                                   [100%]
+2238 passed in 42.31s
+```
+
+`grep -rnE "xfail|pytest\.mark\.skip" tests/`：0 筆。測試後 `git status --short` 為空。
+
+### 15.4 Tracked items 與未驗證項目（都不在本 Ticket 內完成）
+
+| ID | 內容 | Owner／required authority | 狀態 |
+| --- | --- | --- | --- |
+| TI-C16-2 | 來源證據或介面文字中，`map_data_date` 描述為「引擎回報的圖磚最後修改日期」，不得稱為 OpenStreetMap 資料的擷取日期或「已確認最新」的圖資（`decision-20261118-issue16-c161.md` 第 6 節） | Design Authority（整合 Spec 的 derivation） | Tracked |
+| TI-C16-3 | G-RREQ 定義各方向請求位置的組成，以及位置與 `request_key` 地點一致性的核對（不一致時 fail closed）（c161 第 5 節） | Design Authority（G-RREQ 的 derivation） | Tracked |
+| TI-C165-1 | G-RREQ 定義請求位置 `ref_id`／`role` 的合法值，並在送出任何請求之前拒絕不合法的值（含孤立 surrogate）；TI-C16-3 的補充（`decision-20261118-issue16-c165.md` 第 3、5 節） | Design Authority（G-RREQ 的 derivation） | Tracked |
+| TI-C2R1F3-1 | OpenSSL 的預設信任來源在所有平台可由 `SSL_CERT_FILE`、`SSL_CERT_DIR` 增加根憑證；`OPENSSL_CONF` 的影響 NOT VERIFIED；文件不得宣稱傳輸層完全不受環境變數影響（`decision-20261118-issue16-c2r1f3.md` 第 5 節） | Design Authority（SPEC-R1 SIA 與之後的文件 Spec） | Tracked |
+| NV-1 | 真實 Valhalla 伺服器的行為：連線、TLS、轉址、回應形狀（`via` 型態是否只回一個 leg、警告的位置、`trace_attributes` 的欄位、狀態回應的欄位）、是否會回傳本 Ticket 測過的那些異常值；S39／S40 的五條參考路線與詞彙表偏移 | acceptor（真實請求的授權）；之後獲授權的整合 work item（c161 第 2.7 節） | **NOT RUN／NOT VERIFIED** |
+| NV-PY | Python 3.13 以後的直譯器（`requires-python = ">=3.11"`）；本 Ticket 只在 Python 3.11.2 執行 | — | **NOT RUN** |
+
+另：RV-12～RV-14（文件同步，Design Authority）與先前 records 列出的 TI-C14-1、TI-C14-5、TI-C15-1、RV-6～RV-11 沿用各自的 owner，本 Ticket 不涵蓋。
+
+### 15.5 Binding
+
+- 角色與 binding：同第 2 節（agentId `a1e2cfa52290d496f`，`gov-executor`）。各次派工的 binding 核對由派工者記於 run record（`docs/governance/records/run/run-20261117-oc1-run2.md`）；本 worklog 中的計數都是 Executor 的自我觀測，不是派工者的核對。
